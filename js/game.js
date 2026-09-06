@@ -200,7 +200,8 @@ function revealAnswers(xiaoluSelected, xiaogSelected) {
   elements.feedback.hidden = false;
   elements.nextButton.textContent = currentIndex === gameQuestions.length - 1 ? "查看成绩 →" : "下一题 →";
   elements.nextButton.hidden = false;
-  elements.nextButton.focus();
+  elements.feedback.focus({ preventScroll: true });
+  elements.feedback.scrollIntoView({ behavior: "smooth", block: "nearest" });
 }
 
 function goToNextQuestion() {
