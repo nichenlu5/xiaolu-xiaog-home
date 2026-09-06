@@ -1,6 +1,13 @@
 const ArcadeStorage = (() => {
   const KEY = "xiaoluXiaogArcadeV1";
-  const empty = () => ({ plays: { lyrics: 0, timer: 0, sync: 0 }, timerBest: { xiaolu: null, xiaog: null }, syncBest: 0, syncHistory: [] });
+  const empty = () => ({
+    plays: { lyrics: 0, timer: 0, sync: 0, memory: 0, world: 0, province: 0 },
+    timerBest: { xiaolu: null, xiaog: null }, syncBest: 0, syncHistory: [],
+    memoryBest: { easy: { time: null, moves: null }, normal: { time: null, moves: null }, hard: { time: null, moves: null } },
+    memoryBattleHistory: [],
+    worldBest: { score: 0, streak: 0, country: 0, city: 0 },
+    provinceBest: { ten: 0, twenty: 0, streak: 0 }
+  });
   function read() {
     try { return { ...empty(), ...JSON.parse(localStorage.getItem(KEY) || "{}") }; }
     catch (error) { console.warn("读取游戏厅存档失败：", error); return empty(); }
@@ -9,10 +16,14 @@ const ArcadeStorage = (() => {
     try { localStorage.setItem(KEY, JSON.stringify(data)); }
     catch (error) { console.warn("保存游戏厅存档失败：", error); }
   }
-  function addPlay(game) { const data = read(); data.plays = { ...empty().plays, ...data.plays }; data.plays[game] += 1; write(data); }
+  function addPlay(game) { const data = read(); data.plays = { ...empty().plays, ...data.plays }; data.plays[game] = (data.plays[game] || 0) + 1; write(data); }
   function saveTimerBest(player, error) { const data = read(); if (data.timerBest[player] === null || error < data.timerBest[player]) data.timerBest[player] = error; write(data); return data.timerBest[player]; }
   function saveSyncBest(score) { const data = read(); data.syncBest = Math.max(data.syncBest || 0, score); write(data); return data.syncBest; }
   function saveSyncResult(score) { const data = read(); data.syncHistory = Array.isArray(data.syncHistory) ? data.syncHistory : []; data.syncHistory.unshift({ date: new Date().toISOString(), score, total: 10 }); write(data); return data.syncHistory; }
   function getSyncHistory() { const history = read().syncHistory; return Array.isArray(history) ? history : []; }
-  return { read, addPlay, saveTimerBest, saveSyncBest, saveSyncResult, getSyncHistory };
+  function saveMemoryBest(level, time, moves) { const data = read(); data.memoryBest = { ...empty().memoryBest, ...(data.memoryBest || {}) }; const old = data.memoryBest[level] || { time: null, moves: null }; data.memoryBest[level] = { time: old.time === null ? time : Math.min(old.time, time), moves: old.moves === null ? moves : Math.min(old.moves, moves) }; write(data); return data.memoryBest[level]; }
+  function saveMemoryBattle(xiaolu, xiaog) { const data = read(); data.memoryBattleHistory = Array.isArray(data.memoryBattleHistory) ? data.memoryBattleHistory : []; data.memoryBattleHistory.unshift({ date: new Date().toISOString(), xiaolu, xiaog, winner: xiaolu === xiaog ? "平局" : xiaolu > xiaog ? "小路" : "小G" }); data.memoryBattleHistory = data.memoryBattleHistory.slice(0, 30); write(data); return data.memoryBattleHistory; }
+  function saveWorldBest(mode, score, streak) { const data = read(); data.worldBest = { ...empty().worldBest, ...(data.worldBest || {}) }; data.worldBest.score = Math.max(data.worldBest.score || 0, score); data.worldBest.streak = Math.max(data.worldBest.streak || 0, streak); data.worldBest[mode] = Math.max(data.worldBest[mode] || 0, score); write(data); return data.worldBest; }
+  function saveProvinceBest(total, score, streak) { const data = read(); data.provinceBest = { ...empty().provinceBest, ...(data.provinceBest || {}) }; const key = total === 20 ? "twenty" : "ten"; data.provinceBest[key] = Math.max(data.provinceBest[key] || 0, score); data.provinceBest.streak = Math.max(data.provinceBest.streak || 0, streak); write(data); return data.provinceBest; }
+  return { read, addPlay, saveTimerBest, saveSyncBest, saveSyncResult, getSyncHistory, saveMemoryBest, saveMemoryBattle, saveWorldBest, saveProvinceBest };
 })();
