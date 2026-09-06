@@ -15,12 +15,59 @@
 
   <main class="game-shell">
     <section class="quiz-card" id="quiz-card" aria-labelledby="quiz-title">
+      <div class="mode-area" id="mode-area">
+        <p class="eyebrow">GAME ROOM</p>
+        <h1 id="quiz-title">今天想怎么玩？</h1>
+        <p class="mode-intro">选一个模式，和知识来一场轻松的较量吧。</p>
+        <fieldset class="difficulty-picker">
+          <legend>选择难度</legend>
+          <label><input type="radio" name="difficulty" value="easy"> 简单</label>
+          <label><input type="radio" name="difficulty" value="medium" checked> 普通</label>
+          <label><input type="radio" name="difficulty" value="hard"> 困难</label>
+          <label><input type="radio" name="difficulty" value="random"> 随机</label>
+        </fieldset>
+        <div class="mode-options">
+          <button class="mode-card" id="solo-mode" type="button">
+            <span class="mode-icon" aria-hidden="true">💡</span>
+            <strong>单人知识问答</strong>
+            <span>独自挑战 10 道题</span>
+          </button>
+          <button class="mode-card battle-mode-card" id="battle-mode" type="button">
+            <span class="mode-icon" aria-hidden="true">⚔️</span>
+            <strong>小路 VS 小G</strong>
+            <span>面对面双人知识擂台</span>
+          </button>
+          <button class="mode-card revenge-mode-card" id="revenge-mode" type="button">
+            <span class="mode-icon" aria-hidden="true">📒</span>
+            <strong>错题复仇</strong>
+            <span id="wrong-count-label">还没有错题记录</span>
+          </button>
+          <!-- 后续模式可继续添加同结构的 mode-card，例如限时抢答、分类挑战、猜歌词。 -->
+        </div>
+        <section class="battle-history" aria-labelledby="history-title">
+          <h2 id="history-title">双人战绩</h2>
+          <div class="history-summary" id="history-summary"></div>
+          <ol id="history-list"></ol>
+        </section>
+      </div>
+
+      <div id="game-area" hidden>
       <div class="quiz-heading">
         <div>
           <p class="eyebrow">GAME ROOM</p>
-          <h1 id="quiz-title">知识问答</h1>
+          <h1 id="game-title">知识问答</h1>
         </div>
         <span class="category-badge" id="category">准备中</span>
+      </div>
+
+      <div class="battle-scoreboard" id="battle-scoreboard" aria-label="双方比分" hidden>
+        <div class="player-score xiaolu-score">
+          <span>小路</span><strong id="xiaolu-score">0</strong><small>连续 <b id="xiaolu-streak">0</b> 题</small>
+        </div>
+        <div class="versus">VS<small><b id="battle-current-number">1</b> / <b id="battle-total-number">10</b></small></div>
+        <div class="player-score xiaog-score">
+          <span>小G</span><strong id="xiaog-score">0</strong><small>连续 <b id="xiaog-streak">0</b> 题</small>
+        </div>
       </div>
 
       <div class="stats" aria-label="答题数据">
@@ -36,8 +83,13 @@
       <div class="question-area" id="question-area">
         <h2 id="question-text">题目正在赶来的路上……</h2>
         <div class="options" id="options" role="group" aria-label="答案选项"></div>
+        <div class="xiaog-answer-area" id="xiaog-answer-area" hidden>
+          <p><strong>等待小G作答</strong><span>请听小G的答案，再帮 TA 录入：</span></p>
+          <div class="xiaog-options" id="xiaog-options" role="group" aria-label="小G答案"></div>
+        </div>
         <div class="feedback" id="feedback" aria-live="polite" hidden>
           <strong id="feedback-title"></strong>
+          <div class="answer-summary" id="answer-summary"></div>
           <p id="explanation"></p>
         </div>
         <button class="primary-button next-button" id="next-button" type="button" hidden>下一题 →</button>
@@ -49,16 +101,24 @@
         <h2>答得不错，欢迎回家！</h2>
         <p class="score-line"><strong id="final-score">0</strong><span>分</span></p>
         <p id="result-message"></p>
+        <div class="battle-result" id="battle-result" hidden>
+          <strong id="winner-text">平局</strong>
+          <p>小路 <b id="final-xiaolu-score">0</b> ： <b id="final-xiaog-score">0</b> 小G</p>
+        </div>
         <div class="result-details">
           <span>答对 <strong id="final-correct">0</strong> 题</span>
           <span>最高连对 <strong id="best-streak">0</strong> 题</span>
         </div>
         <button class="primary-button" id="restart-button" type="button">再玩一局</button>
+        <button class="text-button" id="change-mode-button" type="button">返回模式选择</button>
+      </div>
       </div>
     </section>
   </main>
 
   <script src="js/questions.js"></script>
+  <script src="js/questions-extra.js"></script>
+  <script src="js/storage.js"></script>
   <script src="js/game.js"></script>
 </body>
 </html>

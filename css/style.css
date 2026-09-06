@@ -235,6 +235,43 @@ p {
 
 .quiz-card { padding: clamp(24px, 5vw, 48px); }
 
+.mode-area { padding: 10px 0; text-align: center; }
+.mode-area h1 { margin-bottom: 10px; font-size: clamp(28px, 5vw, 40px); }
+.mode-intro { margin-bottom: 28px; color: var(--muted); }
+.mode-options { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+.mode-card {
+  display: flex;
+  min-height: 180px;
+  padding: 25px 18px;
+  align-items: center;
+  flex-direction: column;
+  justify-content: center;
+  border: 2px solid var(--line);
+  border-radius: 20px;
+  color: var(--ink);
+  background: #fffaf5;
+  cursor: pointer;
+  transition: transform 160ms ease, border-color 160ms ease, box-shadow 160ms ease;
+}
+.mode-card:hover { border-color: var(--peach); box-shadow: 0 10px 24px rgba(110, 78, 57, 0.1); transform: translateY(-2px); }
+.mode-card:disabled { opacity: 0.58; cursor: not-allowed; transform: none; box-shadow: none; }
+.mode-card:focus-visible, .xiaog-option:focus-visible, .text-button:focus-visible { outline: 3px solid rgba(217, 120, 90, 0.3); outline-offset: 3px; }
+.mode-card strong { margin: 9px 0 5px; font-size: 20px; }
+.mode-card > span:last-child { color: var(--muted); font-size: 14px; }
+.mode-icon { font-size: 34px; }
+.battle-mode-card { background: #fff8e5; }
+.revenge-mode-card { background: #f2f8f2; }
+.difficulty-picker { display: flex; width: fit-content; margin: 0 auto 24px; padding: 8px; gap: 4px; border: 1px solid var(--line); border-radius: 999px; background: #fff; }
+.difficulty-picker legend { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+.difficulty-picker label { min-height: 40px; padding: 9px 13px; border-radius: 999px; color: var(--muted); font-size: 14px; cursor: pointer; }
+.difficulty-picker label:has(input:checked) { color: #fff; background: var(--peach-dark); }
+.difficulty-picker input { position: absolute; opacity: 0; pointer-events: none; }
+.battle-history { margin-top: 28px; padding-top: 22px; border-top: 1px solid var(--line); text-align: left; }
+.battle-history h2 { margin-bottom: 12px; font-size: 18px; }
+.history-summary { display: flex; flex-wrap: wrap; gap: 7px; color: var(--muted); font-size: 13px; }
+.history-summary span { padding: 7px 10px; border-radius: 9px; background: #f8f3ed; }
+.battle-history ol { max-height: 150px; margin: 12px 0 0; padding-left: 24px; overflow: auto; color: var(--muted); font-size: 13px; line-height: 1.8; }
+
 .quiz-heading {
   display: flex;
   align-items: flex-start;
@@ -296,6 +333,21 @@ p {
   transition: width 300ms ease;
 }
 
+.battle-scoreboard {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  gap: 14px;
+  margin: 0 0 20px;
+  align-items: center;
+}
+.player-score { display: grid; grid-template-columns: 1fr auto; padding: 14px 18px; border-radius: 16px; background: #fff3ed; }
+.xiaog-score { background: #fff7dc; }
+.player-score span { font-weight: 800; }
+.player-score strong { color: var(--peach-dark); font-size: 25px; }
+.player-score small { grid-column: 1 / -1; color: var(--muted); }
+.versus { color: var(--peach-dark); font-size: 13px; font-weight: 900; text-align: center; }
+.versus small { display: block; margin-top: 4px; color: var(--muted); font-weight: 600; white-space: nowrap; }
+
 .question-area h2 {
   min-height: 62px;
   margin-bottom: 24px;
@@ -355,6 +407,16 @@ p {
 .option-button:disabled { cursor: default; }
 .option-button.correct .option-letter { color: #fff; background: var(--correct); }
 .option-button.wrong .option-letter { color: #fff; background: var(--wrong); }
+.option-button.selected { border-color: var(--peach-dark); background: #fff4ef; }
+
+.xiaog-answer-area { margin-top: 20px; padding: 17px; border: 1px dashed var(--peach); border-radius: 16px; background: #fffaf5; }
+.xiaog-answer-area p { display: flex; margin-bottom: 13px; align-items: baseline; justify-content: space-between; gap: 12px; }
+.xiaog-answer-area p span { color: var(--muted); font-size: 13px; }
+.xiaog-options { display: grid; grid-template-columns: repeat(4, 1fr); gap: 9px; }
+.xiaog-option { min-height: 44px; border: 0; border-radius: 12px; color: var(--ink); background: #f7e3a9; font-weight: 900; cursor: pointer; }
+.xiaog-option:hover { background: var(--yellow); }
+.xiaog-option.correct { color: #fff; background: var(--correct); }
+.xiaog-option.wrong { color: #fff; background: var(--wrong); }
 
 .feedback {
   margin-top: 20px;
@@ -366,6 +428,8 @@ p {
 .feedback.correct-feedback { border-left: 4px solid var(--correct); }
 .feedback.wrong-feedback { border-left: 4px solid var(--wrong); }
 .feedback p { margin: 5px 0 0; color: var(--muted); font-size: 14px; line-height: 1.65; }
+.answer-summary { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 10px; }
+.answer-summary span { padding: 6px 9px; border-radius: 8px; background: #fff; color: var(--ink); font-size: 13px; }
 .next-button { margin-top: 20px; }
 
 .result-area {
@@ -402,6 +466,10 @@ p {
   color: var(--muted);
   font-size: 14px;
 }
+.battle-result { margin: 20px auto; padding: 18px; border-radius: 16px; background: #fff7dc; }
+.battle-result > strong { color: var(--peach-dark); font-size: 28px; }
+.battle-result p { margin: 8px 0 0; color: var(--muted); }
+.text-button { display: block; margin: 15px auto 0; border: 0; color: var(--muted); background: transparent; cursor: pointer; text-decoration: underline; }
 
 [hidden] { display: none !important; }
 
@@ -417,7 +485,26 @@ p {
   .stats { gap: 7px; }
   .stat-item { padding: 10px 8px; text-align: center; }
   .options { grid-template-columns: 1fr; gap: 10px; }
+  .mode-options { grid-template-columns: 1fr; }
+  .mode-card { min-height: 140px; }
+  .battle-scoreboard { gap: 7px; }
+  .player-score { padding: 11px 10px; }
+  .xiaog-answer-area p { display: block; }
+  .xiaog-answer-area p span { display: block; margin-top: 4px; }
+  .difficulty-picker { width: 100%; justify-content: space-between; }
+  .difficulty-picker label { display: grid; flex: 1; padding: 8px 4px; place-items: center; }
+  .option-button { min-height: 56px; }
+  .xiaog-option { min-height: 48px; }
+  .answer-summary { display: grid; grid-template-columns: 1fr; }
   .question-area h2 { min-height: auto; }
+}
+
+@media (max-width: 390px) {
+  .quiz-card { padding: 20px 16px; }
+  .battle-scoreboard { grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); }
+  .player-score { font-size: 14px; }
+  .player-score strong { font-size: 22px; }
+  .xiaog-options { gap: 7px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
