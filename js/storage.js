@@ -2,6 +2,7 @@
 const GameStorage = (() => {
   const WRONG_KEY = "xiaoluQuizWrongQuestionsV1";
   const HISTORY_KEY = "xiaoluQuizBattleHistoryV1";
+  const STATS_KEY = "xiaoluQuizStatsV15";
 
   function read(key, fallback) {
     try {
@@ -67,5 +68,16 @@ const GameStorage = (() => {
     };
   }
 
-  return { getWrongRecords, recordWrong, recordMastered, getWrongQuestions, saveBattle, getBattleSummary };
+  function getStats() { return read(STATS_KEY, { plays: 0, bestScore: 0, bestStreak: 0, revengeWins: 0 }); }
+
+  function saveResult(mode, score, streak, revengeWins = 0) {
+    const stats = getStats();
+    stats.plays = (stats.plays || 0) + 1;
+    stats.bestScore = Math.max(stats.bestScore || 0, score || 0);
+    stats.bestStreak = Math.max(stats.bestStreak || 0, streak || 0);
+    stats.revengeWins = (stats.revengeWins || 0) + revengeWins;
+    write(STATS_KEY, stats);
+  }
+
+  return { getWrongRecords, recordWrong, recordMastered, getWrongQuestions, saveBattle, getBattleSummary, getStats, saveResult };
 })();

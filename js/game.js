@@ -31,6 +31,7 @@ let currentIndex = 0;
 let players = createPlayers();
 let answered = false;
 let xiaoluAnswer = null;
+let revengeWins = 0;
 
 function createPlayers() {
   return { xiaolu: { score: 0, streak: 0, bestStreak: 0 }, xiaog: { score: 0, streak: 0, bestStreak: 0 } };
@@ -70,6 +71,7 @@ function startGame() {
   }
   currentIndex = 0;
   players = createPlayers();
+  revengeWins = 0;
   elements.totalNumber.textContent = gameQuestions.length;
   elements.battleTotalNumber.textContent = gameQuestions.length;
   elements.questionArea.hidden = false;
@@ -165,7 +167,7 @@ function revealAnswers(xiaoluSelected, xiaogSelected) {
   const xiaogCorrect = xiaogSelected === question.answer;
   applyResult(players.xiaolu, xiaoluCorrect);
   if (mode === "battle") applyResult(players.xiaog, xiaogCorrect);
-  if (xiaoluCorrect && mode === "revenge") GameStorage.recordMastered(question);
+  if (xiaoluCorrect && mode === "revenge") { GameStorage.recordMastered(question); revengeWins += 1; }
   if (!xiaoluCorrect) GameStorage.recordWrong(question);
 
   [...elements.options.children].forEach((button, index) => {
@@ -214,6 +216,7 @@ function showResult() {
   elements.questionArea.hidden = true;
   elements.resultArea.hidden = false;
   elements.category.textContent = "完成";
+  GameStorage.saveResult(mode, players.xiaolu.score, players.xiaolu.bestStreak, revengeWins);
   if (mode === "battle") {
     const difference = players.xiaolu.score - players.xiaog.score;
     elements.winnerText.textContent = difference > 0 ? "小路获胜" : difference < 0 ? "小G获胜" : "平局";

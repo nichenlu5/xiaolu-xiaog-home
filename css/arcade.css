@@ -64,6 +64,36 @@ body { overflow-x: hidden; }
 .round-results strong span, .round-results strong small { display: block; }
 .round-results strong small { margin-top: 4px; color: var(--muted); font-weight: 500; }
 .record-line { color: var(--muted); font-size: 13px; text-align: center; }
+.timer-round-list { display: grid; gap: 9px; margin: 18px 0; }
+.timer-round-list div { display: grid; grid-template-columns: minmax(0, 1.4fr) 1fr 1fr; gap: 8px; padding: 13px 15px; align-items: center; border-radius: 14px; background: #f8f3ed; }
+.timer-round-list small, .timer-round-list span { color: var(--muted); }
+.stop-button.is-running { background: #b94e4e; box-shadow: 0 9px 22px rgba(185,78,78,.28); }
+.timer-summary b { color: var(--peach-dark); }
+.lyrics-filters { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 9px; margin: -5px 0 16px; }
+.lyrics-filters button { min-height: 46px; border: 2px solid var(--line); border-radius: 13px; color: var(--ink); background: #fff; font-size: 15px; font-weight: 800; cursor: pointer; }
+.lyrics-filters button.active { border-color: var(--peach-dark); color: var(--peach-dark); background: #fff4ef; }
+.lyrics-filters button:disabled { cursor: default; opacity: .65; }
+.lyrics-page .clue small { display: block; margin-bottom: 6px; color: var(--peach-dark); font-size: 12px; font-weight: 900; letter-spacing: .08em; }
+.song-meta { color: var(--muted); font-size: 14px; }
+.achievement-entry { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 14px; margin-top: 18px; padding: 18px 22px; align-items: center; border: 1px solid #e1c98d; border-radius: 20px; color: var(--ink); background: #fff8e5; text-decoration: none; box-shadow: 0 8px 20px rgba(110,78,57,.06); }
+.achievement-entry > span { font-size: 31px; }
+.achievement-entry strong, .achievement-entry small { display: block; }
+.achievement-entry small { margin-top: 3px; color: var(--muted); font-size: 14px; }
+.achievement-entry > b { color: var(--peach-dark); font-size: 21px; }
+.achievement-hero { max-width: 720px; margin: 0 auto 24px; text-align: center; }
+.achievement-hero h1 { margin-bottom: 8px; font-size: clamp(30px, 6vw, 44px); }
+.achievement-hero > p { color: var(--muted); }
+.achievement-progress-row { display: flex; justify-content: space-between; gap: 16px; margin: 22px 2px 8px; color: var(--peach-dark); }
+.achievement-progress { height: 12px; overflow: hidden; border-radius: 999px; background: #eadfd5; }
+.achievement-progress i { display: block; width: 0; height: 100%; border-radius: inherit; background: linear-gradient(90deg, var(--peach-dark), var(--yellow)); transition: width .4s ease; }
+.achievement-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+.achievement-card { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 14px; min-width: 0; padding: 20px; border: 1px solid var(--line); border-radius: 20px; background: var(--paper); box-shadow: 0 8px 22px rgba(110,78,57,.06); }
+.achievement-card.locked { opacity: .54; filter: grayscale(.55); }
+.achievement-card.unlocked { border-color: #e5c879; background: #fffaf0; }
+.achievement-icon { font-size: 31px; line-height: 1.2; }
+.achievement-card h2 { margin: 1px 0 6px; font-size: 19px; }
+.achievement-card p { margin: 0 0 8px; color: var(--muted); font-size: 15px; line-height: 1.55; }
+.achievement-card small { color: var(--peach-dark); font-weight: 700; }
 .result-panel { padding: 25px 10px; text-align: center; }
 .result-panel .result-emoji { font-size: 52px; }
 .result-panel h2 { font-size: clamp(25px,5vw,34px); }
@@ -167,6 +197,13 @@ body { overflow-x: hidden; }
   .province-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
   .province-grid button { min-height: 45px; font-size: 13px; }
   .result-actions { grid-template-columns: 1fr; }
+  .arcade-shell, .arcade-card { padding-bottom: max(34px, env(safe-area-inset-bottom)); }
+  .timer-round-list div { grid-template-columns: 1fr 1fr; }
+  .timer-round-list small { grid-column: 1 / -1; }
+  .achievement-entry { padding: 16px; }
+  .achievement-grid { grid-template-columns: 1fr; gap: 11px; }
+  .achievement-card { padding: 17px 16px; }
+  .achievements-page .arcade-shell { padding-top: 22px; }
 }
 @media (max-width: 380px) {
   .arcade-card { padding: 19px 15px; }

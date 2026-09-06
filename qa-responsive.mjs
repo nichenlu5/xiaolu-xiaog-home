@@ -19,7 +19,7 @@ async function click(selector) { await evaluate(`document.querySelector(${JSON.s
 
 try {
   await connect(); await send("Page.enable"); await send("Runtime.enable");
-  const pages = ["game-hall.html", "game.html", "lyrics.html", "timer.html", "sync.html", "memory.html", "world.html", "province.html"];
+  const pages = ["game-hall.html", "game.html", "lyrics.html", "timer.html", "sync.html", "memory.html", "world.html", "province.html", "achievements.html"];
   for (const width of [360, 375, 390, 412, 430, 768, 1024]) for (const page of pages) { await open(page, width); const sizes = await evaluate("({scroll:document.documentElement.scrollWidth,client:document.documentElement.clientWidth})"); await assert(sizes.scroll <= sizes.client, `${page} overflows at ${width}px: ${sizes.scroll}/${sizes.client}`); }
 
   await open("memory.html", 360); await click('[data-mode="solo"]');
@@ -33,5 +33,15 @@ try {
 
   for (const total of [10,20]) { await open("province.html", 430); await click(`[data-total="${total}"]`); for (let i=0;i<total;i++) { const province = await evaluate(`ProvinceQuestions.find(q=>q.city===document.querySelector('#province-city').textContent).province`); await click(`[data-province="${province}"]`); await pause(820); } await assert(await evaluate("!document.querySelector('#province-result').hidden"), `province ${total} did not finish`); }
   await open("province.html", 430); const saved = await evaluate(`JSON.parse(localStorage.getItem('xiaoluXiaogArcadeV1'))`); await assert(saved.memoryBest.normal.time !== null && saved.worldBest.country > 0 && saved.worldBest.city > 0 && saved.provinceBest.ten === 10 && saved.provinceBest.twenty === 20, "localStorage records were not persisted");
-  console.log("PASS responsive: 8 pages × 7 viewports; memory solo/battle complete; world country/city + 4/3/2/1 scoring; province 10/20; localStorage persistence");
+  for (const category of ["classic", "pop", "random"]) {
+    await open("lyrics.html", 390); await click(`[data-category="${category}"]`); const clues = [];
+    for (let i=0;i<5;i++) { clues.push(await evaluate("document.querySelector('#clue').textContent")); await click("#options button"); await click("#g-options button"); await click("#next"); }
+    await assert(new Set(clues).size === 5, `lyrics ${category} repeated a question`); await assert(await evaluate("!document.querySelector('#result').hidden"), `lyrics ${category} did not finish`);
+  }
+  await open("timer.html", 390);
+  for (let i=0;i<3;i++) { await click("#timer-button"); await pause(5005); await click("#timer-button"); await pause(400); }
+  await assert(await evaluate("!document.querySelector('#result').hidden"), "timer did not finish three rounds");
+  await assert(await evaluate("JSON.parse(localStorage.getItem('xiaoluXiaogArcadeV1')).timerHistory.length > 0"), "timer history was not persisted");
+  await open("achievements.html", 390); await assert(await evaluate("document.querySelectorAll('.achievement-card').length === 16"), "achievement count mismatch"); await assert(await evaluate("document.querySelectorAll('.achievement-card.unlocked').length > 0"), "achievement unlock logic did not recognize history");
+  console.log("PASS responsive: 9 pages × 7 viewports; memory solo/battle; world scoring; province 10/20; lyrics 3 pools/no repeats; timer 3 rounds; 16 achievements; localStorage persistence");
 } finally { proc.kill(); }
