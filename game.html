@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="小路和小G的知识问答游戏。">
+  <title>知识问答｜小路 × 小G的小家</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="game-page">
+  <header class="topbar">
+    <a class="back-link" href="index.html" aria-label="返回首页">← 返回小家</a>
+    <div class="mini-brand">小路 <span>×</span> 小G</div>
+  </header>
+
+  <main class="game-shell">
+    <section class="quiz-card" id="quiz-card" aria-labelledby="quiz-title">
+      <div class="quiz-heading">
+        <div>
+          <p class="eyebrow">GAME ROOM</p>
+          <h1 id="quiz-title">知识问答</h1>
+        </div>
+        <span class="category-badge" id="category">准备中</span>
+      </div>
+
+      <div class="stats" aria-label="答题数据">
+        <div class="stat-item"><span>当前题数</span><strong><b id="current-number">1</b> / <b id="total-number">10</b></strong></div>
+        <div class="stat-item"><span>正确数</span><strong id="correct-count">0</strong></div>
+        <div class="stat-item"><span>连续答对</span><strong><b id="streak-count">0</b> 🔥</strong></div>
+      </div>
+
+      <div class="progress-track" aria-hidden="true">
+        <div class="progress-bar" id="progress-bar"></div>
+      </div>
+
+      <div class="question-area" id="question-area">
+        <h2 id="question-text">题目正在赶来的路上……</h2>
+        <div class="options" id="options" role="group" aria-label="答案选项"></div>
+        <div class="feedback" id="feedback" aria-live="polite" hidden>
+          <strong id="feedback-title"></strong>
+          <p id="explanation"></p>
+        </div>
+        <button class="primary-button next-button" id="next-button" type="button" hidden>下一题 →</button>
+      </div>
+
+      <div class="result-area" id="result-area" hidden>
+        <div class="result-icon" aria-hidden="true">🏡</div>
+        <p class="eyebrow">本局完成</p>
+        <h2>答得不错，欢迎回家！</h2>
+        <p class="score-line"><strong id="final-score">0</strong><span>分</span></p>
+        <p id="result-message"></p>
+        <div class="result-details">
+          <span>答对 <strong id="final-correct">0</strong> 题</span>
+          <span>最高连对 <strong id="best-streak">0</strong> 题</span>
+        </div>
+        <button class="primary-button" id="restart-button" type="button">再玩一局</button>
+      </div>
+    </section>
+  </main>
+
+  <script src="js/questions.js"></script>
+  <script src="js/game.js"></script>
+</body>
+</html>
