@@ -1,0 +1,89 @@
+.wishlist-page {
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at 8% 12%, rgba(127, 168, 140, .13) 0 4px, transparent 5px),
+    linear-gradient(rgba(255, 250, 241, .94), rgba(255, 250, 241, .94)),
+    repeating-linear-gradient(45deg, transparent 0 28px, rgba(217, 120, 90, .05) 29px 30px);
+  background-size: 110px 110px, auto, auto;
+}
+
+.wishlist-shell { width: min(100% - 32px, 900px); max-width: calc(100% - 32px); margin: 0 auto; padding: 30px 0 64px; }
+.wishlist-hero { display: flex; align-items: end; justify-content: space-between; gap: 24px; margin-bottom: 22px; }
+.wishlist-hero h1 { margin-bottom: 8px; font-size: clamp(30px, 6vw, 46px); letter-spacing: -.04em; }
+.wishlist-hero h1 span { font-size: .75em; }
+.wishlist-hero p:last-child { margin-bottom: 0; color: var(--muted); line-height: 1.7; }
+.add-wish-button { flex: 0 0 auto; }
+
+.wish-stats { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; }
+.wish-stats span { padding: 9px 12px; border: 1px solid var(--line); border-radius: 999px; color: var(--muted); background: rgba(255, 254, 251, .9); font-size: 14px; }
+.wish-stats strong { color: var(--peach-dark); }
+
+.wish-tabs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; padding: 6px; border: 1px solid var(--line); border-radius: 18px; background: rgba(255, 254, 251, .9); }
+.wish-tabs button { min-width: 0; min-height: 48px; padding: 9px 10px; border: 0; border-radius: 13px; color: var(--muted); background: transparent; font-weight: 800; cursor: pointer; }
+.wish-tabs button[aria-selected="true"] { color: #fff; background: var(--peach-dark); box-shadow: 0 5px 12px rgba(217, 120, 90, .2); }
+.wish-tabs button span { display: inline-grid; min-width: 24px; height: 24px; margin-left: 4px; padding: 0 5px; border-radius: 999px; align-items: center; color: var(--muted); background: #f3ebe3; font-size: 13px; }
+.wish-tabs button[aria-selected="true"] span { color: var(--peach-dark); background: #fff; }
+
+.wish-panel { display: grid; gap: 14px; padding-top: 18px; }
+.wish-card { min-width: 0; padding: 21px; border: 1px solid var(--line); border-radius: 21px; background: var(--paper); box-shadow: 0 8px 22px rgba(110, 78, 57, .07); }
+.wish-card[data-status="doing"] { border-left: 5px solid var(--yellow); }
+.wish-card[data-status="done"] { border-left: 5px solid var(--green); background: #fbfefb; }
+.wish-card h2 { margin-bottom: 9px; font-size: 20px; line-height: 1.5; overflow-wrap: anywhere; }
+.wish-note { margin-bottom: 13px; color: var(--muted); font-size: 15px; line-height: 1.75; white-space: pre-wrap; overflow-wrap: anywhere; }
+.wish-meta { margin-bottom: 15px; color: #9a8b82; font-size: 13px; line-height: 1.6; }
+.wish-completed { margin: 0 0 7px; color: var(--correct); font-size: 14px; font-weight: 800; }
+.wish-celebration { margin: 0 0 14px; color: var(--muted); font-size: 14px; }
+.wish-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.wish-actions button { min-height: 44px; padding: 8px 13px; border: 1px solid var(--line); border-radius: 12px; color: var(--ink); background: #fffaf5; font-size: 14px; font-weight: 700; cursor: pointer; }
+.wish-actions .status-action { border-color: #e5c879; background: #fff8e5; }
+.wish-actions .delete-action { color: #a64b4b; }
+.wish-actions button:focus-visible, .wish-tabs button:focus-visible, .dialog-close:focus-visible, .cancel-button:focus-visible, .wish-dialog input:focus, .wish-dialog textarea:focus { outline: 3px solid rgba(217, 120, 90, .28); outline-offset: 2px; }
+
+.empty-wishes { padding: 42px 20px; border: 1px dashed #decfc1; border-radius: 21px; color: var(--muted); background: rgba(255, 254, 251, .62); text-align: center; line-height: 1.7; }
+.empty-wishes span { display: block; margin-bottom: 8px; font-size: 28px; }
+.wishlist-footnote { margin: 32px 0 0; color: #9a8b82; font-size: 13px; text-align: center; }
+
+.wish-dialog { width: min(calc(100% - 28px), 540px); max-height: min(86vh, 680px); padding: 0; overflow: auto; border: 1px solid var(--line); border-radius: 24px; color: var(--ink); background: var(--paper); box-shadow: 0 24px 70px rgba(70, 50, 40, .25); }
+.wish-dialog::backdrop { background: rgba(71, 61, 56, .42); backdrop-filter: blur(2px); }
+.wish-dialog form { padding: 25px; }
+.dialog-heading { display: flex; align-items: start; justify-content: space-between; gap: 18px; margin-bottom: 21px; }
+.dialog-heading h2 { margin: 0; font-size: 24px; }
+.dialog-close { flex: 0 0 44px; height: 44px; border: 0; border-radius: 50%; color: var(--muted); background: #f5eee7; font-size: 25px; cursor: pointer; }
+.wish-dialog label { display: block; margin: 16px 0 7px; font-weight: 800; }
+.wish-dialog label span { color: var(--muted); font-size: 13px; font-weight: 500; }
+.wish-dialog input[type="text"], .wish-dialog textarea { width: 100%; padding: 13px 14px; border: 2px solid var(--line); border-radius: 13px; color: var(--ink); background: #fff; font: inherit; font-size: 16px; line-height: 1.5; }
+.wish-dialog textarea { min-height: 126px; resize: vertical; }
+.dialog-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 22px; }
+.cancel-button { min-height: 48px; padding: 0 20px; border: 1px solid var(--line); border-radius: 999px; color: var(--muted); background: #fff; font-weight: 700; cursor: pointer; }
+
+@media (min-width: 760px) {
+  .wish-panel { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .empty-wishes { grid-column: 1 / -1; }
+}
+
+@media (max-width: 600px) {
+  .wishlist-topbar { width: calc(100% - max(24px, env(safe-area-inset-left) + env(safe-area-inset-right))); }
+  .wishlist-shell { width: calc(100% - 24px); max-width: calc(100% - 24px); padding: 18px 0 max(72px, env(safe-area-inset-bottom)); }
+  .wishlist-hero { display: block; }
+  .wishlist-hero h1 { font-size: clamp(29px, 9vw, 38px); }
+  .add-wish-button { width: 100%; margin-top: 18px; min-height: 52px; }
+  .wish-stats { gap: 6px; }
+  .wish-stats span { padding: 8px 10px; font-size: 13px; }
+  .wish-tabs { position: sticky; top: max(6px, env(safe-area-inset-top)); z-index: 5; gap: 4px; }
+  .wish-tabs button { min-height: 50px; padding-inline: 4px; font-size: 14px; }
+  .wish-tabs button span { min-width: 22px; height: 22px; margin-left: 2px; }
+  .wish-card { padding: 18px 16px; border-radius: 18px; }
+  .wish-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .wish-actions button { width: 100%; min-height: 46px; padding-inline: 8px; }
+  .wish-dialog { max-height: calc(100dvh - 24px); }
+  .wish-dialog form { padding: 20px 17px max(20px, env(safe-area-inset-bottom)); }
+  .dialog-actions > * { flex: 1; }
+}
+
+@media (max-width: 370px) {
+  .wish-tabs button { font-size: 13px; }
+  .wish-tabs button span { display: inline; padding: 0; color: inherit; background: transparent; }
+}
+
+@media (hover: none) { .wish-actions button { -webkit-tap-highlight-color: transparent; } }
+@media (prefers-reduced-motion: reduce) { .wish-dialog::backdrop { backdrop-filter: none; } }

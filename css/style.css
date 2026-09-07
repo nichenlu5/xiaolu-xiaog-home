@@ -107,6 +107,52 @@ p {
   line-height: 1.9;
 }
 
+.room-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  width: min(100%, 610px);
+  margin: 0 auto;
+  text-align: left;
+}
+
+.room-card {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 12px;
+  min-width: 0;
+  min-height: 98px;
+  padding: 18px;
+  align-items: center;
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  color: var(--ink);
+  background: #fff8e5;
+  text-decoration: none;
+  transition: transform 160ms ease, border-color 160ms ease, box-shadow 160ms ease;
+}
+
+.room-card.wishlist-room { background: #f1f8f2; }
+.room-card:hover { border-color: var(--peach); box-shadow: 0 10px 24px rgba(110, 78, 57, 0.1); transform: translateY(-2px); }
+.room-card:focus-visible, .room-shortcut:focus-visible { outline: 3px solid rgba(217, 120, 90, 0.3); outline-offset: 3px; }
+.room-icon { font-size: 29px; }
+.room-card strong, .room-card small { display: block; }
+.room-card strong { margin-bottom: 5px; font-size: 17px; }
+.room-card small { color: var(--muted); font-size: 13px; line-height: 1.45; }
+.room-card b { color: var(--peach-dark); }
+
+.room-shortcut {
+  display: inline-flex;
+  min-height: 44px;
+  padding: 0 4px;
+  align-items: center;
+  color: var(--muted);
+  font-size: 14px;
+  font-weight: 700;
+  text-decoration: none;
+}
+.room-shortcut:hover { color: var(--peach-dark); }
+
 .primary-button {
   display: inline-flex;
   align-items: center;
@@ -497,6 +543,8 @@ p {
   .home-shell { padding: 24px 0; }
   .welcome-card { padding: 38px 20px 44px; border-radius: 24px; }
   .home-copy { font-size: 15px; }
+  .room-grid { grid-template-columns: 1fr; gap: 11px; }
+  .room-card { min-height: 88px; padding: 15px 16px; }
   .topbar { width: calc(100% - max(32px, env(safe-area-inset-left) + env(safe-area-inset-right))); min-height: max(48px, 3rem); padding-top: max(4px, env(safe-area-inset-top)); }
   .back-link, .mini-brand { display: inline-flex; min-height: 44px; align-items: center; font-size: 14px; }
   .game-shell { padding-top: 15px; }
@@ -536,6 +584,7 @@ p {
 
 @media (hover: none) {
   .primary-button:hover,
+  .room-card:hover,
   .mode-card:hover,
   .option-button:hover:not(:disabled) { transform: none; }
 }

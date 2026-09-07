@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="description" content="小路和小G一起保存想做的事。">
+  <title>一起想做的事｜小路 × 小G的小家</title>
+  <link rel="stylesheet" href="./css/style.css">
+  <link rel="stylesheet" href="./css/wishlist.css">
+</head>
+<body class="wishlist-page">
+  <header class="topbar wishlist-topbar">
+    <a class="back-link" href="./index.html">← 返回小家</a>
+    <a class="room-shortcut" href="./game-hall.html">🎮 游戏厅</a>
+  </header>
+
+  <main class="wishlist-shell">
+    <section class="wishlist-hero" aria-labelledby="wishlist-title">
+      <div>
+        <p class="eyebrow">OUR LITTLE WISHES</p>
+        <h1 id="wishlist-title">一起想做的事 <span aria-hidden="true">🌱</span></h1>
+        <p>把想一起做的事写下来，再一件件慢慢实现。</p>
+      </div>
+      <button class="primary-button add-wish-button" id="add-wish" type="button">＋ 写下一件想做的事</button>
+    </section>
+
+    <section class="wish-stats" aria-label="愿望统计" aria-live="polite">
+      <span>我们已经写下 <strong id="total-count">0</strong> 件想做的事</span>
+      <span>正在进行 <strong id="doing-count">0</strong> 件</span>
+      <span>已经完成 <strong id="done-count">0</strong> 件</span>
+    </section>
+
+    <div class="wish-tabs" role="tablist" aria-label="按状态浏览">
+      <button type="button" role="tab" id="tab-todo" aria-controls="panel-todo" aria-selected="true" data-status="todo">想做 <span id="tab-count-todo">0</span></button>
+      <button type="button" role="tab" id="tab-doing" aria-controls="panel-doing" aria-selected="false" tabindex="-1" data-status="doing">在做 <span id="tab-count-doing">0</span></button>
+      <button type="button" role="tab" id="tab-done" aria-controls="panel-done" aria-selected="false" tabindex="-1" data-status="done">已完成 <span id="tab-count-done">0</span></button>
+    </div>
+
+    <section class="wish-panel" id="panel-todo" role="tabpanel" aria-labelledby="tab-todo" data-panel="todo"></section>
+    <section class="wish-panel" id="panel-doing" role="tabpanel" aria-labelledby="tab-doing" data-panel="doing" hidden></section>
+    <section class="wish-panel" id="panel-done" role="tabpanel" aria-labelledby="tab-done" data-panel="done" hidden></section>
+
+    <p class="wishlist-footnote">今天写下的期待，也会成为以后回头看的生活记录。</p>
+  </main>
+
+  <dialog class="wish-dialog" id="wish-dialog" aria-labelledby="dialog-title">
+    <form id="wish-form">
+      <div class="dialog-heading">
+        <div><p class="eyebrow">A LITTLE PLAN</p><h2 id="dialog-title">写下一件想做的事</h2></div>
+        <button class="dialog-close" type="button" aria-label="关闭">×</button>
+      </div>
+      <input id="wish-id" type="hidden">
+      <label for="wish-title">标题 <span>必填</span></label>
+      <input id="wish-title" name="title" type="text" maxlength="120" required autocomplete="off" placeholder="例如：去内蒙古学骑马">
+      <label for="wish-note">备注 <span>选填</span></label>
+      <textarea id="wish-note" name="note" rows="5" maxlength="1000" placeholder="记下关于这件事的小小想法……"></textarea>
+      <div class="dialog-actions">
+        <button class="cancel-button" type="button">取消</button>
+        <button class="primary-button" type="submit">保存</button>
+      </div>
+    </form>
+  </dialog>
+
+  <script src="./js/wishlist.js"></script>
+</body>
+</html>
