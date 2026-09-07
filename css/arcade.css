@@ -148,6 +148,28 @@ body { overflow-x: hidden; }
 .province-grid button { min-width: 0; min-height: 46px; padding: 6px 3px; border: 2px solid var(--line); border-radius: 11px; color: var(--ink); background: #fff; font-size: 14px; cursor: pointer; }
 .province-feedback { min-height: 24px; margin: 12px 0 0; color: var(--peach-dark); font-weight: 800; text-align: center; }
 .result-actions { justify-content: center; }
+.wide-card { width: min(100% - 32px, 860px); }
+.input-label { display:block; margin-bottom:8px; color:var(--muted); font-size:14px; font-weight:700; }
+.form-hint { margin-top:8px; color:var(--muted); font-size:13px; }
+.open-answer input { width:100%; min-width:0; min-height:52px; padding:12px 15px; border:2px solid var(--line); border-radius:14px; color:var(--ink); background:#fff; font:inherit; }
+.open-answer input:focus,.pi-entry textarea:focus { border-color:var(--peach-dark); outline:3px solid rgba(217,120,90,.16); }
+.open-answer > .primary-button { margin-top:14px; }
+.challenge-question { margin:12px 0 22px; font-size:clamp(20px,4vw,27px); line-height:1.55; }
+.poetry-prompt { margin:8px 0 22px; padding:26px 18px; border-radius:18px; background:#fff8e5; text-align:center; }
+.poetry-prompt small,.poetry-prompt strong { display:block; }.poetry-prompt small { margin-bottom:10px; color:var(--peach-dark); font-weight:800; }.poetry-prompt strong { font-size:clamp(23px,5vw,32px); }
+.matching-help { color:var(--muted); text-align:center; }.matching-board { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px; }.match-column { display:grid; gap:9px; }
+.match-column button { min-width:0; min-height:54px; padding:10px; border:2px solid var(--line); border-radius:13px; color:var(--ink); background:#fff; cursor:pointer; }.match-column button.selected { border-color:var(--peach-dark); background:#fff4ef; }.match-column button.paired { border-color:#e1c879; background:#fff8e5; }
+.match-submit { display:flex; margin:20px auto 0; }.match-submit:disabled { opacity:.45; cursor:default; }
+.result-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:9px; margin:20px 0; }.result-grid div { padding:13px 7px; border-radius:13px; background:#f8f3ed; }.result-grid small,.result-grid strong { display:block; }.result-grid small { color:var(--muted); }
+.pi-modes { grid-template-columns:repeat(2,minmax(0,1fr)); }.pi-entry { display:grid; grid-template-columns:auto minmax(0,1fr); gap:7px; align-items:start; padding:16px; border:2px solid var(--line); border-radius:17px; background:#fff; font-family:ui-monospace,Consolas,monospace; font-size:20px; }.pi-entry>span { padding-top:10px; font-weight:900; }.pi-entry textarea { width:100%; min-width:0; max-width:100%; padding:9px; resize:vertical; border:0; outline:0; overflow-wrap:anywhere; word-break:break-all; font:inherit; line-height:1.6; }
+.pi-compare { display:grid; gap:10px; margin:20px 0; text-align:left; }.pi-compare div { min-width:0; padding:14px; border-radius:13px; background:#f8f3ed; }.pi-compare small,.pi-compare code { display:block; }.pi-compare code { margin-top:7px; white-space:normal; overflow-wrap:anywhere; word-break:break-all; line-height:1.6; }.pi-compare mark { color:#8c3737; background:#ffd0cc; }
+.clue-modes { grid-template-columns:repeat(2,minmax(0,1fr)); }.clue-page .open-answer { margin-top:18px; }.clue-page .actions { align-items:center; }.clue-page .text-button:disabled { opacity:.4; }
+.rule-box { margin:20px 0; padding:17px; border-radius:15px; background:#fff8e5; line-height:1.65; }.rule-box p { margin:6px 0 0; color:var(--muted); }.speed-start { margin-top:20px; }
+.countdown-stage { display:grid; min-height:380px; place-items:center; }.countdown-stage strong { color:var(--peach-dark); font-size:clamp(80px,24vw,150px); animation:countdown-pop .7s ease both; }@keyframes countdown-pop { from{opacity:0;transform:scale(.45)}60%{opacity:1;transform:scale(1.12)}to{transform:scale(1)} }
+.speed-top { display:flex; justify-content:space-between; gap:8px; margin-bottom:12px; }.speed-top span,.speed-top strong { padding:7px 10px; border-radius:999px; background:#f8f3ed; font-size:13px; }.speed-top strong { color:var(--peach-dark); background:#fff3cc; }
+.speed-timer { height:14px; overflow:hidden; border-radius:99px; background:#eadfd5; }.speed-timer i { display:block; width:100%; height:100%; border-radius:inherit; background:linear-gradient(90deg,var(--peach-dark),var(--yellow)); }.speed-timer i.danger { background:var(--wrong); }.speed-seconds { margin:7px 0 20px; color:var(--muted); text-align:right; }.speed-question { min-height:75px; font-size:clamp(21px,4vw,28px); line-height:1.5; }
+.speed-options { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:11px; }.speed-options button { min-width:0; min-height:62px; padding:12px 14px; border:2px solid var(--line); border-radius:15px; color:var(--ink); background:#fff; font-weight:700; cursor:pointer; }.speed-options button.correct { border-color:var(--correct); background:var(--correct-bg); }.speed-options button.wrong { border-color:var(--wrong); background:var(--wrong-bg); }
+.speed-feedback { margin-top:16px; padding:15px; border-radius:14px; font-size:21px; font-weight:900; text-align:center; }.speed-feedback.ok { color:var(--correct); background:var(--correct-bg); }.speed-feedback.bad { color:var(--wrong); background:var(--wrong-bg); }.speed-result-list { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; margin:20px 0; text-align:left; }.speed-result-list span { display:flex; justify-content:space-between; gap:10px; padding:11px 13px; border-radius:12px; color:var(--muted); background:#f8f3ed; }.speed-result-list b { color:var(--ink); }
 @media (max-width: 600px) {
   .arcade-shell, .arcade-card { width: calc(100% - 24px); max-width: calc(100% - 24px); }
   .arcade-shell { padding-top: 24px; }
@@ -197,6 +219,7 @@ body { overflow-x: hidden; }
   .province-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
   .province-grid button { min-height: 45px; font-size: 13px; }
   .result-actions { grid-template-columns: 1fr; }
+  .wide-card { width:calc(100% - 24px); }.result-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }.matching-board { gap:8px; }.match-column button { min-height:58px; padding:8px 5px; }.pi-entry { padding:10px; font-size:17px; }.clue-modes { grid-template-columns:1fr; }.speed-options { grid-template-columns:1fr; }.speed-options button { min-height:58px; font-size:16px; line-height:1.4; }.speed-question { min-height:auto; }.speed-result-list { grid-template-columns:1fr; }
   .arcade-shell, .arcade-card { padding-bottom: max(34px, env(safe-area-inset-bottom)); }
   .timer-round-list div { grid-template-columns: 1fr 1fr; }
   .timer-round-list small { grid-column: 1 / -1; }
