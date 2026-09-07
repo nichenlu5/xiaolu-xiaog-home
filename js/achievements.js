@@ -1,5 +1,14 @@
 (() => {
   const arcade = ArcadeStorage.read(), battles = GameStorage.getBattleSummary(), quiz = GameStorage.getStats();
+  const transportArchive = FootprintsStorage.transport();
+  const transportCatalog = {
+    bus:"urban",subway:"urban","light-rail":"urban",taxi:"urban",bicycle:"urban","e-bike":"urban",
+    train:"railway","hard-seat":"railway","hard-sleeper":"railway","soft-sleeper":"railway","high-speed-rail":"railway",emu:"railway",intercity:"railway",
+    coach:"road","self-drive":"road",motorcycle:"road",plane:"air",ferry:"water","tour-boat":"water",cruise:"water",maglev:"special",tram:"special","cable-car":"special",ropeway:"special","sightseeing-train":"special"
+  };
+  (transportArchive.custom || []).forEach(item => { if (item?.id) transportCatalog[item.id] = item.category || "future"; });
+  const unlockedTransportIds = Object.keys(transportCatalog).filter(id => ["experienced","special"].includes(transportArchive.entries?.[id]?.state));
+  const unlockedTransport = new Set(unlockedTransportIds), transportTotal = Object.keys(transportCatalog).length;
   const plays = { lyrics: 0, timer: 0, sync: 0, memory: 0, world: 0, province: 0, ...(arcade.plays || {}) };
   const totalPlays = Object.values(plays).reduce((sum, value) => sum + (Number(value) || 0), 0) + Math.max(quiz.plays || 0, battles.total || 0);
   const memory = arcade.memoryBest || {}, timer = arcade.timerSoloBest || {}, lyrics = arcade.lyricsBest || {}, province = arcade.provinceBest || {}, world = arcade.worldBest || {};
@@ -22,7 +31,13 @@
     ["song-library","🎵","中华小曲库","猜歌词一局答对 4 题或更多。",(lyrics.xiaolu || 0) >= 4 || (lyrics.xiaog || 0) >= 4,oldest((arcade.lyricsHistory || []).filter(game => game.xiaolu >= 4 || game.xiaog >= 4))],
     ["revenge","⚔️","复仇成功","在错题复仇中重新答对一道题。",(quiz.revengeWins || 0) > 0,null],
     ["so-close","🌙","差一点点","用特别接近的成绩擦过更高档位。",nearMiss,null],
-    ["regular","🏠","小家常客","累计完成 10 局游戏。",totalPlays >= 10,null]
+    ["regular","🏠","小家常客","累计完成 10 局游戏。",totalPlays >= 10,null],
+    ["transport-urban","🚇","城市探索者","体验地铁或轻轨。",unlockedTransport.has("subway") || unlockedTransport.has("light-rail"),transportArchive.achievementDates?.["transport-urban"]],
+    ["transport-rail","🚆","铁路旅行者","体验三种铁路交通。",unlockedTransportIds.filter(id => transportCatalog[id] === "railway").length >= 3,transportArchive.achievementDates?.["transport-rail"]],
+    ["transport-air","✈️","第一次飞向天空","点亮客机。",unlockedTransport.has("plane"),transportArchive.achievementDates?.["transport-air"]],
+    ["transport-water","⛴️","水上旅行者","体验任意一种水上交通。",unlockedTransportIds.some(id => transportCatalog[id] === "water"),transportArchive.achievementDates?.["transport-water"]],
+    ["transport-collector","🎒","交通收藏家","解锁十种交通工具。",unlockedTransportIds.length >= 10,transportArchive.achievementDates?.["transport-collector"]],
+    ["transport-master","🏆","交通大师","交通图鉴完成度达到 80%。",transportTotal > 0 && unlockedTransportIds.length / transportTotal >= .8,transportArchive.achievementDates?.["transport-master"]]
   ].map(([id, icon, name, description, unlocked, inferredAt]) => ({ id, icon, name, description, unlocked, inferredAt }));
   const unlocked = definitions.filter(item => item.unlocked), savedDates = ArcadeStorage.saveAchievementDates(unlocked.map(item => item.id));
   const formatDate = value => { if (!value) return "已解锁"; const date = new Date(value); return Number.isNaN(date.getTime()) ? "已解锁" : `解锁于 ${date.toLocaleDateString("zh-CN")}`; };

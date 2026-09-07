@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="description" content="记录小路和小G一起认识世界、体验世界的过程。">
+  <title>我们的足迹｜小路 × 小G的小家</title>
+  <link rel="stylesheet" href="./css/style.css">
+  <link rel="stylesheet" href="./css/footprints.css">
+</head>
+<body class="footprints-page">
+  <header class="topbar footprints-topbar"><a class="back-link" href="./index.html">← 返回小家</a><a class="room-shortcut" href="./wishlist.html">🌱 想做的事</a></header>
+  <main class="footprints-shell">
+    <section class="footprints-hero">
+      <p class="eyebrow">OUR FOOTPRINTS</p>
+      <h1>我们的足迹 <span aria-hidden="true">🧭</span></h1>
+      <p>记录小路 × 小G一起认识世界、体验世界的过程。</p>
+    </section>
+
+    <nav class="footprint-tabs" aria-label="足迹区域">
+      <button type="button" data-view="travel" aria-selected="true">🗺️ 旅行地图</button>
+      <button type="button" data-view="transport" aria-selected="false">🚆 交通工具图鉴</button>
+    </nav>
+
+    <section id="travel-view" class="footprint-view">
+      <div class="section-title-row"><div><p class="eyebrow">TRAVEL NOTES</p><h2>旅行地图</h2></div><button class="primary-button" id="add-place" type="button">＋ 新增地点</button></div>
+      <div class="travel-stats" aria-live="polite"><span>✓ 已去过 <strong id="visited-count">0</strong> 个地点</span><span>♡ 想去 <strong id="wanted-count">0</strong> 个地点</span><span>★ 留下 <strong id="memory-count">0</strong> 条回忆</span></div>
+      <div class="map-journal" aria-label="旅行地图视觉区">
+        <div class="map-copy"><span class="map-compass" aria-hidden="true">✦</span><strong>把走过与向往的地方，慢慢连成我们的地图</strong><small>这里是足迹手账，不代表真实地理位置</small></div>
+        <div class="map-pins" id="map-pins" aria-hidden="true"></div>
+      </div>
+      <div class="travel-tools">
+        <div class="status-filters" role="group" aria-label="按地点状态筛选"><button type="button" data-filter="all" aria-pressed="true">全部</button><button type="button" data-filter="visited" aria-pressed="false">✓ 已去过</button><button type="button" data-filter="wanted" aria-pressed="false">♡ 想去</button><button type="button" data-filter="special" aria-pressed="false">★ 特别回忆</button></div>
+        <button class="random-next" id="random-next" type="button">🎲 随机下一站</button>
+      </div>
+      <div class="place-grid" id="place-grid" aria-live="polite"></div>
+    </section>
+
+    <section id="transport-view" class="footprint-view" hidden>
+      <div class="section-title-row"><div><p class="eyebrow">MOVING TOGETHER</p><h2>交通工具图鉴</h2></div><button class="primary-button" id="add-transport" type="button">＋ 自定义工具</button></div>
+      <div class="catalog-progress-row"><strong id="transport-count">已解锁 0 / 0</strong><span id="transport-percent">0%</span></div>
+      <div class="catalog-progress" role="progressbar" aria-label="交通图鉴完成度" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><i id="transport-progress-bar"></i></div>
+      <section class="transport-achievements"><h3>交通成就</h3><div id="transport-achievement-grid" class="mini-achievement-grid"></div></section>
+      <div id="transport-groups"></div>
+    </section>
+    <footer class="footprints-footnote">所有记录只保存在当前浏览器，不会上传到任何地方。</footer>
+  </main>
+
+  <dialog class="footprint-dialog" id="place-dialog">
+    <form id="place-form"><div class="dialog-heading"><h2 id="place-dialog-title">新增地点</h2><button class="dialog-close" type="button" aria-label="关闭">×</button></div>
+      <input type="hidden" id="place-id">
+      <label for="place-name">城市 / 地点名称 *</label><input id="place-name" required maxlength="60" autocomplete="off">
+      <div class="form-pair"><div><label for="place-date">日期 <span>可选</span></label><input id="place-date" type="date"></div><div><label for="place-status">状态</label><select id="place-status"><option value="visited">✓ 已去过</option><option value="wanted">♡ 想去</option><option value="special">★ 特别回忆</option></select></div></div>
+      <label for="place-memory">一句话回忆 <span>可选</span></label><textarea id="place-memory" maxlength="300" placeholder="那天最想记住的是什么？"></textarea>
+      <label for="place-tags">标签 <span>用逗号分隔</span></label><input id="place-tags" maxlength="120" placeholder="例如：海边，美食，第一次">
+      <label class="photo-placeholder"><input id="place-photo" type="checkbox"> 有照片留存 <span>（v1.9 仅记录标记）</span></label>
+      <div class="dialog-actions"><button class="cancel-button" type="button">取消</button><button class="primary-button" type="submit">保存地点</button></div>
+    </form>
+  </dialog>
+
+  <dialog class="footprint-dialog" id="transport-dialog">
+    <form id="transport-form"><div class="dialog-heading"><h2 id="transport-dialog-title">交通工具</h2><button class="dialog-close" type="button" aria-label="关闭">×</button></div>
+      <input type="hidden" id="transport-id"><input type="hidden" id="transport-custom">
+      <div class="form-pair custom-transport-fields"><div><label for="transport-name">名称 *</label><input id="transport-name" maxlength="40"></div><div><label for="transport-icon">图标</label><input id="transport-icon" maxlength="8" placeholder="🚐"></div></div>
+      <label class="custom-transport-fields" for="transport-category">分类</label><select class="custom-transport-fields" id="transport-category"></select>
+      <label for="transport-state">图鉴状态</label><select id="transport-state"><option value="locked">🔒 未解锁</option><option value="experienced">✨ 已体验</option><option value="special">⭐ 特别体验</option></select>
+      <div class="form-pair"><div><label for="transport-date">第一次体验日期 <span>可选</span></label><input id="transport-date" type="date"></div><div><label for="transport-place">第一次体验地点 <span>可选</span></label><input id="transport-place" maxlength="60"></div></div>
+      <label for="transport-story">一句话故事 <span>可选</span></label><textarea id="transport-story" maxlength="300"></textarea>
+      <label for="transport-times">体验次数 <span>可选</span></label><input id="transport-times" type="number" min="0" max="9999" inputmode="numeric">
+      <div class="dialog-actions"><button class="danger-button" id="delete-custom-transport" type="button" hidden>删除自定义项</button><button class="cancel-button" type="button">取消</button><button class="primary-button" type="submit">保存图鉴</button></div>
+    </form>
+  </dialog>
+
+  <dialog class="random-dialog" id="next-dialog"><div class="random-content"><button class="random-close" type="button" aria-label="关闭">×</button><p class="eyebrow">NEXT STOP</p><span class="random-icon">🧳</span><h2 id="next-title"></h2><p id="next-note"></p><button class="primary-button" id="random-again" type="button">再抽一次</button></div></dialog>
+  <script src="./js/footprints-storage.js"></script><script src="./js/footprints.js"></script>
+</body></html>
