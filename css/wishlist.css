@@ -18,6 +18,18 @@
 .wish-stats span { padding: 9px 12px; border: 1px solid var(--line); border-radius: 999px; color: var(--muted); background: rgba(255, 254, 251, .9); font-size: 14px; }
 .wish-stats strong { color: var(--peach-dark); }
 
+.wish-tools { display: grid; grid-template-columns: minmax(220px, 1.6fr) repeat(2, minmax(150px, 1fr)); gap: 9px; margin-bottom: 16px; padding: 12px; border: 1px solid var(--line); border-radius: 18px; background: rgba(255, 254, 251, .9); }
+.wish-tools label, .wish-tools input, .wish-tools select { width: 100%; min-width: 0; }
+.wish-tools input, .wish-tools select, .wish-dialog select { min-height: 46px; padding: 9px 12px; border: 2px solid var(--line); border-radius: 12px; color: var(--ink); background: #fff; font: inherit; font-size: 15px; }
+.search-field { grid-column: span 1; }
+.filter-button, .load-more { min-height: 44px; padding: 8px 13px; border: 1px solid var(--line); border-radius: 12px; color: var(--ink); background: #fffaf5; font-weight: 700; cursor: pointer; }
+.filter-button[aria-pressed="true"] { border-color: #e5a3b0; color: #a8465b; background: #fff0f3; }
+.random-button { border-color: #e5c879; background: #fff8e5; }
+.clear-filter { color: var(--muted); }
+.filter-summary { margin: 13px 3px -5px; color: var(--muted); font-size: 13px; }
+.load-more { display: block; width: min(100%, 320px); margin: 18px auto 0; }
+.load-more[hidden] { display: none; }
+
 .wish-tabs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; padding: 6px; border: 1px solid var(--line); border-radius: 18px; background: rgba(255, 254, 251, .9); }
 .wish-tabs button { min-width: 0; min-height: 48px; padding: 9px 10px; border: 0; border-radius: 13px; color: var(--muted); background: transparent; font-weight: 800; cursor: pointer; }
 .wish-tabs button[aria-selected="true"] { color: #fff; background: var(--peach-dark); box-shadow: 0 5px 12px rgba(217, 120, 90, .2); }
@@ -29,6 +41,12 @@
 .wish-card[data-status="doing"] { border-left: 5px solid var(--yellow); }
 .wish-card[data-status="done"] { border-left: 5px solid var(--green); background: #fbfefb; }
 .wish-card h2 { margin-bottom: 9px; font-size: 20px; line-height: 1.5; overflow-wrap: anywhere; }
+.wish-card-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.wish-card-top h2 { min-width: 0; margin-top: 0; }
+.favorite-button { flex: 0 0 44px; min-height: 44px; border: 0; border-radius: 50%; color: #b09c92; background: #f8f0ea; font-size: 26px; line-height: 1; cursor: pointer; }
+.favorite-button.is-favorite { color: #d95f73; background: #fff0f3; }
+.wish-tags { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 13px; }
+.wish-tags span { max-width: 100%; padding: 5px 8px; overflow: hidden; border-radius: 999px; color: #75645c; background: #f4ede6; font-size: 11px; text-overflow: ellipsis; white-space: nowrap; }
 .wish-note { margin-bottom: 13px; color: var(--muted); font-size: 15px; line-height: 1.75; white-space: pre-wrap; overflow-wrap: anywhere; }
 .wish-meta { margin-bottom: 15px; color: #9a8b82; font-size: 13px; line-height: 1.6; }
 .wish-completed { margin: 0 0 7px; color: var(--correct); font-size: 14px; font-weight: 800; }
@@ -41,6 +59,7 @@
 
 .empty-wishes { padding: 42px 20px; border: 1px dashed #decfc1; border-radius: 21px; color: var(--muted); background: rgba(255, 254, 251, .62); text-align: center; line-height: 1.7; }
 .empty-wishes span { display: block; margin-bottom: 8px; font-size: 28px; }
+.empty-wishes p { margin: 0 0 14px; }
 .wishlist-footnote { margin: 32px 0 0; color: #9a8b82; font-size: 13px; text-align: center; }
 
 .wish-dialog { width: min(calc(100% - 28px), 540px); max-height: min(86vh, 680px); padding: 0; overflow: auto; border: 1px solid var(--line); border-radius: 24px; color: var(--ink); background: var(--paper); box-shadow: 0 24px 70px rgba(70, 50, 40, .25); }
@@ -55,10 +74,22 @@
 .wish-dialog textarea { min-height: 126px; resize: vertical; }
 .dialog-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 22px; }
 .cancel-button { min-height: 48px; padding: 0 20px; border: 1px solid var(--line); border-radius: 999px; color: var(--muted); background: #fff; font-weight: 700; cursor: pointer; }
+.random-dialog { width: min(calc(100% - 28px), 520px); padding: 0; border: 1px solid var(--line); border-radius: 24px; color: var(--ink); background: var(--paper); box-shadow: 0 24px 70px rgba(70, 50, 40, .25); }
+.random-dialog::backdrop { background: rgba(71, 61, 56, .42); backdrop-filter: blur(2px); }
+.random-content { position: relative; padding: 30px 26px 26px; text-align: center; }
+.random-content h2 { margin: 10px 25px 10px; line-height: 1.5; overflow-wrap: anywhere; }
+.random-content > p:not(.eyebrow) { color: var(--muted); line-height: 1.7; white-space: pre-wrap; }
+.random-close { position: absolute; top: 14px; right: 14px; width: 40px; height: 40px; border: 0; border-radius: 50%; color: var(--muted); background: #f5eee7; font-size: 24px; cursor: pointer; }
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
 
 @media (min-width: 760px) {
   .wish-panel { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .empty-wishes { grid-column: 1 / -1; }
+}
+
+@media (max-width: 820px) {
+  .wish-tools { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .search-field { grid-column: 1 / -1; }
 }
 
 @media (max-width: 600px) {
@@ -69,10 +100,16 @@
   .add-wish-button { width: 100%; margin-top: 18px; min-height: 52px; }
   .wish-stats { gap: 6px; }
   .wish-stats span { padding: 8px 10px; font-size: 13px; }
+  .wish-tools { grid-template-columns: 1fr 1fr; gap: 7px; padding: 9px; }
+  .wish-tools label { min-width: 0; }
+  .wish-tools input, .wish-tools select { font-size: 14px; }
+  .search-field { grid-column: 1 / -1; }
+  .clear-filter { grid-column: 1 / -1; }
   .wish-tabs { position: sticky; top: max(6px, env(safe-area-inset-top)); z-index: 5; gap: 4px; }
   .wish-tabs button { min-height: 50px; padding-inline: 4px; font-size: 14px; }
   .wish-tabs button span { min-width: 22px; height: 22px; margin-left: 2px; }
   .wish-card { padding: 18px 16px; border-radius: 18px; }
+  .wish-card-top h2 { padding-top: 5px; }
   .wish-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .wish-actions button { width: 100%; min-height: 46px; padding-inline: 8px; }
   .wish-dialog { max-height: calc(100dvh - 24px); }

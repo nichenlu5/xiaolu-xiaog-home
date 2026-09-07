@@ -1,218 +1,35 @@
 (() => {
   "use strict";
+  const STORAGE_KEY="xiaoluXiaogWishlistV1", MIGRATION_KEY="xiaoluXiaogWishlistMigrationVersion", MIGRATION_VERSION="1.7", PAGE_SIZE=60;
+  const statuses=["todo","doing","done"], legacy=window.XIAOLU_LEGACY_WISHLIST||{categories:{},items:[]};
+  const categories=Object.entries(legacy.categories||{}).map(([id,name])=>({id,name}));
+  const difficulties=[...new Set((legacy.items||[]).map(x=>x.tag).filter(Boolean))];
+  const samples=[{title:"去内蒙古学马术，在草原上真正骑一次马",note:"先学会基础马术，再去看看真正的大草原。",status:"todo"},{title:"继续建设 xiaolu-xiaog-home",note:"让这里慢慢变成真正属于我们的小家。",status:"doing"},{title:"做属于我们的旅行地图",note:"把一起去过和想去的地方都标出来。",status:"todo"}];
+  const $=selector=>document.querySelector(selector), dialog=$("#wish-dialog"), randomDialog=$("#random-dialog"), form=$("#wish-form"), titleInput=$("#wish-title"), noteInput=$("#wish-note"), categoryInput=$("#wish-category"), idInput=$("#wish-id");
+  let activeStatus="todo", favoritesOnly=false, visibleLimit=PAGE_SIZE, lastFiltered=[], items=loadAndMigrate();
 
-  const STORAGE_KEY = "xiaoluXiaogWishlistV1";
-  const statuses = ["todo", "doing", "done"];
-  const emptyCopy = {
-    todo: ["📝", "还有好多故事没写进来呢。"],
-    doing: ["🌿", "现在没有正在进行的小计划。"],
-    done: ["✨", "第一件完成的小事，会出现在这里。"]
-  };
-  const sampleItems = [
-    { title: "去内蒙古学马术，在草原上真正骑一次马", note: "先学会基础马术，再去看看真正的大草原。", status: "todo" },
-    { title: "继续建设 xiaolu-xiaog-home", note: "让这里慢慢变成真正属于我们的小家。", status: "doing" },
-    { title: "做属于我们的旅行地图", note: "把一起去过和想去的地方都标出来。", status: "todo" }
-  ];
+  function makeId(){return globalThis.crypto?.randomUUID?.()||`wish-${Date.now()}-${Math.random().toString(16).slice(2)}`}
+  function validDate(value,fallback=null){return value&&!Number.isNaN(new Date(value).getTime())?value:fallback}
+  function normalize(item){const now=new Date().toISOString(),status=statuses.includes(item.status)?item.status:"todo";return {...item,id:String(item.id||makeId()),title:String(item.title||"").trim(),note:String(item.note||""),status,createdAt:validDate(item.createdAt,now),updatedAt:validDate(item.updatedAt,item.createdAt||now),completedAt:status==="done"?validDate(item.completedAt,item.updatedAt||now):null,category:item.category==null?"":String(item.category),difficulty:String(item.difficulty||""),favorite:Boolean(item.favorite),source:item.source==="legacy"?"legacy":"custom"}}
+  function importedItems(){const at="2026-09-07T00:00:00.000Z";return (legacy.items||[]).map(x=>normalize({id:`legacy-${x.num||String(x.id).padStart(3,"0")}`,title:x.title,note:x.desc||"",status:"todo",createdAt:at,updatedAt:at,completedAt:null,category:x.category,difficulty:x.tag,favorite:false,source:"legacy"}))}
+  function readStored(){const raw=localStorage.getItem(STORAGE_KEY);if(raw===null)return null;try{const value=JSON.parse(raw);return Array.isArray(value)?value:[]}catch(error){console.warn("读取想做的事失败，保留原始存储内容。",error);return []}}
+  function save(next=items){try{localStorage.setItem(STORAGE_KEY,JSON.stringify(next));return true}catch(error){console.warn("保存想做的事失败。",error);return false}}
+  function loadAndMigrate(){let stored=readStored();if(stored===null){const now=new Date().toISOString();stored=samples.map((x,i)=>normalize({id:makeId(),...x,createdAt:new Date(Date.now()-i*1000).toISOString(),updatedAt:now,source:"custom"}))}else stored=stored.filter(x=>x&&x.title).map(normalize);if(localStorage.getItem(MIGRATION_KEY)!==MIGRATION_VERSION&&legacy.items?.length){const ids=new Set(stored.map(x=>x.id)),merged=stored.concat(importedItems().filter(x=>!ids.has(x.id)));if(save(merged)){localStorage.setItem(MIGRATION_KEY,MIGRATION_VERSION);return merged}}save(stored);return stored}
+  function localDate(iso){const date=new Date(iso);return !iso||Number.isNaN(date.getTime())?"":new Intl.DateTimeFormat("zh-CN",{year:"numeric",month:"long",day:"numeric"}).format(date)}
+  function button(label,action,className=""){const el=document.createElement("button");el.type="button";el.textContent=label;el.dataset.action=action;el.className=className;return el}
+  function categoryName(id){return legacy.categories?.[String(id)]||(id?"其他":"")}
+  function card(item){const el=document.createElement("article");el.className="wish-card";el.dataset.id=item.id;el.dataset.status=item.status;const top=document.createElement("div"),heading=document.createElement("h2"),fav=button(item.favorite?"♥":"♡","favorite",`favorite-button${item.favorite?" is-favorite":""}`);top.className="wish-card-top";heading.textContent=item.title;fav.title=item.favorite?"取消收藏":"收藏";fav.setAttribute("aria-label",fav.title);fav.setAttribute("aria-pressed",String(item.favorite));top.append(heading,fav);el.append(top);if(item.note){const note=document.createElement("p");note.className="wish-note";note.textContent=item.note;el.append(note)}if(item.category||item.difficulty){const tags=document.createElement("div");tags.className="wish-tags";[categoryName(item.category),item.difficulty].filter(Boolean).forEach(value=>{const tag=document.createElement("span");tag.textContent=value;tags.append(tag)});el.append(tags)}const meta=document.createElement("p");meta.className=item.status==="done"?"wish-completed":"wish-meta";meta.textContent=item.status==="done"&&item.completedAt?`✅ ${localDate(item.completedAt)}完成`:`${localDate(item.createdAt)}写下`;el.append(meta);const actions=document.createElement("div");actions.className="wish-actions";if(item.status==="todo")actions.append(button("开始做","doing","status-action"));if(item.status==="doing")actions.append(button("完成啦","done","status-action"),button("放回想做","todo"));if(item.status==="done")actions.append(button("继续做","doing","status-action"));actions.append(button("✏️ 编辑","edit"),button("删除","delete","delete-action"));el.append(actions);return el}
+  function matches(item){const q=$("#wish-search").value.trim().toLocaleLowerCase("zh-CN"),cat=$("#category-filter").value,diff=$("#difficulty-filter").value,hay=`${item.title} ${item.note} ${categoryName(item.category)} ${item.difficulty}`.toLocaleLowerCase("zh-CN");return item.status===activeStatus&&(!q||hay.includes(q))&&(!cat||item.category===cat)&&(!diff||item.difficulty===diff)&&(!favoritesOnly||item.favorite)}
+  function render(){const counts=Object.fromEntries(statuses.map(status=>[status,items.filter(x=>x.status===status).length]));$("#total-count").textContent=items.length;$("#favorite-count").textContent=items.filter(x=>x.favorite).length;$("#doing-count").textContent=counts.doing;$("#done-count").textContent=counts.done;statuses.forEach(status=>$(`#tab-count-${status}`).textContent=counts[status]);const panel=$(`[data-panel="${activeStatus}"]`);panel.replaceChildren();lastFiltered=items.filter(matches).sort((a,b)=>new Date((activeStatus==="done"?b.completedAt:b.updatedAt)||0)-new Date((activeStatus==="done"?a.completedAt:a.updatedAt)||0));$("#filter-summary").textContent=`当前找到 ${lastFiltered.length} 条`;if(!lastFiltered.length){const empty=document.createElement("div"),icon=document.createElement("span"),text=document.createElement("p");empty.className="empty-wishes";icon.textContent=activeStatus==="doing"?"🌻":activeStatus==="done"?"✅":"📝";icon.setAttribute("aria-hidden","true");text.textContent="这里暂时没有符合条件的愿望。";empty.append(icon,text,button("清除筛选","clear-filters","filter-button"));panel.append(empty)}else{const frag=document.createDocumentFragment();lastFiltered.slice(0,visibleLimit).forEach(x=>frag.append(card(x)));panel.append(frag)}const more=$("#load-more");more.hidden=lastFiltered.length<=visibleLimit;more.textContent=`加载更多（还有 ${Math.max(0,lastFiltered.length-visibleLimit)} 条）`}
+  function selectTab(status,focus=false){activeStatus=status;visibleLimit=PAGE_SIZE;document.querySelectorAll("[role=tab]").forEach(tab=>{const selected=tab.dataset.status===status;tab.setAttribute("aria-selected",String(selected));tab.tabIndex=selected?0:-1;if(selected&&focus)tab.focus()});document.querySelectorAll("[data-panel]").forEach(panel=>panel.hidden=panel.dataset.panel!==status);render()}
+  function openForm(item=null){form.reset();idInput.value=item?.id||"";titleInput.value=item?.title||"";noteInput.value=item?.note||"";categoryInput.value=item?.category||"";$("#dialog-title").textContent=item?"编辑这件想做的事":"写下一件想做的事";dialog.showModal();requestAnimationFrame(()=>titleInput.focus())}
+  function resetFilters(){$("#wish-search").value="";$("#category-filter").value="";$("#difficulty-filter").value="";favoritesOnly=false;$("#favorite-filter").setAttribute("aria-pressed","false");$("#favorite-filter").textContent="♡ 只看收藏";visibleLimit=PAGE_SIZE;render()}
+  function randomOne(){if(!lastFiltered.length){$("#random-title").textContent="暂时抽不到愿望";$("#random-note").textContent="当前筛选条件下没有愿望，清除筛选后再试试吧。";randomDialog.showModal();return}const item=lastFiltered[Math.floor(Math.random()*lastFiltered.length)];$("#random-title").textContent=item.title;$("#random-note").textContent=item.note||[categoryName(item.category),item.difficulty].filter(Boolean).join(" · ");randomDialog.showModal()}
 
-  const dialog = document.querySelector("#wish-dialog");
-  const form = document.querySelector("#wish-form");
-  const titleInput = document.querySelector("#wish-title");
-  const noteInput = document.querySelector("#wish-note");
-  const idInput = document.querySelector("#wish-id");
-  const dialogTitle = document.querySelector("#dialog-title");
-  let activeStatus = "todo";
-  let items = loadItems();
-
-  function makeId() {
-    return globalThis.crypto?.randomUUID?.() || `wish-${Date.now()}-${Math.random().toString(16).slice(2)}`;
-  }
-
-  function loadItems() {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored === null) {
-      const now = new Date().toISOString();
-      const seeded = sampleItems.map((item, index) => ({
-        id: makeId(), ...item, createdAt: new Date(Date.now() - index * 1000).toISOString(), updatedAt: now, completedAt: null
-      }));
-      saveItems(seeded);
-      return seeded;
-    }
-    try {
-      const parsed = JSON.parse(stored);
-      return Array.isArray(parsed) ? parsed.filter(item => item && statuses.includes(item.status)) : [];
-    } catch (error) {
-      console.warn("读取想做的事失败：", error);
-      return [];
-    }
-  }
-
-  function saveItems(nextItems = items) {
-    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(nextItems)); }
-    catch (error) { console.warn("保存想做的事失败：", error); }
-  }
-
-  function localDate(iso) {
-    if (!iso) return "";
-    const date = new Date(iso);
-    if (Number.isNaN(date.getTime())) return "";
-    const digits = "〇一二三四五六七八九";
-    const year = String(date.getFullYear()).replace(/\d/g, digit => digits[Number(digit)]);
-    const chineseNumber = value => value < 10 ? digits[value] : value === 10 ? "十" : value < 20 ? `十${digits[value - 10]}` : `${digits[Math.floor(value / 10)]}十${value % 10 ? digits[value % 10] : ""}`;
-    return `${year}年${chineseNumber(date.getMonth() + 1)}月${chineseNumber(date.getDate())}日`;
-  }
-
-  function createButton(label, action, className = "") {
-    const button = document.createElement("button");
-    button.type = "button";
-    button.textContent = label;
-    button.dataset.action = action;
-    button.className = className;
-    return button;
-  }
-
-  function createCard(item) {
-    const card = document.createElement("article");
-    card.className = "wish-card";
-    card.dataset.id = item.id;
-    card.dataset.status = item.status;
-
-    const heading = document.createElement("h2");
-    heading.textContent = item.title;
-    card.append(heading);
-
-    if (item.note) {
-      const note = document.createElement("p");
-      note.className = "wish-note";
-      note.textContent = item.note;
-      card.append(note);
-    }
-
-    if (item.status === "done" && item.completedAt) {
-      const completed = document.createElement("p");
-      completed.className = "wish-completed";
-      completed.textContent = `✅ ${localDate(item.completedAt)}完成`;
-      const celebration = document.createElement("p");
-      celebration.className = "wish-celebration";
-      celebration.textContent = "又一起实现了一件小事。";
-      card.append(completed, celebration);
-    } else {
-      const meta = document.createElement("p");
-      meta.className = "wish-meta";
-      meta.textContent = `${localDate(item.createdAt)}写下`;
-      card.append(meta);
-    }
-
-    const actions = document.createElement("div");
-    actions.className = "wish-actions";
-    if (item.status === "todo") actions.append(createButton("开始做", "doing", "status-action"));
-    if (item.status === "doing") actions.append(createButton("完成啦", "done", "status-action"), createButton("放回想做", "todo"));
-    if (item.status === "done") actions.append(createButton("继续做", "doing", "status-action"));
-    actions.append(createButton("✏️ 编辑", "edit"), createButton("删除", "delete", "delete-action"));
-    card.append(actions);
-    return card;
-  }
-
-  function render() {
-    const counts = Object.fromEntries(statuses.map(status => [status, items.filter(item => item.status === status).length]));
-    document.querySelector("#total-count").textContent = items.length;
-    document.querySelector("#doing-count").textContent = counts.doing;
-    document.querySelector("#done-count").textContent = counts.done;
-    statuses.forEach(status => {
-      document.querySelector(`#tab-count-${status}`).textContent = counts[status];
-      const panel = document.querySelector(`[data-panel="${status}"]`);
-      panel.replaceChildren();
-      const matching = items.filter(item => item.status === status).sort((a, b) => {
-        const aDate = status === "done" ? a.completedAt : a.updatedAt;
-        const bDate = status === "done" ? b.completedAt : b.updatedAt;
-        return new Date(bDate || 0) - new Date(aDate || 0);
-      });
-      if (!matching.length) {
-        const empty = document.createElement("div");
-        empty.className = "empty-wishes";
-        const icon = document.createElement("span");
-        icon.setAttribute("aria-hidden", "true");
-        icon.textContent = emptyCopy[status][0];
-        empty.append(icon, document.createTextNode(emptyCopy[status][1]));
-        panel.append(empty);
-      } else matching.forEach(item => panel.append(createCard(item)));
-    });
-  }
-
-  function selectTab(status, focus = false) {
-    activeStatus = status;
-    document.querySelectorAll("[role=tab]").forEach(tab => {
-      const selected = tab.dataset.status === status;
-      tab.setAttribute("aria-selected", selected);
-      tab.tabIndex = selected ? 0 : -1;
-      if (selected && focus) tab.focus();
-    });
-    document.querySelectorAll("[data-panel]").forEach(panel => { panel.hidden = panel.dataset.panel !== status; });
-  }
-
-  function openForm(item = null) {
-    form.reset();
-    idInput.value = item?.id || "";
-    titleInput.value = item?.title || "";
-    noteInput.value = item?.note || "";
-    dialogTitle.textContent = item ? "编辑这件想做的事" : "写下一件想做的事";
-    dialog.showModal();
-    requestAnimationFrame(() => titleInput.focus());
-  }
-
-  document.querySelector("#add-wish").addEventListener("click", () => openForm());
-  document.querySelectorAll(".dialog-close, .cancel-button").forEach(button => button.addEventListener("click", () => dialog.close()));
-  dialog.addEventListener("click", event => { if (event.target === dialog) dialog.close(); });
-
-  form.addEventListener("submit", event => {
-    event.preventDefault();
-    const title = titleInput.value.trim();
-    if (!title) { titleInput.setCustomValidity("请写下这件想做的事。"); titleInput.reportValidity(); return; }
-    titleInput.setCustomValidity("");
-    const note = noteInput.value.trim();
-    const now = new Date().toISOString();
-    if (idInput.value) {
-      const item = items.find(wish => wish.id === idInput.value);
-      if (item) Object.assign(item, { title, note, updatedAt: now });
-    } else {
-      items.unshift({ id: makeId(), title, note, status: "todo", createdAt: now, updatedAt: now, completedAt: null });
-      selectTab("todo");
-    }
-    saveItems();
-    render();
-    dialog.close();
-  });
-  titleInput.addEventListener("input", () => titleInput.setCustomValidity(""));
-
-  document.querySelector(".wishlist-shell").addEventListener("click", event => {
-    const tab = event.target.closest("[role=tab]");
-    if (tab) { selectTab(tab.dataset.status); return; }
-    const button = event.target.closest("[data-action]");
-    if (!button) return;
-    const card = button.closest(".wish-card");
-    const item = items.find(wish => wish.id === card?.dataset.id);
-    if (!item) return;
-    const action = button.dataset.action;
-    if (action === "edit") { openForm(item); return; }
-    if (action === "delete") {
-      if (!confirm("确定要删掉这件事吗？")) return;
-      items = items.filter(wish => wish.id !== item.id);
-    } else if (statuses.includes(action)) {
-      item.status = action;
-      item.updatedAt = new Date().toISOString();
-      item.completedAt = action === "done" ? item.updatedAt : null;
-    }
-    saveItems();
-    render();
-  });
-
-  document.querySelector(".wish-tabs").addEventListener("keydown", event => {
-    if (!["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) return;
-    event.preventDefault();
-    const current = statuses.indexOf(activeStatus);
-    const next = event.key === "Home" ? 0 : event.key === "End" ? statuses.length - 1 : (current + (event.key === "ArrowRight" ? 1 : -1) + statuses.length) % statuses.length;
-    selectTab(statuses[next], true);
-  });
-
-  render();
-  selectTab(activeStatus);
+  categories.forEach(category=>[$("#category-filter"),categoryInput].forEach(select=>{const option=document.createElement("option");option.value=category.id;option.textContent=category.name;select.append(option)}));difficulties.forEach(value=>{const option=document.createElement("option");option.value=value;option.textContent=value;$("#difficulty-filter").append(option)});
+  $("#add-wish").addEventListener("click",()=>openForm());document.querySelectorAll(".dialog-close,.cancel-button").forEach(x=>x.addEventListener("click",()=>dialog.close()));dialog.addEventListener("click",e=>{if(e.target===dialog)dialog.close()});$(".random-close").addEventListener("click",()=>randomDialog.close());randomDialog.addEventListener("click",e=>{if(e.target===randomDialog)randomDialog.close()});$("#random-again").addEventListener("click",randomOne);
+  form.addEventListener("submit",e=>{e.preventDefault();const title=titleInput.value.trim();if(!title){titleInput.setCustomValidity("请写下这件想做的事。");titleInput.reportValidity();return}titleInput.setCustomValidity("");const now=new Date().toISOString(),values={title,note:noteInput.value.trim(),category:categoryInput.value,updatedAt:now};if(idInput.value){const item=items.find(x=>x.id===idInput.value);if(item)Object.assign(item,values)}else{items.unshift(normalize({id:makeId(),...values,status:"todo",createdAt:now,difficulty:"",favorite:false,source:"custom"}));activeStatus="todo"}save();selectTab(activeStatus);dialog.close()});titleInput.addEventListener("input",()=>titleInput.setCustomValidity(""));
+  $("#wish-search").addEventListener("input",()=>{visibleLimit=PAGE_SIZE;render()});["category-filter","difficulty-filter"].forEach(id=>$(`#${id}`).addEventListener("change",()=>{visibleLimit=PAGE_SIZE;render()}));$("#favorite-filter").addEventListener("click",e=>{favoritesOnly=!favoritesOnly;e.currentTarget.setAttribute("aria-pressed",String(favoritesOnly));e.currentTarget.textContent=favoritesOnly?"♥ 正在看收藏":"♡ 只看收藏";visibleLimit=PAGE_SIZE;render()});$("#clear-filters").addEventListener("click",resetFilters);$("#random-wish").addEventListener("click",randomOne);$("#load-more").addEventListener("click",()=>{visibleLimit+=PAGE_SIZE;render()});
+  $(".wishlist-shell").addEventListener("click",e=>{const tab=e.target.closest("[role=tab]");if(tab){selectTab(tab.dataset.status);return}const control=e.target.closest("[data-action]");if(!control)return;if(control.dataset.action==="clear-filters"){resetFilters();return}const item=items.find(x=>x.id===control.closest(".wish-card")?.dataset.id);if(!item)return;const action=control.dataset.action;if(action==="edit"){openForm(item);return}if(action==="delete"){if(!confirm("确定要删掉这件事吗？"))return;items=items.filter(x=>x.id!==item.id)}else if(action==="favorite")item.favorite=!item.favorite;else if(statuses.includes(action)){item.status=action;item.updatedAt=new Date().toISOString();item.completedAt=action==="done"?item.updatedAt:null}save();render()});
+  $(".wish-tabs").addEventListener("keydown",e=>{if(!["ArrowLeft","ArrowRight","Home","End"].includes(e.key))return;e.preventDefault();const current=statuses.indexOf(activeStatus),next=e.key==="Home"?0:e.key==="End"?statuses.length-1:(current+(e.key==="ArrowRight"?1:-1)+statuses.length)%statuses.length;selectTab(statuses[next],true)});selectTab(activeStatus);
 })();

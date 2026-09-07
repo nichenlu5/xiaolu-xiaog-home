@@ -23,14 +23,22 @@ try {
   for (const width of [360, 375, 390, 412, 430, 768, 1024]) for (const page of pages) { await open(page, width); const sizes = await evaluate("({scroll:document.documentElement.scrollWidth,client:document.documentElement.clientWidth})"); await assert(sizes.scroll <= sizes.client, `${page} overflows at ${width}px: ${sizes.scroll}/${sizes.client}`); }
 
   await open("wishlist.html", 390);
-  await assert(await evaluate("JSON.parse(localStorage.getItem('xiaoluXiaogWishlistV1')).length === 3"), "wishlist did not initialize exactly once");
-  await assert(await evaluate("document.querySelector('#tab-count-todo').textContent === '2' && document.querySelector('#tab-count-doing').textContent === '1' && document.querySelector('#tab-count-done').textContent === '0'"), "wishlist initial counts are incorrect");
+  await assert(await evaluate("Array.isArray(window.XIAOLU_LEGACY_WISHLIST.items) && window.XIAOLU_LEGACY_WISHLIST.items.length === 450"), "legacy payload is not a 450-item array");
+  await evaluate(`localStorage.removeItem('xiaoluXiaogWishlistMigrationVersion');localStorage.setItem('xiaoluXiaogWishlistV1',JSON.stringify([{id:'v16-kept',title:'v1.6 保留测试',note:'不能被覆盖',status:'doing',createdAt:'2026-09-01T00:00:00.000Z',updatedAt:'2026-09-01T00:00:00.000Z',completedAt:null}]))`);
+  await open("wishlist.html", 390);
+  await assert(await evaluate("JSON.parse(localStorage.getItem('xiaoluXiaogWishlistV1')).length === 451"), "v1.7 migration count is incorrect");
+  await assert(await evaluate("JSON.parse(localStorage.getItem('xiaoluXiaogWishlistV1')).some(x=>x.id==='v16-kept'&&x.source==='custom')"), "v1.6 item was not preserved");
+  await assert(await evaluate("JSON.parse(localStorage.getItem('xiaoluXiaogWishlistV1')).filter(x=>x.source==='legacy').length === 450 && new Set(JSON.parse(localStorage.getItem('xiaoluXiaogWishlistV1')).map(x=>x.id)).size===451"), "legacy data or stable IDs are incorrect");
+  await open("wishlist.html", 390);
+  await assert(await evaluate("JSON.parse(localStorage.getItem('xiaoluXiaogWishlistV1')).length === 451"), "legacy wishes were imported twice");
+  await assert(await evaluate("document.querySelectorAll('#category-filter option').length === 22 && document.querySelectorAll('#difficulty-filter option').length === 5"), "legacy filters are incomplete");
+  await assert(await evaluate("document.querySelectorAll('#panel-todo .wish-card').length === 60"), "large wishlist was not batch-rendered");
   await evaluate("localStorage.setItem('xiaoluLegacySentinel', 'keep-me')");
   await click("#add-wish");
   await evaluate(`document.querySelector('#wish-title').value='一起看一次海上日出'; document.querySelector('#wish-note').value='带上热饮，慢慢等天亮。'`);
   await click("#wish-form button[type=submit]");
   await assert(await evaluate("JSON.parse(localStorage.getItem('xiaoluXiaogWishlistV1')).some(item => item.title === '一起看一次海上日出')"), "wishlist item was not saved");
-  await assert(await evaluate("document.querySelector('#total-count').textContent === '4' && document.querySelector('#tab-count-todo').textContent === '3'"), "wishlist counts did not update after adding");
+  await assert(await evaluate("document.querySelector('#total-count').textContent === '452' && document.querySelector('#tab-count-todo').textContent === '451'"), "wishlist counts did not update after adding");
   await open("wishlist.html", 390);
   await assert(await evaluate("document.querySelector('.wish-card h2').textContent === '一起看一次海上日出'"), "wishlist item did not persist after refresh");
   await click(".wish-card [data-action=edit]");
@@ -53,6 +61,25 @@ try {
   await evaluate("window.confirm=()=>true");
   await click("#panel-doing .wish-card [data-action=delete]");
   await assert(await evaluate("!JSON.parse(localStorage.getItem('xiaoluXiaogWishlistV1')).some(item => item.title === '一起看一次海边日出')"), "confirmed deletion failed");
+  await click("#tab-todo");
+  await evaluate(`document.querySelector('#wish-search').value='早安';document.querySelector('#wish-search').dispatchEvent(new Event('input',{bubbles:true}))`);
+  await assert(await evaluate("document.querySelector('#filter-summary').textContent === '当前找到 2 条'"), "search failed");
+  await click("#panel-todo .wish-card [data-action=favorite]");
+  await assert(await evaluate("JSON.parse(localStorage.getItem('xiaoluXiaogWishlistV1')).find(x=>x.id==='legacy-001').favorite === true && document.querySelector('#favorite-count').textContent === '1'"), "favorite persistence or count failed");
+  await click("#favorite-filter");
+  await assert(await evaluate("document.querySelectorAll('#panel-todo .wish-card').length === 1"), "favorite combined filter failed");
+  await click("#random-wish");
+  await assert(await evaluate("document.querySelector('#random-dialog').open && document.querySelector('#random-title').textContent === '早安'"), "random draw did not use filtered results");
+  await click(".random-close");
+  await click("#clear-filters");
+  await evaluate(`document.querySelector('#category-filter').value='21';document.querySelector('#category-filter').dispatchEvent(new Event('change',{bubbles:true}));document.querySelector('#difficulty-filter').value='候选脑洞';document.querySelector('#difficulty-filter').dispatchEvent(new Event('change',{bubbles:true}))`);
+  await assert(await evaluate("document.querySelector('#filter-summary').textContent === '当前找到 50 条'"), "category and difficulty combination failed");
+  await evaluate(`document.querySelector('#wish-search').value='绝对不存在的愿望';document.querySelector('#wish-search').dispatchEvent(new Event('input',{bubbles:true}))`);
+  await assert(await evaluate("document.querySelector('.empty-wishes')?.textContent.includes('这里暂时没有符合条件的愿望')"), "zero-results state failed");
+  await click("#random-wish");
+  await assert(await evaluate("document.querySelector('#random-dialog').open && document.querySelector('#random-title').textContent === '暂时抽不到愿望'"), "zero-results random draw feedback failed");
+  await click(".random-close");
+  await click(".empty-wishes [data-action=clear-filters]");
   await assert(await evaluate("localStorage.getItem('xiaoluLegacySentinel') === 'keep-me'"), "wishlist changed unrelated localStorage data");
   console.log("PASS wishlist and responsive layouts");
 
