@@ -133,7 +133,8 @@ p {
 }
 
 .room-card.wishlist-room { background: #f1f8f2; }
-.room-card.footprints-room { grid-column: 1 / -1; background: #f3f7fb; }
+.room-card.study-room { background: #fff5e8; }
+.room-card.footprints-room { background: #f3f7fb; }
 .room-card:hover { border-color: var(--peach); box-shadow: 0 10px 24px rgba(110, 78, 57, 0.1); transform: translateY(-2px); }
 .room-card:focus-visible, .room-shortcut:focus-visible { outline: 3px solid rgba(217, 120, 90, 0.3); outline-offset: 3px; }
 .room-icon { font-size: 29px; }

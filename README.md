@@ -6,6 +6,10 @@
 
 ## 已经实现
 
+### 📖 一起学习 · 一起背单词（v2.0）
+
+内置考研必考词汇、考研完整词汇、CET-6、CET-4 四本离线词书，支持独立进度切换、每日 50 个有效新词、英→中与中→英双轮学习、太简单跳过补位、错词本与复习、断点恢复、学习记录、学习成就以及 JSON 导入导出。词书由 [WordTyper Vocabularies](https://github.com/grhliu/wordtyper-vocabularies) / [ECDICT](https://github.com/skywind3000/ECDICT) 的 MIT 数据在开发阶段一次性转换，详细归属见 `data/wordbooks/NOTICE.md`；页面运行时只读取本站静态 JSON。
+
 ### 🧭 我们的足迹（v1.9）
 
 用旅行地图手账记录已去过、想去和有特别回忆的地点；用交通工具图鉴保存第一次体验、故事与次数，并自动点亮交通成就。足迹数据使用独立、版本化的浏览器本地存档。

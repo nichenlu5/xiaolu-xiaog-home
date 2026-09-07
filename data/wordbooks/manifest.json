@@ -1,0 +1,38 @@
+[
+  {
+    "bookId": "kaoyan-required",
+    "name": "考研必考词汇",
+    "source": "https://github.com/grhliu/wordtyper-vocabularies",
+    "upstream": "https://github.com/skywind3000/ECDICT",
+    "license": "MIT",
+    "totalWords": 2291,
+    "file": "./data/wordbooks/kaoyan-required.json"
+  },
+  {
+    "bookId": "kaoyan-complete",
+    "name": "考研完整词汇",
+    "source": "https://github.com/grhliu/wordtyper-vocabularies",
+    "upstream": "https://github.com/skywind3000/ECDICT",
+    "license": "MIT",
+    "totalWords": 4787,
+    "file": "./data/wordbooks/kaoyan-complete.json"
+  },
+  {
+    "bookId": "cet6",
+    "name": "CET-6",
+    "source": "https://github.com/grhliu/wordtyper-vocabularies",
+    "upstream": "https://github.com/skywind3000/ECDICT",
+    "license": "MIT",
+    "totalWords": 5371,
+    "file": "./data/wordbooks/cet6.json"
+  },
+  {
+    "bookId": "cet4",
+    "name": "CET-4",
+    "source": "https://github.com/grhliu/wordtyper-vocabularies",
+    "upstream": "https://github.com/skywind3000/ECDICT",
+    "license": "MIT",
+    "totalWords": 3815,
+    "file": "./data/wordbooks/cet4.json"
+  }
+]
