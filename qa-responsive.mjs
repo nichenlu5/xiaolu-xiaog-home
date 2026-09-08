@@ -21,7 +21,7 @@ async function click(selector) { await evaluate(`document.querySelector(${JSON.s
 
 try {
   await connect(); await send("Page.enable"); await send("Runtime.enable");
-  const pages = ["index.html", "wishlist.html", "footprints.html", "exercise.html", "timeline.html", "notes.html", "game-hall.html", "game.html", "lyrics.html", "timer.html", "sync.html", "memory.html", "world.html", "province.html", "literature.html", "pi-memory.html", "clue-guess.html", "speed-quiz.html", "achievements.html"];
+  const pages = ["index.html", "wishlist.html", "footprints.html", "exercise.html", "timeline.html", "notes.html", "data-center.html", "game-hall.html", "game.html", "lyrics.html", "timer.html", "sync.html", "memory.html", "world.html", "province.html", "literature.html", "pi-memory.html", "clue-guess.html", "speed-quiz.html", "achievements.html"];
   for (const width of [320, 360, 375, 390, 412, 430, 768, 1024]) for (const page of pages) { await open(page, width); const sizes = await evaluate("({scroll:document.documentElement.scrollWidth,client:document.documentElement.clientWidth})"); await assert(sizes.scroll <= sizes.client, `${page} overflows at ${width}px: ${sizes.scroll}/${sizes.client}`); }
 
   await open("wishlist.html", 390);
@@ -111,7 +111,7 @@ try {
   await open("game.html",390);await click('#solo-mode');for(let i=0;i<10;i++){await click('#options .option-button');await click('#next-button')}await assert(await evaluate("!document.querySelector('#result-area').hidden"),"knowledge quiz solo did not finish");
   await open("sync.html",390);for(let i=0;i<10;i++){await click('#options .arcade-option');await click('#g-options button');await click('#next')}await assert(await evaluate("!document.querySelector('#result').hidden"),"sync challenge did not finish");
   console.log("PASS knowledge quiz and sync regression");
-  await open("achievements.html", 390); await assert(await evaluate("document.querySelectorAll('.achievement-card').length === 22"), "achievement count mismatch"); await assert(await evaluate("document.querySelectorAll('.achievement-card.unlocked').length > 0"), "achievement unlock logic did not recognize history");
+  await open("achievements.html", 390); await assert(await evaluate("document.querySelectorAll('.achievement-card').length === 35"), "achievement count mismatch"); await assert(await evaluate("document.querySelectorAll('.achievement-card.unlocked').length > 0"), "achievement unlock logic did not recognize history");
   await open("footprints.html",320);await evaluate("localStorage.removeItem('xiaoluXiaogTravelV1');localStorage.removeItem('xiaoluXiaogTransportV1');localStorage.setItem('v19Sentinel','keep-me')");await open("footprints.html",320);
   await assert(await evaluate("document.querySelector('.empty-footprint')?.textContent.includes('地图还是空白')"),"travel empty state failed");await click('#add-place');await evaluate("document.querySelector('#place-name').value='杭州';document.querySelector('#place-status').value='wanted';document.querySelector('#place-memory').value='一起去看西湖的晚风';document.querySelector('#place-tags').value='湖边，下一站';document.querySelector('#place-form').requestSubmit()");
   await assert(await evaluate("JSON.parse(localStorage.getItem('xiaoluXiaogTravelV1')).records[0].name==='杭州'&&document.querySelector('#wanted-count').textContent==='1'"),"travel add or stats failed");await open("footprints.html",320);await assert(await evaluate("document.querySelector('.place-card h3').textContent==='杭州'"),"travel persistence failed");
@@ -149,5 +149,5 @@ try {
   await assert(await evaluate("!document.querySelector('#speed-result').hidden && document.querySelector('#speed-result').textContent.includes('超时 1')"),"speed 20-question result failed");await open("speed-quiz.html",430);await assert(await evaluate("document.querySelector('#speed-record').textContent.includes('历史最高')&&localStorage.getItem('xiaoluXiaogSpeedQuizV1')"),"speed record persistence failed");
   console.log("PASS speed quiz: countdown, auto-next, timeout, combo, result, persistence");
   await open("game-hall.html",390);await assert(await evaluate("document.querySelectorAll('.game-grid .game-tile').length===11"),"game hall does not have 11 entries");
-  console.log(`PASS responsive: ${pages.length} pages × 8 viewports; 11 game entries; wishlist regression; 7 original games; 22 achievements; v1.8 games; v1.9 footprints; v2.2 life modules`);
+  console.log(`PASS responsive: ${pages.length} pages × 8 viewports; 11 game entries; wishlist regression; 7 original games; 35 achievements; v2.3 data center and life links`);
 } finally { proc.kill(); server.close(); }

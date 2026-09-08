@@ -97,7 +97,8 @@ body { overflow-x: hidden; }
 .achievement-card.locked { opacity: .54; filter: grayscale(.55); }
 .achievement-card.unlocked { border-color: #e5c879; background: #fffaf0; }
 .achievement-icon { font-size: 31px; line-height: 1.2; }
-.achievement-card h2 { margin: 1px 0 6px; font-size: 19px; }
+.achievement-card h2,.achievement-card h3 { margin: 1px 0 6px; font-size: 19px; }
+.achievement-category { grid-column: 1 / -1; margin: 16px 2px 0; font-size: 21px; }
 .achievement-card p { margin: 0 0 8px; color: var(--muted); font-size: 15px; line-height: 1.55; }
 .achievement-card small { color: var(--peach-dark); font-weight: 700; }
 .result-panel { padding: 25px 10px; text-align: center; }

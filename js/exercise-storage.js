@@ -5,7 +5,7 @@
 })(typeof globalThis === "object" ? globalThis : window, () => {
   "use strict";
   const KEY = "xiaoluXiaogExerciseV1";
-  const SCHEMA_VERSION = 1;
+  const SCHEMA_VERSION = 2;
   const TYPES = ["臀腿", "上肢", "核心", "体态", "有氧", "拉伸", "休息"];
   const STATUSES = ["planned", "completed", "rest"];
   const text = (value, max = 500) => (typeof value === "string" || typeof value === "number" ? String(value).trim().slice(0, max) : "");
@@ -20,6 +20,7 @@
       sets: integer(input.sets, 100), reps: integer(input.reps, 10000), durationMinutes: integer(input.durationMinutes, 1440),
       status, feeling: text(input.feeling, 40), note: text(input.note, 1000),
       posturePhotoRefs: Array.isArray(input.posturePhotoRefs) ? input.posturePhotoRefs.filter(x => typeof x === "string").map(x => text(x, 500)).filter(Boolean).slice(0, 20) : [],
+      links: { memoryIds: Array.isArray(input.links?.memoryIds) ? input.links.memoryIds.map(x=>text(x,100)).filter(Boolean).slice(0,50) : [] },
       createdAt: text(input.createdAt, 40) || new Date().toISOString(), updatedAt: text(input.updatedAt, 40) || new Date().toISOString()
     };
   }

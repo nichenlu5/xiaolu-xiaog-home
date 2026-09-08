@@ -34,7 +34,7 @@
 .empty-state span { display: block; margin-bottom: 8px; font-size: 34px; }
 .life-dialog { width: min(calc(100% - 24px), 620px); max-height: min(88vh,800px); padding: 0; border: 0; border-radius: 22px; color: var(--ink); background: var(--paper); box-shadow: var(--shadow); }
 .life-dialog::backdrop { background: rgba(55,42,35,.42); }
-.life-dialog form { display: grid; gap: 11px; padding: 24px; overflow: auto; }
+.life-dialog form { display: grid; max-height: min(88dvh,800px); gap: 11px; padding: 24px; overflow: auto; scroll-padding-bottom: 72px; }
 .life-dialog label { font-size: 14px; font-weight: 700; }
 .life-dialog label span { color: var(--muted); font-size: 12px; font-weight: 400; }
 .life-dialog input, .life-dialog select, .life-dialog textarea { width: 100%; min-height: 44px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 11px; color: var(--ink); background: #fff; font: inherit; }
@@ -42,7 +42,7 @@
 .dialog-heading, .dialog-actions { display: flex; gap: 12px; align-items: center; justify-content: space-between; }
 .dialog-heading h2 { margin: 0; }
 .dialog-close { width: 44px; height: 44px; border: 0; border-radius: 50%; color: var(--muted); background: #f7f0ea; font-size: 25px; cursor: pointer; }
-.dialog-actions { justify-content: flex-end; margin-top: 8px; }
+.dialog-actions { position: sticky; bottom: -1px; justify-content: flex-end; margin-top: 8px; padding-top: 9px; background: linear-gradient(transparent,#fffefb 24%); }
 .form-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 12px; }
 .type-bars { display: grid; gap: 8px; margin-top: 14px; }
 .type-bar { display: grid; grid-template-columns: 58px 1fr 28px; gap: 9px; align-items: center; font-size: 13px; }
@@ -52,6 +52,7 @@
 .timeline-list .record-card { position: relative; }
 .timeline-list .record-card::before { position: absolute; top: 22px; left: -23px; width: 12px; height: 12px; border: 3px solid #fffaf1; border-radius: 50%; background: var(--peach-dark); content: ""; }
 .memory-image-link { display: inline-block; margin-top: 10px; color: var(--peach-dark); }
+.save-toast { position: fixed; z-index: 50; right: 16px; bottom: max(18px,env(safe-area-inset-bottom)); max-width: min(calc(100% - 32px),360px); padding: 11px 15px; border-radius: 13px; color: #fff; background: #4f7f5f; box-shadow: 0 9px 26px rgba(50,70,55,.22); font-size: 14px; }
 @media (max-width:600px) {
   .life-shell { width: calc(100% - 24px); padding-top: 12px; }
   .life-hero { display: block; padding: 23px 19px; border-radius: 20px; }

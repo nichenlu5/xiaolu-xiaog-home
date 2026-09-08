@@ -6,12 +6,14 @@
     {"id":"exercise","name":"一起运动","kind":"internal","route":"./exercise.html","status":"active"},
     {"id":"memory-timeline","name":"回忆时间线","kind":"internal","route":"./timeline.html","status":"active"},
     {"id":"notes","name":"笔记","kind":"internal","route":"./notes.html","status":"active"},
+    {"id":"data-center","name":"数据备份与恢复","kind":"internal","route":"./data-center.html","status":"active"},
     {"id":"embedded-lab","name":"嵌入式实验室","kind":"external-repository","repository":"xiaolu-embedded-lab","status":"independent"},
     {"id":"career-radar","name":"职业雷达","kind":"external-repository","repository":"xiaolu-career-radar","status":"independent"},
     {"id":"ai-hub","name":"AI Hub","kind":"external-repository","repository":"xiaolu-ai-hub","status":"independent"},
     {"id":"research-toolkit","name":"科研工具箱","kind":"external-repository","repository":"xiaolu-research-toolkit","status":"independent"}
   ],
   "capabilities": {
+    "localBackup": "active",
     "eventBus": "reserved",
     "permissionCenter": "reserved",
     "memoryCore": "reserved",

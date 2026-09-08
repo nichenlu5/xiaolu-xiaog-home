@@ -114,6 +114,7 @@
   .wish-actions button { width: 100%; min-height: 46px; padding-inline: 8px; }
   .wish-dialog { max-height: calc(100dvh - 24px); }
   .wish-dialog form { padding: 20px 17px max(20px, env(safe-area-inset-bottom)); }
+  .dialog-actions { position: sticky; bottom: 0; padding-top: 9px; background: var(--paper); }
   .dialog-actions > * { flex: 1; }
 }
 
