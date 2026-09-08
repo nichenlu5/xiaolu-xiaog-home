@@ -1,6 +1,6 @@
 # 词库来源与许可证
 
-本目录的四本静态词库由 [WordTyper Vocabularies](https://github.com/grhliu/wordtyper-vocabularies) 的对应 JSON 在开发阶段一次性转换生成。该项目说明其数据由 [ECDICT](https://github.com/skywind3000/ECDICT) 按考试大纲标签与客观词频字段派生，采用 MIT License。
+本目录的四本静态词库由 [WordTyper Vocabularies](https://github.com/grhliu/wordtyper-vocabularies) 的对应 JSON 在开发阶段一次性转换生成。v2.1 的主词书为考研完整词汇与 CET-6；考研必考词汇和 CET-4 文件继续保留，仅用于兼容 v2.0 数据迁移与归档恢复。该项目说明其数据由 [ECDICT](https://github.com/skywind3000/ECDICT) 按考试大纲标签与客观词频字段派生，采用 MIT License。
 
 - `kaoyan-required.json`：来源文件 `kaoyan_high_freq.json`，考研大纲词汇按 ECDICT `bnc` / `frq` 语料词频筛选的高频集合。
 - `kaoyan-complete.json`：来源文件 `kaoyan.json`，ECDICT `ky` 考试标签集合。

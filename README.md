@@ -6,9 +6,9 @@
 
 ## 已经实现
 
-### 📖 一起学习 · 一起背单词（v2.0）
+### 📖 一起学习 · 一起背单词（v2.1）
 
-内置考研必考词汇、考研完整词汇、CET-6、CET-4 四本离线词书，支持独立进度切换、每日 50 个有效新词、英→中与中→英双轮学习、太简单跳过补位、错词本与复习、断点恢复、学习记录、学习成就以及 JSON 导入导出。词书由 [WordTyper Vocabularies](https://github.com/grhliu/wordtyper-vocabularies) / [ECDICT](https://github.com/skywind3000/ECDICT) 的 MIT 数据在开发阶段一次性转换，详细归属见 `data/wordbooks/NOTICE.md`；页面运行时只读取本站静态 JSON。
+主词书精简为考研词汇与 CET-6，保留各自的学习位置、历史和断点，同时按规范化英文跨词书共享掌握状态。支持英→中与中→英双向主动回忆、🔴不认识 / 🟠模糊 / 🟢认识 / 🟡太简单四级自评、按方向安排的渐进复习、多义词分层、高频搭配练习、易混词基础训练、学习报告及 JSON 导入导出。v2.0 的四词书数据会安全迁移，退出主列表的考研必考词汇与 CET-4 进度保存在归档中，不会被删除。词书由 [WordTyper Vocabularies](https://github.com/grhliu/wordtyper-vocabularies) / [ECDICT](https://github.com/skywind3000/ECDICT) 的 MIT 数据在开发阶段一次性转换，详细归属见 `data/wordbooks/NOTICE.md`。
 
 ### 🧭 我们的足迹（v1.9）
 
@@ -108,13 +108,13 @@ HTML / CSS / Vanilla JavaScript / localStorage / GitHub Pages
 
 上面列出的游戏与成就墙均已实现。接下来想让这个小家慢慢拥有更多空间：
 
-- 回忆馆
-- 旅行地图
-- 小纸条 / 留言
-- 更多适合小路 × 小G 的互动内容
-- 未来再考虑跨设备云端同步
+- 小路 OS / 手机式首页
+- 一起运动、回忆时间线与笔记
+- 通过稳定事件和摘要实现模块互联
+- PWA、跨设备云同步与 AI Companion
+- 由 Home 统一聚合独立的 `xiaolu-embedded-lab`、`xiaolu-career-radar`、`xiaolu-ai-hub`、`xiaolu-research-toolkit`
 
-这些仍是未来计划，不代表当前版本已经提供。
+这些仍是未来计划，不代表当前版本已经提供。模块边界与迁移约定见 [架构说明](./docs/ARCHITECTURE.md)。
 
 ## 版本记录
 
@@ -128,6 +128,8 @@ HTML / CSS / Vanilla JavaScript / localStorage / GitHub Pages
 - **v1.7**：迁移旧版愿望池，将旧网站积累的愿望内容融合进新版“一起想做的事”，加入主题、实现门槛、收藏、搜索、组合筛选与随机抽取，并保留 v1.6 的长期状态记录能力。
 - **v1.8**：游戏厅由 7 款扩展到 11 款，新增文学挑战、背圆周率、线索猜猜猜和限时快答。
 - **v1.9**：新增“我们的足迹”，包含旅行地图、交通工具图鉴和自动交通成就。
+- **v2.0**：加入四本离线词书、每日双轮学习、错词复习、断点、历史和备份。
+- **v2.1**：主词书精简为考研与 CET-6；加入跨词书共享掌握状态、四级自评、双向渐进复习、多义词分层、搭配/易混词练习、报告与 v2.0 安全迁移。
 
 > 这里不是一个一次性完成的网站，它会跟着我们一起慢慢长大。
 

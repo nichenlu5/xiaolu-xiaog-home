@@ -2,8 +2,10 @@ import { spawn } from "node:child_process";
 import { mkdtemp } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { resolveChrome, startStaticServer } from "./qa-browser-helper.mjs";
 
-const chrome = "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe";
+const chrome = resolveChrome();
+const server = await startStaticServer();
 const profile = await mkdtemp(join(tmpdir(), "xiaolu-v14-"));
 const proc = spawn(chrome, ["--headless=new", "--disable-gpu", "--remote-debugging-port=9333", `--user-data-dir=${profile}`, "about:blank"]);
 const pause = ms => new Promise(resolve => setTimeout(resolve, ms));
@@ -148,4 +150,4 @@ try {
   console.log("PASS speed quiz: countdown, auto-next, timeout, combo, result, persistence");
   await open("game-hall.html",390);await assert(await evaluate("document.querySelectorAll('.game-grid .game-tile').length===11"),"game hall does not have 11 entries");
   console.log("PASS responsive: 16 pages × 8 viewports; 11 game entries; wishlist regression; 7 original games; 22 achievements; v1.8 games; v1.9 footprints");
-} finally { proc.kill(); }
+} finally { proc.kill(); server.close(); }

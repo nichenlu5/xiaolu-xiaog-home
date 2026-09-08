@@ -1,0 +1,31 @@
+{
+  "schemaVersion": 1,
+  "collocations": [
+    {"word":"account","prompt":"take ___ of","answer":"account","meaning":"考虑到；把……计算在内","options":["account","charge","place","care"]},
+    {"word":"adapt","prompt":"adapt ___ a new environment","answer":"to","meaning":"适应新环境","options":["to","with","for","from"]},
+    {"word":"advantage","prompt":"take advantage ___","answer":"of","meaning":"利用","options":["of","for","to","with"]},
+    {"word":"attention","prompt":"pay attention ___","answer":"to","meaning":"注意","options":["to","for","at","on"]},
+    {"word":"contribute","prompt":"contribute ___","answer":"to","meaning":"促成；有助于；向……投稿","options":["to","with","for","on"]},
+    {"word":"depend","prompt":"depend ___","answer":"on","meaning":"依靠；取决于","options":["on","at","of","from"]},
+    {"word":"effect","prompt":"have an effect ___","answer":"on","meaning":"对……有影响","options":["on","to","for","with"]},
+    {"word":"engage","prompt":"engage ___","answer":"in","meaning":"从事；参加","options":["in","on","to","with"]},
+    {"word":"focus","prompt":"focus ___","answer":"on","meaning":"专注于","options":["on","in","at","for"]},
+    {"word":"influence","prompt":"have an influence ___","answer":"on","meaning":"对……有影响","options":["on","at","of","from"]},
+    {"word":"responsible","prompt":"be responsible ___","answer":"for","meaning":"对……负责；是……的原因","options":["for","to","with","of"]},
+    {"word":"result","prompt":"result ___","answer":"in","meaning":"导致","options":["in","from","to","with"]},
+    {"word":"result","prompt":"result ___","answer":"from","meaning":"由……引起","options":["from","in","of","at"]},
+    {"word":"similar","prompt":"be similar ___","answer":"to","meaning":"与……相似","options":["to","with","for","of"]},
+    {"word":"solution","prompt":"a solution ___ the problem","answer":"to","meaning":"问题的解决办法","options":["to","of","for","with"]},
+    {"word":"vary","prompt":"vary ___ person to person","answer":"from","meaning":"因人而异","options":["from","with","by","at"]}
+  ],
+  "confusables": [
+    {"group":"adapt / adopt / adept","prompt":"采纳一项新政策","answer":"adopt","options":["adapt","adopt","adept"],"note":"adopt = 采纳；adapt = 适应/改编；adept = 熟练的"},
+    {"group":"affect / effect","prompt":"这个变化会影响结果","answer":"affect","options":["affect","effect"],"note":"affect 常作动词“影响”；effect 常作名词“影响、结果”"},
+    {"group":"assure / ensure / insure","prompt":"确保计划按时完成","answer":"ensure","options":["assure","ensure","insure"],"note":"assure sb 使某人确信；ensure 确保；insure 投保"},
+    {"group":"economic / economical","prompt":"一种省钱的办法","answer":"economical","options":["economic","economical"],"note":"economic = 经济的；economical = 节约的、实惠的"},
+    {"group":"principal / principle","prompt":"基本原则","answer":"principle","options":["principal","principle"],"note":"principal = 主要的/负责人；principle = 原则"},
+    {"group":"respectful / respective / respectable","prompt":"各自的研究领域","answer":"respective","options":["respectful","respective","respectable"],"note":"respectful 恭敬的；respective 各自的；respectable 值得尊敬的"},
+    {"group":"complement / compliment","prompt":"赞美某人的工作","answer":"compliment","options":["complement","compliment"],"note":"complement 补充、相辅相成；compliment 赞美"},
+    {"group":"conscious / conscience","prompt":"良知；是非感","answer":"conscience","options":["conscious","conscience"],"note":"conscious = 意识到的；conscience = 良知"}
+  ]
+}

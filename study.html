@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <meta name="description" content="小路和小G一起背红宝书必考词，每天 50 词，两轮巩固。">
+  <meta name="description" content="小路和小G一起背考研与 CET-6 词汇，用双向主动回忆真正记住单词。">
   <title>一起背单词｜小路 × 小G的小家</title>
   <link rel="stylesheet" href="./css/style.css">
   <link rel="stylesheet" href="./css/study.css">
@@ -13,25 +13,51 @@
     <a class="back-link" href="./index.html">← 返回小家</a>
     <span class="mini-brand">小路 <span>×</span> 小G</span>
   </header>
+
   <main class="study-shell">
     <section class="study-hero">
-      <div><p class="eyebrow">STUDY TOGETHER</p><h1>一起背单词 <span aria-hidden="true">📖</span></h1><p>四本开源词书 · 每日 50 词 · 英中双向巩固</p></div>
+      <div>
+        <p class="eyebrow">STUDY TOGETHER · V2.1</p>
+        <h1>一起背单词 <span aria-hidden="true">📖</span></h1>
+        <p>考研 + CET-6 · 双向主动回忆 · 跨词书共享掌握状态</p>
+      </div>
       <div class="study-stats" aria-label="学习概览">
-        <span><strong id="learned-count">0</strong><small>已学词</small></span>
-        <span><strong id="wrong-count">0</strong><small>错词</small></span>
+        <span><strong id="mastered-count">0</strong><small>认识</small></span>
+        <span><strong id="due-count">0</strong><small>待复习</small></span>
         <span><strong id="day-count">0</strong><small>学习天数</small></span>
       </div>
     </section>
 
     <section id="dashboard" class="study-card dashboard-card">
-      <label class="book-picker"><span>当前词书</span><select id="book-select" aria-label="选择词书"></select><small id="book-source"></small></label>
-      <div id="resume-banner" class="resume-banner" hidden><div><strong>上次学习还没结束</strong><p id="resume-copy"></p></div><button id="resume-button" class="primary-button">继续学习</button></div>
+      <div id="migration-note" class="migration-note" hidden role="status"></div>
+      <label class="book-picker">
+        <span>当前词书</span>
+        <select id="book-select" aria-label="选择词书"></select>
+        <small id="book-source"></small>
+      </label>
+
+      <div id="resume-banner" class="resume-banner" hidden>
+        <div><strong>上次学习还没结束</strong><p id="resume-copy"></p></div>
+        <button id="resume-button" class="primary-button">继续学习</button>
+      </div>
+
       <div class="daily-plan">
         <div><p class="eyebrow">TODAY'S 50</p><h2>今天的 50 个词</h2><p id="daily-range">正在读取词库……</p></div>
-        <button id="start-button" class="primary-button">开始今日学习</button>
+        <button id="start-button" class="primary-button">开始主动回忆</button>
       </div>
+
+      <div class="mastery-legend" aria-label="四级掌握状态">
+        <span class="status-unknown">🔴 不认识</span>
+        <span class="status-fuzzy">🟠 模糊</span>
+        <span class="status-known">🟢 认识</span>
+        <span class="status-simple">🟡 太简单</span>
+      </div>
+
       <div class="dashboard-actions">
-        <button id="review-button" class="soft-button">复习错词 <span id="review-badge">0</span></button>
+        <button id="review-button" class="soft-button">到期复习 <span id="review-badge">0</span></button>
+        <button id="collocation-button" class="soft-button">高频搭配</button>
+        <button id="confusable-button" class="soft-button">易混词训练</button>
+        <button id="report-button" class="soft-button">学习报告</button>
         <button id="history-button" class="soft-button">学习记录</button>
         <button id="data-button" class="soft-button">导入 / 导出</button>
       </div>
@@ -40,22 +66,67 @@
     </section>
 
     <section id="session" class="study-card session-card" hidden aria-live="polite">
-      <div class="session-heading"><div><p id="round-label" class="eyebrow"></p><h2 id="direction-label"></h2></div><button id="exit-button" class="plain-button">暂存并返回</button></div>
+      <div class="session-heading">
+        <div><p id="round-label" class="eyebrow"></p><h2 id="direction-label"></h2></div>
+        <button id="exit-button" class="plain-button">暂存并返回</button>
+      </div>
       <div class="session-progress"><span id="session-progress-text"></span><div><i id="session-progress-bar"></i></div></div>
       <article class="word-card">
-        <span id="unit-label" class="unit-pill"></span>
+        <div class="word-meta"><span id="unit-label" class="unit-pill"></span><span id="current-status" class="current-status"></span></div>
         <p id="prompt-label" class="prompt-label"></p>
         <h3 id="word-prompt"></h3>
+        <p class="recall-hint">先在心里或纸上说出答案，再点击揭晓。</p>
         <button id="reveal-button" class="primary-button">显示答案</button>
-        <div id="answer-panel" class="answer-panel" hidden><p id="answer-text"></p><div class="rating-actions"><button id="wrong-button" class="rating-button wrong">没记住</button><button id="skip-button" class="rating-button skip">太简单，跳过</button><button id="correct-button" class="rating-button correct">记住了</button></div><small>“太简单”会从今后的计划移除，且不占今天 50 词。</small></div>
+        <div id="answer-panel" class="answer-panel" hidden>
+          <div id="answer-english" class="answer-english"></div>
+          <div id="meaning-view" class="meaning-view">
+            <div class="meaning-core"><small>核心语义</small><strong id="meaning-core"></strong></div>
+            <div id="meaning-common-wrap"><small>高频义项</small><ul id="meaning-common"></ul></div>
+            <details id="meaning-extra-wrap"><summary>展开低频义项</summary><ul id="meaning-extra"></ul></details>
+          </div>
+          <div id="word-collocations" class="word-collocations" hidden><small>高频搭配</small><ul></ul></div>
+          <p class="rating-question">这一次主动回忆得怎么样？</p>
+          <div class="rating-actions">
+            <button data-rating="unknown" class="rating-button unknown">🔴<span>不认识</span></button>
+            <button data-rating="fuzzy" class="rating-button fuzzy">🟠<span>模糊</span></button>
+            <button data-rating="known" class="rating-button known">🟢<span>认识</span></button>
+            <button data-rating="simple" class="rating-button simple">🟡<span>太简单</span></button>
+          </div>
+          <small class="rating-note">掌握状态在考研与 CET-6 中共享；两本词书的学习位置仍各自独立。</small>
+        </div>
       </article>
     </section>
 
-    <section id="result" class="study-card result-card" hidden><div class="result-icon">🌟</div><p class="eyebrow">SESSION COMPLETE</p><h2 id="result-title">今天完成啦</h2><p id="result-copy"></p><div id="result-stats" class="result-stats"></div><button id="result-home" class="primary-button">返回学习首页</button></section>
+    <section id="result" class="study-card result-card" hidden>
+      <div class="result-icon">🌟</div><p class="eyebrow">SESSION COMPLETE</p>
+      <h2 id="result-title">今天完成啦</h2><p id="result-copy"></p>
+      <div id="result-stats" class="result-stats"></div>
+      <button id="result-home" class="primary-button">返回学习首页</button>
+    </section>
 
-    <dialog id="history-dialog" class="study-dialog"><div class="dialog-heading"><div><p class="eyebrow">HISTORY</p><h2>学习记录</h2></div><button class="dialog-close" data-close="history-dialog" aria-label="关闭">×</button></div><div id="history-list" class="history-list"></div></dialog>
-    <dialog id="data-dialog" class="study-dialog"><div class="dialog-heading"><div><p class="eyebrow">BACKUP</p><h2>导入 / 导出</h2></div><button class="dialog-close" data-close="data-dialog" aria-label="关闭">×</button></div><p>导出文件包含学习进度、错词、跳过词、断点和学习记录，不包含本站其他房间的数据。</p><div class="data-actions"><button id="export-button" class="primary-button">导出学习数据</button><label class="soft-button file-button">导入学习数据<input id="import-input" type="file" accept="application/json,.json"></label></div><p id="data-message" class="data-message" role="status"></p></dialog>
+    <dialog id="practice-dialog" class="study-dialog practice-dialog">
+      <div class="dialog-heading"><div><p id="practice-eyebrow" class="eyebrow">PRACTICE</p><h2 id="practice-title">专项练习</h2></div><button class="dialog-close" data-close="practice-dialog" aria-label="关闭">×</button></div>
+      <div id="practice-body"></div>
+    </dialog>
+
+    <dialog id="report-dialog" class="study-dialog">
+      <div class="dialog-heading"><div><p class="eyebrow">LEARNING REPORT</p><h2>学习报告</h2></div><button class="dialog-close" data-close="report-dialog" aria-label="关闭">×</button></div>
+      <div id="report-content"></div>
+    </dialog>
+
+    <dialog id="history-dialog" class="study-dialog">
+      <div class="dialog-heading"><div><p class="eyebrow">HISTORY</p><h2>学习记录</h2></div><button class="dialog-close" data-close="history-dialog" aria-label="关闭">×</button></div>
+      <div id="history-list" class="history-list"></div>
+    </dialog>
+
+    <dialog id="data-dialog" class="study-dialog">
+      <div class="dialog-heading"><div><p class="eyebrow">BACKUP</p><h2>导入 / 导出</h2></div><button class="dialog-close" data-close="data-dialog" aria-label="关闭">×</button></div>
+      <p>导出文件包含两本主词书进度、共享掌握状态、旧词书归档、断点和学习记录，不包含本站其他房间的数据。</p>
+      <div class="data-actions"><button id="export-button" class="primary-button">导出学习数据</button><label class="soft-button file-button">导入学习数据<input id="import-input" type="file" accept="application/json,.json"></label></div>
+      <p id="data-message" class="data-message" role="status"></p>
+    </dialog>
   </main>
+  <script src="./js/study-core.js"></script>
   <script src="./js/study.js"></script>
 </body>
 </html>
