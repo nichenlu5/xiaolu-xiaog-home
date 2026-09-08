@@ -9,7 +9,7 @@ const htmlFiles = [
   "index.html", "study.html", "wishlist.html", "footprints.html", "game-hall.html",
   "game.html", "lyrics.html", "timer.html", "sync.html", "memory.html", "world.html",
   "province.html", "literature.html", "pi-memory.html", "clue-guess.html",
-  "speed-quiz.html", "achievements.html"
+  "speed-quiz.html", "achievements.html", "exercise.html", "timeline.html", "notes.html"
 ];
 
 for (const htmlFile of htmlFiles) {
@@ -30,7 +30,15 @@ const studyIds = new Set([...studyHtml.matchAll(/\bid="([^"]+)"/g)].map(match =>
 const referencedIds = new Set([...studyJs.matchAll(/\$\("([^"]+)"\)/g)].map(match => match[1]));
 for (const id of referencedIds) assert.ok(studyIds.has(id), `js/study.js references missing #${id}`);
 
-for (const file of ["js/study-core.js", "js/study.js", "qa-study-core.mjs", "qa-study.mjs", "qa-responsive.mjs"]) {
+for (const [htmlFile, scriptFile] of [["exercise.html", "js/exercise.js"], ["timeline.html", "js/timeline.js"], ["notes.html", "js/notes.js"], ["index.html", "js/home.js"]]) {
+  const html = await readFile(resolve(root, htmlFile), "utf8");
+  const script = await readFile(resolve(root, scriptFile), "utf8");
+  const htmlIds = new Set([...html.matchAll(/\bid="([^"]+)"/g)].map(match => match[1]));
+  const scriptIds = new Set([...script.matchAll(/\$\("#([^"]+)"\)/g)].map(match => match[1]));
+  for (const id of scriptIds) assert.ok(htmlIds.has(id), `${scriptFile} references missing #${id}`);
+}
+
+for (const file of ["js/study-core.js", "js/study.js", "js/exercise-storage.js", "js/exercise.js", "js/timeline-storage.js", "js/timeline.js", "js/notes-storage.js", "js/notes.js", "js/home.js", "qa-study-core.mjs", "qa-study.mjs", "qa-responsive.mjs", "qa-v22-core.mjs"]) {
   execFileSync(process.execPath, ["--check", resolve(root, file)], { stdio: "pipe" });
 }
 

@@ -21,7 +21,7 @@ async function click(selector) { await evaluate(`document.querySelector(${JSON.s
 
 try {
   await connect(); await send("Page.enable"); await send("Runtime.enable");
-  const pages = ["index.html", "wishlist.html", "footprints.html", "game-hall.html", "game.html", "lyrics.html", "timer.html", "sync.html", "memory.html", "world.html", "province.html", "literature.html", "pi-memory.html", "clue-guess.html", "speed-quiz.html", "achievements.html"];
+  const pages = ["index.html", "wishlist.html", "footprints.html", "exercise.html", "timeline.html", "notes.html", "game-hall.html", "game.html", "lyrics.html", "timer.html", "sync.html", "memory.html", "world.html", "province.html", "literature.html", "pi-memory.html", "clue-guess.html", "speed-quiz.html", "achievements.html"];
   for (const width of [320, 360, 375, 390, 412, 430, 768, 1024]) for (const page of pages) { await open(page, width); const sizes = await evaluate("({scroll:document.documentElement.scrollWidth,client:document.documentElement.clientWidth})"); await assert(sizes.scroll <= sizes.client, `${page} overflows at ${width}px: ${sizes.scroll}/${sizes.client}`); }
 
   await open("wishlist.html", 390);
@@ -149,5 +149,5 @@ try {
   await assert(await evaluate("!document.querySelector('#speed-result').hidden && document.querySelector('#speed-result').textContent.includes('超时 1')"),"speed 20-question result failed");await open("speed-quiz.html",430);await assert(await evaluate("document.querySelector('#speed-record').textContent.includes('历史最高')&&localStorage.getItem('xiaoluXiaogSpeedQuizV1')"),"speed record persistence failed");
   console.log("PASS speed quiz: countdown, auto-next, timeout, combo, result, persistence");
   await open("game-hall.html",390);await assert(await evaluate("document.querySelectorAll('.game-grid .game-tile').length===11"),"game hall does not have 11 entries");
-  console.log("PASS responsive: 16 pages × 8 viewports; 11 game entries; wishlist regression; 7 original games; 22 achievements; v1.8 games; v1.9 footprints");
+  console.log(`PASS responsive: ${pages.length} pages × 8 viewports; 11 game entries; wishlist regression; 7 original games; 22 achievements; v1.8 games; v1.9 footprints; v2.2 life modules`);
 } finally { proc.kill(); server.close(); }

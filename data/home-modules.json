@@ -3,9 +3,9 @@
   "shell": "xiaolu-xiaog-home",
   "modules": [
     {"id":"english","name":"一起背单词","kind":"internal","route":"./study.html","status":"active"},
-    {"id":"exercise","name":"一起运动","kind":"internal","route":null,"status":"planned"},
-    {"id":"memory-timeline","name":"回忆时间线","kind":"internal","route":null,"status":"planned"},
-    {"id":"notes","name":"笔记","kind":"internal","route":null,"status":"planned"},
+    {"id":"exercise","name":"一起运动","kind":"internal","route":"./exercise.html","status":"active"},
+    {"id":"memory-timeline","name":"回忆时间线","kind":"internal","route":"./timeline.html","status":"active"},
+    {"id":"notes","name":"笔记","kind":"internal","route":"./notes.html","status":"active"},
     {"id":"embedded-lab","name":"嵌入式实验室","kind":"external-repository","repository":"xiaolu-embedded-lab","status":"independent"},
     {"id":"career-radar","name":"职业雷达","kind":"external-repository","repository":"xiaolu-career-radar","status":"independent"},
     {"id":"ai-hub","name":"AI Hub","kind":"external-repository","repository":"xiaolu-ai-hub","status":"independent"},

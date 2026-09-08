@@ -135,6 +135,9 @@ p {
 .room-card.wishlist-room { background: #f1f8f2; }
 .room-card.study-room { background: #fff5e8; }
 .room-card.footprints-room { background: #f3f7fb; }
+.room-card.exercise-room { background: #f0f8f3; }
+.room-card.timeline-room { background: #fff1eb; }
+.room-card.notes-room { background: #f7f2fb; }
 .room-card:hover { border-color: var(--peach); box-shadow: 0 10px 24px rgba(110, 78, 57, 0.1); transform: translateY(-2px); }
 .room-card:focus-visible, .room-shortcut:focus-visible { outline: 3px solid rgba(217, 120, 90, 0.3); outline-offset: 3px; }
 .room-icon { font-size: 29px; }
@@ -142,6 +145,13 @@ p {
 .room-card strong { margin-bottom: 5px; font-size: 17px; }
 .room-card small { color: var(--muted); font-size: 13px; line-height: 1.45; }
 .room-card b { color: var(--peach-dark); }
+.home-recent { width: min(100%,610px); margin: 28px auto 0; text-align: left; }
+.home-recent h2 { margin-bottom: 11px; font-size: 18px; }
+.home-summary-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 10px; }
+.home-summary-grid a { min-width: 0; padding: 14px; border: 1px solid var(--line); border-radius: 16px; color: var(--ink); background: #fff; text-decoration: none; }
+.home-summary-grid span, .home-summary-grid strong { display: block; }
+.home-summary-grid span { margin-bottom: 6px; color: var(--muted); font-size: 12px; }
+.home-summary-grid strong { overflow: hidden; font-size: 14px; text-overflow: ellipsis; white-space: nowrap; }
 
 .room-shortcut {
   display: inline-flex;
@@ -548,6 +558,7 @@ p {
   .room-grid { grid-template-columns: 1fr; gap: 11px; }
   .room-card.footprints-room { grid-column: auto; }
   .room-card { min-height: 88px; padding: 15px 16px; }
+  .home-summary-grid { grid-template-columns: 1fr; }
   .topbar { width: calc(100% - max(32px, env(safe-area-inset-left) + env(safe-area-inset-right))); min-height: max(48px, 3rem); padding-top: max(4px, env(safe-area-inset-top)); }
   .back-link, .mini-brand { display: inline-flex; min-height: 44px; align-items: center; font-size: 14px; }
   .game-shell { padding-top: 15px; }
