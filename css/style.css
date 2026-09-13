@@ -639,6 +639,10 @@ p {
 .os-app-icon { display: grid; width: 54px; height: 54px; margin-bottom: 9px; place-items: center; border-radius: 18px; background: #fff1df; box-shadow: inset 0 0 0 1px rgba(255,255,255,.65); font-size: 27px; }
 .app-exercise .os-app-icon { background:#e9f5ec; }.app-games .os-app-icon { background:#fff1d0; }.app-footprints .os-app-icon { background:#eaf3fb; }.app-wishes .os-app-icon { background:#eef6e7; }.app-memory .os-app-icon { background:#ffe9e3; }.app-notes .os-app-icon { background:#f2eafa; }.app-achievements .os-app-icon { background:#fff2c9; }
 .os-app strong { font-size: 16px; }.os-app small { margin-top: 4px; overflow: hidden; color: var(--muted); font-size: 11px; text-overflow: ellipsis; white-space: nowrap; }
+.os-secondary { display:flex; margin-top:14px; gap:12px; align-items:center; }
+.os-secondary > span { color:var(--muted); font-size:12px; font-weight:750; white-space:nowrap; }
+.os-secondary a { display:grid; min-width:0; flex:1; min-height:58px; padding:9px 13px; grid-template-columns:auto minmax(0,1fr) auto; gap:10px; align-items:center; border:1px solid #eedcc7; border-radius:16px; color:var(--ink); background:#fff8e9; text-decoration:none; }
+.os-secondary a > span:first-child { font-size:24px; }.os-secondary strong,.os-secondary small { display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }.os-secondary small { margin-top:3px; color:var(--muted); font-size:11px; }.os-secondary b { color:var(--peach-dark); }
 .today-panel,.home-page .home-recent { width: 100%; margin: 28px 0 0; }
 .section-heading { display: flex; margin-bottom: 11px; align-items: end; justify-content: space-between; gap: 14px; }
 .section-heading .eyebrow { margin-bottom: 4px; }.section-heading h2 { margin: 0; font-size: 20px; }.section-heading > span { color: var(--muted); font-size: 12px; }
@@ -660,7 +664,7 @@ p {
 
 @media (min-width: 820px) {
   .home-page .os-shell { display:grid; grid-template-columns:minmax(0,1.12fr) minmax(300px,.88fr); column-gap:28px; }
-  .os-statusbar,.os-hero,.os-app-grid,.install-card,.offline-note { grid-column:1; }
+  .os-statusbar,.os-hero,.os-app-grid,.os-secondary,.install-card,.offline-note { grid-column:1; }
   .os-statusbar { grid-column:1/-1; }.os-hero { max-width:none; margin-left:0; }
   .today-panel { grid-column:2; grid-row:2/4; margin-top:26px; }.today-grid { grid-template-columns:1fr; }
   .home-page .home-recent { grid-column:1/-1; }.home-page .home-summary-grid { grid-template-columns:repeat(3,minmax(0,1fr)); }

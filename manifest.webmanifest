@@ -18,6 +18,7 @@
   "shortcuts": [
     {"name":"一起学习","short_name":"学习","url":"./study.html"},
     {"name":"回忆时间线","short_name":"回忆","url":"./timeline.html"},
-    {"name":"一起运动","short_name":"运动","url":"./exercise.html"}
+    {"name":"一起运动","short_name":"运动","url":"./exercise.html"},
+    {"name":"礼物盒","short_name":"礼物","url":"./gifts.html"}
   ]
 }

@@ -18,6 +18,7 @@
   const exercise = window.XiaoluExerciseStore?.load().state.records || [];
   const memories = window.XiaoluTimelineStore?.load().state.memories || [];
   const notes = window.XiaoluNotesStore?.load().state.notes || [];
+  const gifts = window.XiaoluGiftsStore?.load().state.gifts || [];
   const rawWishes = safe("xiaoluXiaogWishlistV1",[]);
   const wishes = Array.isArray(rawWishes) ? rawWishes : [];
   const study = safe("xiaoluXiaogVocabularyV2",{});
@@ -45,4 +46,6 @@
   set("#recent-note",latestNote?`${latestNote.date} · ${latestNote.title}`:"还没有小纸条");
   set("#recent-study",studySummary);
   set("#recent-achievement",achievement?.latest?`${achievement.latest.icon} ${achievement.latest.name}`:"还没有解锁记录");
+  const latestGift=newest(gifts,["date","updatedAt"]);
+  set("#home-gift-summary",latestGift?`最近：${latestGift.name}`:"收藏文件礼物与纪念小物");
 })();

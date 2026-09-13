@@ -22,13 +22,13 @@ assert.equal(manifest.display,"standalone");
 assert.equal(manifest.start_url,"./index.html");
 assert.equal(manifest.icons.length,3);
 for(const icon of manifest.icons) await access(resolve(root,icon.src));
-assert.equal(manifest.shortcuts.length,3);
+assert.equal(manifest.shortcuts.length,4);
 assert.ok(sw.includes("request.mode===\"navigate\""),"service worker needs an offline navigation strategy");
 assert.ok(!sw.includes("localStorage"),"service worker must not touch localStorage");
-assert.equal(backup.APP_VERSION,"2.4");
-assert.equal(backup.specs.length,15,"v2.4 must keep the v2.3 backup registry unchanged");
-assert.equal(modules.schemaVersion,2);
-assert.equal(modules.modules.filter(module=>module.kind==="internal"&&module.status==="active").length,9,"module registry must cover eight apps plus data center");
+assert.equal(backup.APP_VERSION,"2.5");
+assert.equal(backup.specs.length,16,"v2.5 adds only the gifts storage key to the backup registry");
+assert.equal(modules.schemaVersion,3);
+assert.equal(modules.modules.filter(module=>module.kind==="internal"&&module.status==="active").length,10,"module registry must cover eight apps, gifts and data center");
 assert.equal(modules.capabilities.pwa,"active");
 
 const elements=new Map(["#home-date","#home-greeting","#today-study","#today-exercise","#today-memory","#today-wish","#recent-exercise","#recent-memory","#recent-wish","#recent-note","#recent-study","#recent-achievement"].map(selector=>[selector,{textContent:""}]));
@@ -44,4 +44,4 @@ assert.equal(elements.get("#today-wish").textContent,"一起看海");
 assert.equal(elements.get("#recent-achievement").textContent,"✨ 愿望变成回忆");
 assert.equal(writes,0,"home summaries must remain read-only");
 
-console.log("PASS v2.4 core: eight real apps, dock, live summaries, install manifest, offline shell, unchanged backup registry");
+console.log("PASS v2.4 shell compatibility: eight main apps, dock, live summaries, install manifest and offline shell");

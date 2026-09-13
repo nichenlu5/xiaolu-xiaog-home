@@ -1,6 +1,6 @@
 # 小路 OS 架构边界
 
-`xiaolu-xiaog-home` 是公开可访问的统一入口和个人仪表盘，不吞并专业项目仓库。当前仍保持零构建的 HTML / CSS / Vanilla JavaScript 结构；功能按“页面 + 独立数据 + 版本化存储”逐步演进。v2.4 已把 Home Shell 升级为移动端优先的 Xiaolu OS 首页。
+`xiaolu-xiaog-home` 是公开可访问的统一入口和个人仪表盘，不吞并专业项目仓库。当前仍保持零构建的 HTML / CSS / Vanilla JavaScript 结构；功能按“页面 + 独立数据 + 版本化存储”逐步演进。v2.5 在 Xiaolu OS 首页之上深化回忆馆与笔记本，并新增礼物盒。
 
 ## 三个长期核心
 
@@ -15,7 +15,7 @@
 | 层级 | 当前职责 | 未来扩展 |
 |---|---|---|
 | Home Shell | Xiaolu OS 手机式入口、统一导航、摘要卡片、PWA 外壳 | 通知与模块互联 |
-| Domain Modules | 英语、游戏、愿望、足迹、运动、回忆、笔记等独立页面 | 体态照片时间线与更完整关联 |
+| Domain Modules | 英语、游戏、愿望、足迹、运动、回忆馆、多笔记本、礼物盒等独立页面 | 体态照片时间线与更完整关联 |
 | Local Data | 各模块独立、版本化的 localStorage | 可导入导出、可选择迁移 |
 | Integration | 模块清单、稳定链接、PWA 离线外壳 | 云同步、AI Companion |
 
@@ -32,8 +32,9 @@
 | 模块 | localStorage key | 根结构 | 扩展边界 |
 |---|---|---|---|
 | 一起运动 | `xiaoluXiaogExerciseV1` | `{ schemaVersion, records }` | 单条记录预留 `posturePhotoRefs` |
-| 回忆时间线 | `xiaoluXiaogTimelineV1` | `{ schemaVersion, memories }` | `source` 保存来源，`links` 预留领域 ID 数组 |
-| 笔记 / 小纸条 | `xiaoluXiaogNotesV1` | `{ schemaVersion, notebooks, notes }` | 笔记通过 `notebookId` 归属笔记本 |
+| 回忆馆 | `xiaoluXiaogTimelineV1` | `{ schemaVersion: 3, memories }` | `source` 与 `links` 保存稳定领域 ID；记录支持收藏和置顶 |
+| 笔记本 | `xiaoluXiaogNotesV1` | `{ schemaVersion: 3, notebooks, notes }` | 笔记通过稳定 `notebookId` 归属可管理的笔记本 |
+| 礼物盒 | `xiaoluXiaogGiftsV1` | `{ schemaVersion: 1, gifts }` | 礼物通过 `links.memoryIds` 关联回忆 |
 | 跨模块成就 | `xiaoluXiaogAchievementsV2` | `{ schemaVersion, unlocked }` | 只登记稳定成就 ID 与首次解锁时间 |
 
 生活模块仓储均过滤缺失字段和异常类型；JSON 损坏或检测到更高 schema 版本时只读展示，不覆盖原值。
@@ -41,6 +42,16 @@
 ### v2.3 备份边界
 
 备份文件使用独立的 `backupSchemaVersion`，并按模块保存已登记 localStorage key 的原始 JSON 值，以保留未知字段。恢复只接受当前备份 schema，逐项校验根类型；损坏 JSON 仅留在导出文件供人工恢复，不自动写回。恢复不会清空备份未包含的 key；写入中途失败时会尝试回滚本轮已写项目。当前仅提供明确确认后的覆盖恢复，不提供自动合并或远端同步。
+
+v2.5 将 `xiaoluXiaogGiftsV1` 加入第 16 个备份注册项。笔记本与笔记共用原有 notes 根存储，因此无需新增第二个 key。旧 v2.3/v2.4 备份没有 gifts 条目时，恢复逻辑不会删除或覆盖当前礼物数据。
+
+### v2.5 迁移与关联边界
+
+- Timeline V2 升级到 V3 时保留正文、日期、地点、标签、图片引用、来源和所有旧 links，并为旧记录补充 `favorite:false`、`pinned:false`。
+- Notes V2 升级到 V3 时建立六本默认笔记本，所有旧笔记归入稳定 ID 为 `default` 的默认笔记本；标题、正文、日期、标签与来源不变。
+- V3 用户删除的非默认空笔记本不会在下次加载时重新出现；`default` 始终作为安全回退存在。
+- 从笔记或礼物创建回忆时，回忆保存 `source.module + source.itemId`，同时写入对应 `links.noteIds` 或 `links.giftIds`；来源记录保存回忆的稳定 ID 作为轻量回链。
+- 本版不建立通用图数据库，也不自动复制来源正文；关联记录保持各自独立。
 
 ### v2.4 PWA 边界
 
@@ -67,7 +78,8 @@ Home 不复制这些仓库的业务代码。未来聚合数据时，每个项目
 - **v2.2 第一阶段**：运动、回忆、笔记使用独立 V1 存储；首页读取只读摘要；愿望和足迹通过 URL 预填建立可选来源引用。
 - **v2.2 后续边界**：体态照片时间线、关系反向索引与模块事件协议。
 - **v2.3**：全站备份/恢复、稳定来源引用、跨模块成就登记和首页动态摘要。
-- **v2.4（当前）**：小路 OS 手机式首页、八应用入口、今日摘要、底部 Dock 与 PWA 离线壳；不改变各模块存储。
+- **v2.4**：小路 OS 手机式首页、八应用入口、今日摘要、底部 Dock 与 PWA 离线壳；不改变各模块存储。
+- **v2.5（当前）**：回忆馆收藏/置顶/日期层级、多笔记本、礼物盒、稳定 note/gift 回链与第 16 项备份注册。
 - **模块互联**：在稳定 ID 和导出恢复机制成熟后，再加入事件协议与可选双向索引。
 - **平台能力**：PWA 离线壳已完成；云同步必须在冲突策略和导出恢复成熟后加入。
 - **AI Companion**：最后接入权限中心与记忆核心，只读取用户明确授权的范围。

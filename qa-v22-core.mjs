@@ -4,12 +4,14 @@ const require = createRequire(import.meta.url);
 const exercise = require("./js/exercise-storage.js");
 const timeline = require("./js/timeline-storage.js");
 const notes = require("./js/notes-storage.js");
+const gifts = require("./js/gifts-storage.js");
 
 const fakeStorage = raw => ({ getItem: () => raw, setItem(key, value) { this.saved = { key, value }; } });
 const broken = fakeStorage("{bad json");
 assert.equal(exercise.load(broken).locked, true, "malformed exercise data must be protected");
 assert.equal(timeline.load(broken).locked, true, "malformed timeline data must be protected");
 assert.equal(notes.load(broken).locked, true, "malformed notes data must be protected");
+assert.equal(gifts.load(broken).locked, true, "malformed gifts data must be protected");
 assert.equal(exercise.load(fakeStorage('{"schemaVersion":3,"records":[]}')).locked, true, "future exercise schema must be read-only");
 
 const exerciseState = exercise.normalizeState({ records: [null, { type: "有氧", durationMinutes: "35", status: "completed", posturePhotoRefs: ["future-photo-id", 2] }] });
@@ -36,14 +38,15 @@ assert.equal(noteState.notes[0].source.module, "manual");
 const saved = fakeStorage(null);
 assert.equal(notes.save(noteState, saved), true);
 assert.equal(saved.saved.key, notes.KEY);
-assert.equal(JSON.parse(saved.saved.value).schemaVersion, 2);
+assert.equal(JSON.parse(saved.saved.value).schemaVersion, 3);
 
 const values = new Map([["legacySentinel", "keep-me"]]);
 const isolatedStorage = { getItem:key=>values.has(key)?values.get(key):null, setItem:(key,value)=>values.set(key,value) };
 assert.equal(exercise.save(exerciseState, isolatedStorage), true);
 assert.equal(timeline.save({ memories:[memory] }, isolatedStorage), true);
 assert.equal(notes.save(noteState, isolatedStorage), true);
+assert.equal(gifts.save({gifts:[]},isolatedStorage),true);
 assert.equal(values.get("legacySentinel"), "keep-me");
-assert.deepEqual([...values.keys()].sort(), [exercise.KEY, "legacySentinel", notes.KEY, timeline.KEY].sort());
+assert.deepEqual([...values.keys()].sort(), [exercise.KEY, gifts.KEY, "legacySentinel", notes.KEY, timeline.KEY].sort());
 
-console.log("PASS v2.2/v2.3 compatibility: schema migration, alias normalization, malformed JSON protection, storage isolation, references");
+console.log("PASS v2.2-v2.5 compatibility: schema migration, alias normalization, malformed JSON protection, storage isolation, references");
