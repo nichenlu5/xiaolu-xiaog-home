@@ -2,68 +2,87 @@
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="小路和小G一起学习、玩耍的温暖小家。">
-  <title>小路 × 小G的小家</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="description" content="小路和小G一起学习、生活、玩耍与收藏回忆的私人生活空间。">
+  <meta name="theme-color" content="#fff8ed">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="小路的小家">
+  <title>小路 OS｜小路 × 小G的小家</title>
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="icon" href="./icons/app-icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="./icons/app-icon-192.png">
   <link rel="stylesheet" href="./css/style.css">
 </head>
 <body class="home-page">
-  <main class="home-shell">
-    <section class="welcome-card" aria-labelledby="home-title">
-      <div class="home-illustration" aria-hidden="true">
-        <span class="little-star star-one">✦</span>
-        <span class="little-star star-two">✦</span>
-        <div class="house">
-          <div class="roof"></div>
-          <div class="house-body">
-            <div class="window"><span></span></div>
-            <div class="door"></div>
-          </div>
-        </div>
-      </div>
+  <main class="home-shell" id="home-top">
+    <section class="welcome-card os-shell" aria-labelledby="home-title">
+      <header class="os-statusbar">
+        <div><p class="os-date" id="home-date">今天</p><p class="os-greeting" id="home-greeting">欢迎回家，小路</p></div>
+        <a class="os-settings" href="./data-center.html" aria-label="打开数据备份与恢复">⚙️</a>
+      </header>
 
-      <p class="eyebrow">WELCOME HOME</p>
-      <h1 id="home-title">小路 <span>×</span> 小G的小家</h1>
-      <p class="home-copy">一间装着好奇心、小快乐和未来计划的屋子。<br>选一个房间，继续写我们的故事吧。</p>
-      <nav class="room-grid" aria-label="小家的房间">
-        <a class="room-card game-room" href="./game-hall.html">
-          <span class="room-icon" aria-hidden="true">🎮</span>
-          <span><strong>双人游戏厅</strong><small>一起玩一局</small></span>
-          <b aria-hidden="true">→</b>
-        </a>
-        <a class="room-card wishlist-room" href="./wishlist.html">
-          <span class="room-icon" aria-hidden="true">🌱</span>
-          <span><strong>一起想做的事</strong><small>把期待慢慢变成回忆</small></span>
-          <b aria-hidden="true">→</b>
-        </a>
-        <a class="room-card study-room" href="./study.html">
-          <span class="room-icon" aria-hidden="true">📖</span>
-          <span><strong>一起学习</strong><small>六级与考研词书，继续今天的学习</small></span>
-          <b aria-hidden="true">→</b>
-        </a>
-        <a class="room-card footprints-room" href="./footprints.html">
-          <span class="room-icon" aria-hidden="true">🧭</span>
-          <span><strong>我们的足迹</strong><small>一起认识世界、体验世界</small></span>
-          <b aria-hidden="true">→</b>
-        </a>
-        <a class="room-card exercise-room" href="./exercise.html">
-          <span class="room-icon" aria-hidden="true">🏃</span>
-          <span><strong>一起运动</strong><small>记录训练，也认真休息</small></span><b aria-hidden="true">→</b>
-        </a>
-        <a class="room-card timeline-room" href="./timeline.html">
-          <span class="room-icon" aria-hidden="true">📸</span>
-          <span><strong>回忆时间线</strong><small>收好舍不得忘记的片刻</small></span><b aria-hidden="true">→</b>
-        </a>
-        <a class="room-card notes-room" href="./notes.html">
-          <span class="room-icon" aria-hidden="true">📝</span>
-          <span><strong>笔记 / 小纸条</strong><small>记下灵感、日记与学习片段</small></span><b aria-hidden="true">→</b>
-        </a>
+      <section class="os-hero">
+        <div class="home-illustration" aria-hidden="true">
+          <span class="little-star star-one">✦</span><span class="little-star star-two">✦</span>
+          <div class="house"><div class="roof"></div><div class="house-body"><div class="window"><span></span></div><div class="door"></div></div></div>
+        </div>
+        <div class="os-hero-copy"><p class="eyebrow">XIAOLU OS</p><h1 id="home-title">小路 <span>×</span> 小G</h1><p>一间装着学习、生活、小快乐和共同回忆的屋子。</p></div>
+      </section>
+
+      <nav class="os-app-grid" aria-label="小路 OS 应用">
+        <a class="os-app app-study" href="./study.html"><span class="os-app-icon" aria-hidden="true">📚</span><strong>学习</strong><small>六级与考研</small></a>
+        <a class="os-app app-exercise" href="./exercise.html"><span class="os-app-icon" aria-hidden="true">🏃🏻‍♀️</span><strong>运动</strong><small>训练与休息</small></a>
+        <a class="os-app app-games" href="./game-hall.html"><span class="os-app-icon" aria-hidden="true">🎮</span><strong>游戏</strong><small>一起玩一局</small></a>
+        <a class="os-app app-footprints" href="./footprints.html"><span class="os-app-icon" aria-hidden="true">🗺️</span><strong>足迹</strong><small>去过的地方</small></a>
+        <a class="os-app app-wishes" href="./wishlist.html"><span class="os-app-icon" aria-hidden="true">🌱</span><strong>愿望</strong><small>想做的事情</small></a>
+        <a class="os-app app-memory" href="./timeline.html"><span class="os-app-icon" aria-hidden="true">❤️</span><strong>回忆</strong><small>舍不得忘记</small></a>
+        <a class="os-app app-notes" href="./notes.html"><span class="os-app-icon" aria-hidden="true">📝</span><strong>小纸条</strong><small>灵感与日记</small></a>
+        <a class="os-app app-achievements" href="./achievements.html"><span class="os-app-icon" aria-hidden="true">🏆</span><strong>成就</strong><small>发生过的闪光</small></a>
       </nav>
-      <section class="home-recent" aria-labelledby="recent-title"><h2 id="recent-title">最近的小日子</h2><div class="home-summary-grid"><a href="./exercise.html"><span>最近运动</span><strong id="recent-exercise">还没有运动记录</strong></a><a href="./timeline.html"><span>最近回忆</span><strong id="recent-memory">还没有回忆</strong></a><a href="./wishlist.html"><span>最近完成愿望</span><strong id="recent-wish">还没有完成的愿望</strong></a><a href="./notes.html"><span>最近笔记</span><strong id="recent-note">还没有小纸条</strong></a><a href="./study.html"><span>英语今日进度</span><strong id="today-study">今天可以慢慢开始</strong></a><a href="./achievements.html"><span>最近解锁成就</span><strong id="recent-achievement">还没有解锁记录</strong></a></div><a class="data-center-link" href="./data-center.html">💾 备份与恢复小家数据</a></section>
+
+      <section class="today-panel" id="today" aria-labelledby="today-title">
+        <div class="section-heading"><div><p class="eyebrow">TODAY</p><h2 id="today-title">今天的小家</h2></div><span>慢慢来，也很好</span></div>
+        <div class="today-grid">
+          <a href="./study.html"><span class="today-icon" aria-hidden="true">📖</span><span><small>英语学习</small><strong id="today-study">今天可以慢慢开始</strong></span></a>
+          <a href="./exercise.html"><span class="today-icon" aria-hidden="true">🌿</span><span><small>运动状态</small><strong id="today-exercise">今天还没有记录</strong></span></a>
+          <a href="./timeline.html"><span class="today-icon" aria-hidden="true">📸</span><span><small>最近回忆</small><strong id="today-memory">还没有回忆</strong></span></a>
+          <a href="./wishlist.html"><span class="today-icon" aria-hidden="true">✨</span><span><small>愿望进展</small><strong id="today-wish">还没有完成的愿望</strong></span></a>
+        </div>
+      </section>
+
+      <section class="home-recent" id="recent" aria-labelledby="recent-title">
+        <div class="section-heading"><div><p class="eyebrow">LITTLE MOMENTS</p><h2 id="recent-title">最近的小日子</h2></div></div>
+        <div class="home-summary-grid">
+          <a href="./exercise.html"><span>最近运动</span><strong id="recent-exercise">还没有运动记录</strong></a>
+          <a href="./timeline.html"><span>最近回忆</span><strong id="recent-memory">还没有回忆</strong></a>
+          <a href="./wishlist.html"><span>最近完成愿望</span><strong id="recent-wish">还没有完成的愿望</strong></a>
+          <a href="./notes.html"><span>最近笔记</span><strong id="recent-note">还没有小纸条</strong></a>
+          <a href="./study.html"><span>英语今日进度</span><strong id="recent-study">今天可以慢慢开始</strong></a>
+          <a href="./achievements.html"><span>最近解锁成就</span><strong id="recent-achievement">还没有解锁记录</strong></a>
+        </div>
+      </section>
+
+      <section class="install-card" id="install-card" hidden>
+        <span aria-hidden="true">📲</span><div><strong>把小家放到手机桌面</strong><small>以后可以像打开 App 一样回家。</small></div><button type="button" id="install-app">添加</button><button class="install-dismiss" type="button" id="dismiss-install" aria-label="暂时关闭安装提示">×</button>
+      </section>
+      <p class="offline-note" id="offline-note" role="status" hidden>当前处于离线状态，已访问过的房间仍可继续使用。</p>
     </section>
   </main>
 
+  <nav class="os-dock" aria-label="常用导航">
+    <a class="active" href="#home-top" aria-current="page"><span aria-hidden="true">🏠</span><small>首页</small></a>
+    <a href="./study.html"><span aria-hidden="true">📚</span><small>学习</small></a>
+    <a href="./timeline.html"><span aria-hidden="true">❤️</span><small>回忆</small></a>
+    <a href="./data-center.html"><span aria-hidden="true">⚙️</span><small>数据</small></a>
+  </nav>
+
   <footer class="site-footer">Made with ♡ by 小路 &amp; 小G</footer>
-  <script src="./js/exercise-storage.js"></script><script src="./js/timeline-storage.js"></script><script src="./js/notes-storage.js"></script><script src="./js/achievement-core.js"></script><script src="./js/home.js"></script>
+  <script src="./js/exercise-storage.js"></script>
+  <script src="./js/timeline-storage.js"></script>
+  <script src="./js/notes-storage.js"></script>
+  <script src="./js/achievement-core.js"></script>
+  <script src="./js/home.js"></script>
+  <script src="./js/pwa.js"></script>
 </body>
 </html>

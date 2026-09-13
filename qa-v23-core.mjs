@@ -20,7 +20,7 @@ const source=new MemoryStorage({
 });
 const payload=backup.createBackup(source,new Date(date));
 assert.equal(payload.backupSchemaVersion,1);
-assert.equal(payload.app.version,"2.3");
+assert.equal(payload.app.version,"2.4");
 assert.equal(payload.modules.english.entries.xiaoluXiaogVocabularyV2.format,"raw","broken JSON must still be preserved in export");
 assert.equal(payload.modules.timeline.entries.xiaoluXiaogTimelineV1.value.futureField.keep,true,"unknown fields must survive export");
 const target=new MemoryStorage({legacySentinel:"keep-me",unrelatedApp:"untouched"});

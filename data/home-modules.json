@@ -1,11 +1,15 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "shell": "xiaolu-xiaog-home",
   "modules": [
     {"id":"english","name":"一起背单词","kind":"internal","route":"./study.html","status":"active"},
     {"id":"exercise","name":"一起运动","kind":"internal","route":"./exercise.html","status":"active"},
+    {"id":"games","name":"双人游戏厅","kind":"internal","route":"./game-hall.html","status":"active"},
+    {"id":"footprints","name":"我们的足迹","kind":"internal","route":"./footprints.html","status":"active"},
+    {"id":"wishlist","name":"一起想做的事","kind":"internal","route":"./wishlist.html","status":"active"},
     {"id":"memory-timeline","name":"回忆时间线","kind":"internal","route":"./timeline.html","status":"active"},
     {"id":"notes","name":"笔记","kind":"internal","route":"./notes.html","status":"active"},
+    {"id":"achievements","name":"我们的成就","kind":"internal","route":"./achievements.html","status":"active"},
     {"id":"data-center","name":"数据备份与恢复","kind":"internal","route":"./data-center.html","status":"active"},
     {"id":"embedded-lab","name":"嵌入式实验室","kind":"external-repository","repository":"xiaolu-embedded-lab","status":"independent"},
     {"id":"career-radar","name":"职业雷达","kind":"external-repository","repository":"xiaolu-career-radar","status":"independent"},
@@ -17,7 +21,7 @@
     "eventBus": "reserved",
     "permissionCenter": "reserved",
     "memoryCore": "reserved",
-    "pwa": "planned",
+    "pwa": "active",
     "cloudSync": "planned",
     "aiCompanion": "planned"
   }

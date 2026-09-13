@@ -20,7 +20,7 @@ for (const htmlFile of htmlFiles) {
   for (const asset of assets) await access(resolve(root, asset));
 }
 
-for (const file of ["data/wordbooks/manifest.json", "data/study-practice.json", "data/home-modules.json"]) {
+for (const file of ["data/wordbooks/manifest.json", "data/study-practice.json", "data/home-modules.json", "manifest.webmanifest"]) {
   JSON.parse(await readFile(resolve(root, file), "utf8"));
 }
 
@@ -38,7 +38,7 @@ for (const [htmlFile, scriptFile] of [["exercise.html", "js/exercise.js"], ["tim
   for (const id of scriptIds) assert.ok(htmlIds.has(id), `${scriptFile} references missing #${id}`);
 }
 
-for (const file of ["js/study-core.js", "js/study.js", "js/exercise-storage.js", "js/exercise.js", "js/timeline-storage.js", "js/timeline.js", "js/notes-storage.js", "js/notes.js", "js/backup-core.js", "js/data-center.js", "js/achievement-core.js", "js/achievements.js", "js/home.js", "qa-study-core.mjs", "qa-study.mjs", "qa-responsive.mjs", "qa-v22-core.mjs", "qa-v23-core.mjs"]) {
+for (const file of ["js/study-core.js", "js/study.js", "js/exercise-storage.js", "js/exercise.js", "js/timeline-storage.js", "js/timeline.js", "js/notes-storage.js", "js/notes.js", "js/backup-core.js", "js/data-center.js", "js/achievement-core.js", "js/achievements.js", "js/home.js", "js/pwa.js", "sw.js", "qa-study-core.mjs", "qa-study.mjs", "qa-responsive.mjs", "qa-v22-core.mjs", "qa-v23-core.mjs", "qa-v24-core.mjs"]) {
   execFileSync(process.execPath, ["--check", resolve(root, file)], { stdio: "pipe" });
 }
 

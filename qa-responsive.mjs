@@ -24,6 +24,13 @@ try {
   const pages = ["index.html", "wishlist.html", "footprints.html", "exercise.html", "timeline.html", "notes.html", "data-center.html", "game-hall.html", "game.html", "lyrics.html", "timer.html", "sync.html", "memory.html", "world.html", "province.html", "literature.html", "pi-memory.html", "clue-guess.html", "speed-quiz.html", "achievements.html"];
   for (const width of [320, 360, 375, 390, 412, 430, 768, 1024]) for (const page of pages) { await open(page, width); const sizes = await evaluate("({scroll:document.documentElement.scrollWidth,client:document.documentElement.clientWidth})"); await assert(sizes.scroll <= sizes.client, `${page} overflows at ${width}px: ${sizes.scroll}/${sizes.client}`); }
 
+  await open("index.html",320);
+  await assert(await evaluate("document.querySelectorAll('.os-app').length===8"),"Xiaolu OS app grid does not have eight entries");
+  await assert(await evaluate("document.querySelectorAll('.os-dock a').length===4"),"Xiaolu OS dock does not have four shortcuts");
+  await assert(await evaluate("getComputedStyle(document.querySelector('.os-app-grid')).gridTemplateColumns.split(' ').length===4"),"Xiaolu OS mobile grid is not four columns");
+  await open("index.html",1024);
+  await assert(await evaluate("getComputedStyle(document.querySelector('.os-shell')).gridTemplateColumns.split(' ').length===2"),"Xiaolu OS desktop dashboard is not two columns");
+
   await open("wishlist.html", 390);
   await assert(await evaluate("Array.isArray(window.XIAOLU_LEGACY_WISHLIST.items) && window.XIAOLU_LEGACY_WISHLIST.items.length === 450"), "legacy payload is not a 450-item array");
   await evaluate(`localStorage.removeItem('xiaoluXiaogWishlistMigrationVersion');localStorage.setItem('xiaoluXiaogWishlistV1',JSON.stringify([{id:'v16-kept',title:'v1.6 保留测试',note:'不能被覆盖',status:'doing',createdAt:'2026-09-01T00:00:00.000Z',updatedAt:'2026-09-01T00:00:00.000Z',completedAt:null}]))`);
