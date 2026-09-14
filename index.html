@@ -31,7 +31,7 @@
       </section>
 
       <nav class="os-app-grid" aria-label="小路 OS 应用">
-        <a class="os-app app-study" href="./study.html"><span class="os-app-icon" aria-hidden="true">📚</span><strong>学习</strong><small>六级与考研</small></a>
+        <a class="os-app app-study" href="./study.html"><span class="os-app-icon" aria-hidden="true">📚</span><strong>学习</strong><small>考研 · 六级 · 学术</small></a>
         <a class="os-app app-exercise" href="./exercise.html"><span class="os-app-icon" aria-hidden="true">🏃🏻‍♀️</span><strong>运动</strong><small>训练与休息</small></a>
         <a class="os-app app-games" href="./game-hall.html"><span class="os-app-icon" aria-hidden="true">🎮</span><strong>游戏</strong><small>一起玩一局</small></a>
         <a class="os-app app-footprints" href="./footprints.html"><span class="os-app-icon" aria-hidden="true">🗺️</span><strong>足迹</strong><small>去过的地方</small></a>
@@ -42,10 +42,16 @@
       </nav>
       <nav class="os-secondary" aria-label="更多收藏"><span>更多收藏</span><a href="./gifts.html"><span aria-hidden="true">🎁</span><span><strong>礼物盒</strong><small id="home-gift-summary">收藏文件礼物与纪念小物</small></span><b aria-hidden="true">→</b></a></nav>
 
+      <a class="graduate-summary-card" href="./graduate-journey.html" aria-label="打开研究生旅程">
+        <span class="graduate-summary-icon" aria-hidden="true">🎓</span>
+        <span class="graduate-summary-copy"><small>研究生旅程 · <b id="home-journey-phase">研一</b></small><strong id="home-journey-remaining">正在计算毕业倒计时</strong><span class="graduate-mini-progress"><i id="home-journey-bar"></i></span><em id="home-journey-goal">还没有设置目标</em></span>
+        <span class="graduate-summary-percent" id="home-journey-percent">0%</span>
+      </a>
+
       <section class="today-panel" id="today" aria-labelledby="today-title">
         <div class="section-heading"><div><p class="eyebrow">TODAY</p><h2 id="today-title">今天的小家</h2></div><span>慢慢来，也很好</span></div>
         <div class="today-grid">
-          <a href="./study.html"><span class="today-icon" aria-hidden="true">📖</span><span><small>英语学习</small><strong id="today-study">今天可以慢慢开始</strong></span></a>
+          <a href="./study.html"><span class="today-icon" aria-hidden="true">📖</span><span><small>英语 · Academic Priority</small><strong id="today-study">今天可以慢慢开始</strong></span></a>
           <a href="./exercise.html"><span class="today-icon" aria-hidden="true">🌿</span><span><small>运动状态</small><strong id="today-exercise">今天还没有记录</strong></span></a>
           <a href="./timeline.html"><span class="today-icon" aria-hidden="true">📸</span><span><small>最近回忆</small><strong id="today-memory">还没有回忆</strong></span></a>
           <a href="./wishlist.html"><span class="today-icon" aria-hidden="true">✨</span><span><small>愿望进展</small><strong id="today-wish">还没有完成的愿望</strong></span></a>
@@ -83,6 +89,7 @@
   <script src="./js/timeline-storage.js"></script>
   <script src="./js/notes-storage.js"></script>
   <script src="./js/gifts-storage.js"></script>
+  <script src="./js/graduate-journey-core.js"></script>
   <script src="./js/achievement-core.js"></script>
   <script src="./js/home.js"></script>
   <script src="./js/pwa.js"></script>

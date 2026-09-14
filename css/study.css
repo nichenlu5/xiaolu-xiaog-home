@@ -25,6 +25,18 @@
 .daily-plan { display: flex; align-items: center; justify-content: space-between; gap: 20px; }
 .daily-plan h2 { margin-bottom: 8px; font-size: clamp(24px,4vw,32px); }
 .daily-plan > div > p:last-child { margin: 0; color: var(--muted); line-height: 1.6; }
+.academic-priority-card { display: flex; align-items: center; justify-content: space-between; gap: 22px; margin-top: 24px; padding: 20px; border: 1px solid #c8d8ca; border-radius: 20px; background: linear-gradient(135deg,#f0f8f1,#fff8ed); }
+.academic-priority-copy { min-width: 0; }
+.academic-priority-card h2 { margin: 3px 0 6px; font-size: 24px; }
+.academic-priority-card p { margin: 0; color: var(--muted); line-height: 1.6; }
+.academic-progress-row { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 8px; margin-top: 14px; }
+.academic-progress-row span { min-width: 0; padding: 9px 10px; border-radius: 12px; background: rgba(255,255,255,.72); }
+.academic-progress-row strong,.academic-progress-row small { display: block; overflow-wrap: anywhere; }
+.academic-progress-row strong { color: #536f5b; font-size: 15px; }
+.academic-progress-row small { margin-top: 3px; color: var(--muted); font-size: 11px; }
+.academic-button { min-height: 50px; padding: 0 18px; flex: 0 0 auto; border: 0; border-radius: 15px; color: #fff; background: #708f78; font: inherit; font-weight: 800; cursor: pointer; }
+.academic-button:disabled { cursor: not-allowed; opacity: .52; }
+.academic-data-note { margin-top: 10px !important; font-size: 12px; }
 .mastery-legend { display: grid; grid-template-columns: repeat(4,1fr); gap: 8px; margin-top: 24px; }
 .mastery-legend span,.status-report span { padding: 10px; border: 1px solid transparent; border-radius: 12px; text-align: center; font-size: 13px; font-weight: 700; }
 .status-unknown { color: #963b42; background: #fff0f0; border-color: #f4c4c7 !important; }
@@ -70,6 +82,11 @@
 .word-collocations { margin-top: 12px; background: #f2f8f2; }
 .word-collocations li strong,.word-collocations li span { display: block; }
 .word-collocations li span { color: var(--muted); font-size: 13px; }
+.academic-detail { display: grid; gap: 10px; margin-top: 12px; padding: 14px; border: 1px solid #c9dbc9; border-radius: 14px; background: #f4faf4; }
+.academic-detail small { color: #5a745f; font-weight: 800; letter-spacing: .06em; }
+.academic-detail strong,.academic-detail p { display: block; margin: 5px 0 0; line-height: 1.65; }
+.academic-detail #academic-example,.academic-detail #academic-translation { white-space: pre-line; }
+.academic-detail #academic-translation,.academic-detail #academic-confusable,.academic-detail #academic-meta { color: var(--muted); font-size: 13px; }
 .rating-question { margin: 24px 0 10px; text-align: center; font-weight: 800; }
 .rating-actions { display: grid; grid-template-columns: repeat(4,1fr); gap: 8px; }
 .rating-button { min-height: 58px; padding: 7px; border: 1px solid transparent; border-radius: 14px; font: inherit; font-size: 18px; cursor: pointer; }
@@ -139,6 +156,8 @@
   .book-picker small { grid-column: 1; }
   .daily-plan { display: block; }
   .daily-plan .primary-button { width: 100%; margin-top: 20px; }
+  .academic-priority-card { display: block; padding: 16px; }
+  .academic-button { width: 100%; margin-top: 16px; }
   .mastery-legend,.status-report { grid-template-columns: repeat(2,1fr); }
   .dashboard-actions { grid-template-columns: repeat(2,1fr); }
   .study-achievements > div { grid-template-columns: repeat(2,1fr); }
@@ -163,4 +182,5 @@
   .dashboard-actions { grid-template-columns: 1fr; }
   .mastery-legend { font-size: 12px; }
   .practice-options { grid-template-columns: 1fr; }
+  .academic-progress-row { grid-template-columns: 1fr; }
 }

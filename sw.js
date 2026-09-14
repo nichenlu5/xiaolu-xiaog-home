@@ -1,6 +1,6 @@
-const CACHE_NAME="xiaolu-home-v2.5-shell-1";
+const CACHE_NAME="xiaolu-home-v2.6-shell-3";
 const CACHE_PREFIX="xiaolu-home-";
-const CORE=["./","./index.html","./css/style.css","./js/home.js","./js/pwa.js","./js/exercise-storage.js","./js/timeline-storage.js","./js/notes-storage.js","./js/gifts-storage.js","./js/achievement-core.js","./manifest.webmanifest","./icons/app-icon.svg","./icons/app-icon-192.png","./icons/app-icon-512.png"];
+const CORE=["./","./index.html","./study.html","./graduate-journey.html","./css/style.css","./css/study.css","./css/life-module.css","./js/home.js","./js/study-core.js","./js/study.js","./js/pwa.js","./js/exercise-storage.js","./js/timeline-storage.js","./js/notes-storage.js","./js/gifts-storage.js","./js/graduate-journey-core.js","./js/graduate-journey.js","./js/achievement-core.js","./data/wordbooks/manifest.json","./data/wordbooks/kaoyan-complete.json","./data/wordbooks/cet6.json","./data/academic-vocabulary.json","./data/study-practice.json","./manifest.webmanifest","./icons/app-icon.svg","./icons/app-icon-192.png","./icons/app-icon-512.png"];
 
 self.addEventListener("install",event=>{ event.waitUntil(caches.open(CACHE_NAME).then(cache=>cache.addAll(CORE))); self.skipWaiting(); });
 self.addEventListener("activate",event=>{ event.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(key=>key.startsWith(CACHE_PREFIX)&&key!==CACHE_NAME).map(key=>caches.delete(key))))); self.clients.claim(); });

@@ -68,6 +68,6 @@ assert.equal(Object.keys(dirty.mastery).length, 1);
 
 const summary = Core.report({ ...migrated, mastery: { ...migrated.mastery, adapt: mastery } }, manifest, Date.parse("2026-09-10T00:00:00.000Z"));
 assert.equal(summary.counts.simple, 2);
-assert.ok(summary.books.every(book => ["kaoyan-complete", "cet6"].includes(book.bookId)));
+assert.deepEqual(summary.books.map(book => book.bookId), ["kaoyan-complete", "cet6", "academic-priority"]);
 
 console.log("PASS v2.1 core: v3 migration, archived progress, shared mastery, directional SRS, meaning tiers, anomaly filtering, report");

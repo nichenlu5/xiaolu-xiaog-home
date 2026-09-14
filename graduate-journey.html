@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="description" content="记录小路从研一到毕业的目标、里程碑与成长进度。">
+  <title>研究生旅程｜小路 × 小G的小家</title>
+  <link rel="stylesheet" href="./css/style.css">
+  <link rel="stylesheet" href="./css/life-module.css">
+</head>
+<body class="life-page graduate-page">
+  <header class="topbar"><a class="back-link" href="./index.html">← 返回小家</a><a class="room-shortcut" href="./notes.html">📚 笔记本</a></header>
+  <main class="life-shell graduate-shell">
+    <section class="life-hero graduate-hero">
+      <div><p class="eyebrow">GRADUATE JOURNEY</p><h1>研究生旅程 🎓</h1><p>从研一的第一堂课，到论文、答辩和毕业，把每一步都认真留下。</p></div>
+      <button class="soft-button" id="open-settings" type="button">⚙️ 时间设置</button>
+    </section>
+    <p class="life-notice" id="storage-warning" hidden></p>
+
+    <section class="life-panel journey-overview" aria-labelledby="journey-overview-title">
+      <div class="life-section-heading"><div><p class="eyebrow">CURRENT CHAPTER</p><h2 id="journey-overview-title">旅程进度</h2></div><span id="journey-date-range"></span></div>
+      <div class="journey-stats">
+        <article><small>当前阶段</small><strong id="journey-phase">研一</strong></article>
+        <article><small>距离预计毕业</small><strong id="journey-remaining">—</strong></article>
+        <article><small>已经读研</small><strong id="journey-elapsed">—</strong></article>
+        <article><small>总进度</small><strong id="journey-percent">0%</strong></article>
+      </div>
+      <div class="journey-progress" role="progressbar" aria-label="研究生旅程总进度" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><span id="journey-progress-bar"></span></div>
+      <p class="journey-phase-copy" id="journey-phase-copy"></p>
+    </section>
+
+    <section class="life-panel" aria-labelledby="phase-map-title">
+      <div class="life-section-heading"><h2 id="phase-map-title">三年路线图</h2><span>目标可以随时调整</span></div>
+      <div class="phase-map" id="phase-map"></div>
+    </section>
+
+    <section class="life-panel" aria-labelledby="growth-title">
+      <div class="life-section-heading"><h2 id="growth-title">成长记录</h2><span>只读汇总，不复制数据</span></div>
+      <div class="growth-grid">
+        <a href="./study.html"><span>📖</span><small>学习记录</small><strong id="growth-study">暂无数据</strong></a>
+        <a href="./exercise.html"><span>🏃🏻‍♀️</span><small>完成运动</small><strong id="growth-exercise">暂无数据</strong></a>
+        <a href="./timeline.html"><span>❤️</span><small>创建回忆</small><strong id="growth-memories">暂无数据</strong></a>
+        <a href="./notes.html"><span>📝</span><small>创建笔记</small><strong id="growth-notes">暂无数据</strong></a>
+        <a href="./wishlist.html"><span>🌱</span><small>完成愿望</small><strong id="growth-wishes">暂无数据</strong></a>
+      </div>
+    </section>
+
+    <section class="life-panel milestone-panel" aria-labelledby="milestone-title">
+      <div class="life-section-heading"><div><p class="eyebrow">MILESTONES</p><h2 id="milestone-title">目标与里程碑</h2></div><button class="primary-button" id="add-milestone" type="button">＋ 添加目标</button></div>
+      <nav class="filter-pills" aria-label="按阶段筛选"><button class="active" type="button" data-stage-filter="all" aria-pressed="true">全部</button><button type="button" data-stage-filter="year1" aria-pressed="false">研一</button><button type="button" data-stage-filter="year2" aria-pressed="false">研二</button><button type="button" data-stage-filter="year3" aria-pressed="false">研三</button></nav>
+      <p id="milestone-summary" aria-live="polite"></p><div class="record-list" id="milestone-list"></div>
+    </section>
+  </main>
+
+  <dialog class="life-dialog compact-dialog" id="journey-settings-dialog"><form id="journey-settings-form"><div class="dialog-heading"><h2>旅程时间设置</h2><button class="dialog-close" type="button" aria-label="关闭">×</button></div><label for="admission-month">入学月份</label><input id="admission-month" type="month" required><label for="graduation-month">预计毕业月份</label><input id="graduation-month" type="month" required><label for="graduation-date">具体毕业日 <span>选填；留空时只显示预计月份</span></label><input id="graduation-date" type="date"><p class="form-hint">没有确定日期时不会展示一个虚构的毕业日；倒计时按该月最后一天估算。</p><div class="dialog-actions"><button class="soft-button cancel-button" type="button">取消</button><button class="primary-button" type="submit">保存时间</button></div></form></dialog>
+
+  <dialog class="life-dialog" id="milestone-dialog"><form id="milestone-form"><div class="dialog-heading"><h2 id="milestone-dialog-title">添加目标</h2><button class="dialog-close" type="button" aria-label="关闭">×</button></div><input id="milestone-id" type="hidden"><label for="milestone-title-input">标题</label><input id="milestone-title-input" maxlength="120" required autocomplete="off"><div class="form-grid"><div><label for="milestone-stage">阶段</label><select id="milestone-stage" required><option value="year1">研一</option><option value="year2">研二</option><option value="year3">研三</option></select></div><div><label for="milestone-category">分类</label><select id="milestone-category" required></select></div></div><div class="form-grid"><div><label for="milestone-date">日期 / 预计日期 <span>选填</span></label><input id="milestone-date" type="date"></div><div><label for="milestone-status">状态</label><select id="milestone-status" required><option value="todo">未开始</option><option value="doing">进行中</option><option value="done">已完成</option></select></div></div><label class="single-check"><input id="milestone-estimated" type="checkbox"> 此日期为预计日期</label><label for="milestone-note">备注 <span>选填</span></label><textarea id="milestone-note" maxlength="3000"></textarea><div class="dialog-actions"><button class="soft-button cancel-button" type="button">取消</button><button class="primary-button" type="submit">保存目标</button></div></form></dialog>
+
+  <script src="./js/graduate-journey-core.js"></script>
+  <script src="./js/graduate-journey.js"></script>
+</body>
+</html>

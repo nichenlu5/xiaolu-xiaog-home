@@ -30,6 +30,17 @@
     "file": "./data/wordbooks/cet6.json"
   },
   {
+    "bookId": "academic-priority",
+    "name": "Academic Priority / 学术高频",
+    "kind": "academic",
+    "active": true,
+    "source": "academic",
+    "license": "用户词库",
+    "catalogVersion": 2,
+    "totalWords": 465,
+    "file": "./data/academic-vocabulary.json"
+  },
+  {
     "bookId": "cet4",
     "name": "CET-4",
     "active": false,

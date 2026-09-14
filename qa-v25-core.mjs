@@ -37,14 +37,14 @@ assert.equal(gifts.load(new MemoryStorage({[gifts.KEY]:json({schemaVersion:2,gif
 
 const storage=new MemoryStorage({sentinel:"keep",[notes.KEY]:json(migratedNotes),[timeline.KEY]:json(oldTimeline),[gifts.KEY]:json({schemaVersion:1,gifts:[gift]})});
 const payload=backup.createBackup(storage,new Date("2026-09-13T12:00:00.000Z"));
-assert.equal(payload.app.version,"2.5");assert.equal(backup.specs.length,16);assert.equal(payload.modules.notes.entries[notes.KEY].value.notebooks.length,6);assert.equal(payload.modules.gifts.entries[gifts.KEY].value.gifts[0].id,"g-1");
+assert.equal(payload.app.version,"2.6");assert.equal(backup.specs.length,17);assert.equal(payload.modules.notes.entries[notes.KEY].value.notebooks.length,6);assert.equal(payload.modules.gifts.entries[gifts.KEY].value.gifts[0].id,"g-1");
 const oldPayload=structuredClone(payload);delete oldPayload.modules.gifts;oldPayload.app.version="2.4";const preservedGifts=json({schemaVersion:1,gifts:[{id:"keep",name:"保留的礼物"}]}),oldTarget=new MemoryStorage({sentinel:"keep",[gifts.KEY]:preservedGifts}),oldInspection=backup.inspectBackup(oldPayload,oldTarget);assert.equal(oldInspection.valid,true);const restored=backup.restoreBackup(oldPayload,oldTarget);assert.ok(restored.restored.includes(notes.KEY));assert.equal(oldTarget.getItem("sentinel"),"keep");assert.equal(oldTarget.getItem(gifts.KEY),preservedGifts,"old backups without gifts must not clear current gift data");
 
 const timelineHtml=await readFile(resolve(root,"timeline.html"),"utf8"),notesJs=await readFile(resolve(root,"js/notes.js"),"utf8"),giftsJs=await readFile(resolve(root,"js/gifts.js"),"utf8"),sw=await readFile(resolve(root,"sw.js"),"utf8");
 assert.ok(timelineHtml.includes('data-memory-filter="pinned"')&&timelineHtml.includes('data-memory-filter="favorite"')&&timelineHtml.includes('id="tag-filter"'));
 assert.ok(notesJs.includes('source:"note"')&&notesJs.includes("查看关联回忆"),"note to memory flow is missing");
 assert.ok(giftsJs.includes('source:"gift"')&&giftsJs.includes("查看关联回忆"),"gift to memory flow is missing");
-assert.ok(sw.includes("xiaolu-home-v2.5")&&sw.includes("./js/gifts-storage.js"));
+assert.ok(sw.includes("xiaolu-home-v2.6")&&sw.includes("./js/gifts-storage.js"));
 for(const path of ["gifts.html","js/gifts.js","js/gifts-storage.js","manifest.webmanifest","icons/app-icon-192.png"])await access(resolve(root,path));
 
 console.log("PASS v2.5 core: memory flags/links, notebook migration/management, note and gift backlinks, old backup compatibility, PWA resources");

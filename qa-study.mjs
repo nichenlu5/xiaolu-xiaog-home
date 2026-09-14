@@ -86,12 +86,12 @@ try {
   await assert(await evaluate("localStorage.getItem('v21Sentinel')==='keep-me'"), "migration touched unrelated localStorage");
 
   await click("#start-button");
-  await assert(await evaluate("StudyApp.getBook().session.queue.length===50 && StudyApp.getBook().session.queue[0]==='kaoyan-complete-00001'"), "daily 50/order failed");
+  await assert(await evaluate("StudyApp.getBook().session.queue.length===50 && StudyApp.getBook().session.queue.slice(0,30).every(id=>id.startsWith('academic-priority-')) && StudyApp.getBook().session.queue.filter(id=>id.startsWith('academic-priority-')).length===30"), "academic-first 30+20 daily plan failed");
   await click("#reveal-button");
   await click('[data-rating="unknown"]');
   await click("#reveal-button");
   await click('[data-rating="simple"]');
-  await assert(await evaluate("StudyApp.getBook().session.queue.length===50 && StudyApp.getBook().session.queue[49]==='kaoyan-complete-00051'"), "too-simple did not refill daily goal");
+  await assert(await evaluate("StudyApp.getBook().session.queue.length===50 && StudyApp.getBook().session.queue.filter(id=>id.startsWith('academic-priority-')).length===30"), "too-simple did not refill the academic target");
   await assert(await evaluate("Object.values(StudyApp.getState().mastery).some(x=>x.status==='unknown') && Object.values(StudyApp.getState().mastery).some(x=>x.status==='simple')"), "four-level mastery was not saved");
   await evaluate("(()=>{while(StudyApp.getBook().session.round===0)StudyApp.rate('known');for(let i=0;i<3;i++)StudyApp.rate('known')})()");
   await click("#exit-button");
@@ -100,7 +100,7 @@ try {
   await assert(await evaluate("!document.querySelector('#resume-banner').hidden && StudyApp.getBook().session.round===1 && StudyApp.getBook().session.index===3"), "breakpoint resume failed");
   await click("#resume-button");
   await evaluate("(()=>{while(StudyApp.getBook().session)StudyApp.rate('known')})()");
-  await assert(await evaluate("StudyApp.getBook().history.length===1 && StudyApp.getBook().currentPosition===51"), "completion/history/cursor failed");
+  await assert(await evaluate("StudyApp.getBook().history.length===1 && StudyApp.getBook().currentPosition>=20 && StudyApp.getState().books['academic-priority'].currentPosition>=30 && StudyApp.getBook().history[0].academicWords===30"), "completion/history/cursors failed");
 
   await click("#result-home");
   await evaluate("(()=>{const s=StudyApp.getState();const key=Object.keys(s.mastery).find(k=>s.mastery[k].status==='unknown');s.mastery[key].nextReviewAt='2000-01-01T00:00:00.000Z';s.mastery[key].directions['en-zh'].nextReviewAt='2000-01-01T00:00:00.000Z';localStorage.setItem('xiaoluXiaogVocabularyV2',JSON.stringify(s));location.reload()})()");
@@ -111,6 +111,11 @@ try {
   const sharedWord = await evaluate("(async()=>{const first=StudyApp.getWords()[0].word;StudyApp.getState().mastery[first.toLowerCase()]={word:first,status:'fuzzy',updatedAt:new Date().toISOString(),nextReviewAt:new Date().toISOString(),directions:{'en-zh':{status:'fuzzy',updatedAt:new Date().toISOString(),nextReviewAt:new Date().toISOString(),streak:0,misses:0}}};await StudyApp.loadBook('cet6');return first})()");
   await assert(await evaluate(`StudyApp.getState().mastery[${JSON.stringify(sharedWord.toLowerCase())}].status==='fuzzy' && StudyApp.getBook().currentPosition===12`), "shared mastery or independent book progress failed");
 
+  await click("#academic-button");
+  await assert(await evaluate("StudyApp.getBook().session.mode==='academic' && StudyApp.getBook().session.queue.every(id=>id.startsWith('academic-priority-')) && document.querySelector('#round-label').textContent.includes('Academic Mode')"), "paper mode did not isolate academic words");
+  await evaluate("(()=>{while(StudyApp.getBook().session)StudyApp.rate('known')})()");
+  await click("#result-home");
+
   await click("#collocation-button");
   await assert(await evaluate("document.querySelector('#practice-dialog').open && document.querySelectorAll('[data-practice-answer]').length>=2"), "collocation practice structure failed");
   await click('[data-close="practice-dialog"]');
@@ -118,7 +123,7 @@ try {
   await assert(await evaluate("document.querySelector('#practice-dialog').open && document.querySelector('#practice-title').textContent.includes('易混词')"), "confusable practice structure failed");
   await click('[data-close="practice-dialog"]');
   await click("#report-button");
-  await assert(await evaluate("document.querySelector('#report-dialog').open && document.querySelectorAll('.book-report article').length===2"), "learning report failed");
+  await assert(await evaluate("document.querySelector('#report-dialog').open && document.querySelectorAll('.book-report article').length===3"), "learning report failed");
   await click('[data-close="report-dialog"]');
 
   const backup = await evaluate("JSON.stringify({app:'xiaolu-xiaog-vocabulary',schemaVersion:4,data:StudyApp.getState()})");
@@ -129,7 +134,7 @@ try {
   await pause(350);
   await assert(await evaluate("StudyApp.getState().version===4 && localStorage.getItem('v21Sentinel')==='keep-me'"), "validated import or storage isolation failed");
 
-  for (const width of [320, 360, 390, 430, 1024]) {
+  for (const width of [320, 360, 375, 390, 430, 1024]) {
     await open("study.html", width);
     await ready();
     const size = await evaluate("({scroll:document.documentElement.scrollWidth,client:document.documentElement.clientWidth})");
@@ -137,7 +142,7 @@ try {
   }
   await open("index.html", 320);
   await assert(await evaluate("!!document.querySelector('a[href=\"./study.html\"]')"), "home study entry missing");
-  console.log("PASS v2.1 browser: two main books; v3 migration; shared mastery; independent progress; four ratings; active recall; SRS; practice; report; safe storage; import; responsive");
+  console.log("PASS v2.6 study browser: two main books; academic priority; daily 50; paper mode; v3 migration; shared four-state mastery; SRS; practice; report; safe storage; import; responsive");
 } finally {
   proc.kill();
   server.close();

@@ -131,3 +131,33 @@
   .memory-date-group { padding-left:19px; }.timeline-list .memory-card::before { left:-18px; }
   .record-actions button,.record-actions a { flex:1 1 auto; justify-content:center; text-align:center; }
 }
+
+/* Graduate journey · v2.6 */
+.graduate-hero { background:linear-gradient(135deg,#f6fbf6,#fff7e9); }
+.journey-overview { background:linear-gradient(145deg,#fffefb,#f3f8f3); }
+.journey-stats { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:10px; }
+.journey-stats article { min-width:0; padding:14px; border:1px solid #e4ebe4; border-radius:15px; background:rgba(255,255,255,.82); }
+.journey-stats small,.journey-stats strong { display:block; }.journey-stats small { color:var(--muted); font-size:11px; }.journey-stats strong { margin-top:6px; overflow-wrap:anywhere; font-size:20px; }
+.journey-progress { height:13px; margin-top:16px; overflow:hidden; border-radius:999px; background:#e7eee7; box-shadow:inset 0 1px 3px rgba(72,91,76,.08); }
+.journey-progress span { display:block; width:0; height:100%; border-radius:inherit; background:linear-gradient(90deg,#92b99a,#efb18e); transition:width 300ms ease; }
+.journey-phase-copy { margin:10px 0 0; color:var(--muted); font-size:13px; }
+.phase-map { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:11px; }
+.phase-card { padding:16px; border:1px solid var(--line); border-radius:17px; background:#fffdf9; }
+.phase-card.current { border-color:#94b39a; box-shadow:0 0 0 2px rgba(131,173,141,.13); background:#f7fbf7; }
+.phase-card > span { display:inline-flex; padding:4px 8px; border-radius:999px; color:#5e7964; background:#e9f3eb; font-size:11px; font-weight:750; }.phase-card h3 { margin:10px 0 5px; }.phase-card p { min-height:48px; margin:0; color:var(--muted); font-size:13px; line-height:1.55; }.phase-card small { display:block; margin-top:11px; color:#856b5f; }
+.growth-grid { display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:9px; }
+.growth-grid a { display:flex; min-width:0; min-height:105px; padding:12px 8px; align-items:center; flex-direction:column; justify-content:center; border:1px solid var(--line); border-radius:15px; color:var(--ink); background:#fffdf9; text-align:center; text-decoration:none; }.growth-grid a > span { font-size:22px; }.growth-grid small { margin:6px 0 3px; color:var(--muted); font-size:11px; }.growth-grid strong { font-size:12px; overflow-wrap:anywhere; }
+.milestone-status { display:inline-flex; padding:5px 9px; border-radius:999px; font-size:12px; font-weight:750; }.is-todo .milestone-status { color:#765e4f; background:#f4ede6; }.is-doing .milestone-status { color:#526d58; background:#e5f1e7; }.is-done .milestone-status { color:#766633; background:#fff1c7; }.milestone-card.is-done h3 { text-decoration-color:#d8c798; text-decoration-line:line-through; }
+.form-hint { margin:0; color:var(--muted); font-size:12px; line-height:1.55; }
+
+@media (max-width:700px) {
+  .graduate-shell { width:100%; padding:8px 12px 44px; }
+  .graduate-hero { padding:22px 18px; }.graduate-hero .soft-button { width:100%; margin-top:14px; }
+  .journey-stats { grid-template-columns:repeat(2,minmax(0,1fr)); }.journey-stats article { padding:12px; }.journey-stats strong { font-size:18px; }
+  .phase-map { display:flex; margin:0 -14px; padding:2px 14px 8px; overflow-x:auto; gap:9px; scroll-snap-type:x proximity; }.phase-card { min-width:min(78vw,250px); scroll-snap-align:start; }.phase-card p { min-height:0; }
+  .growth-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }.growth-grid a:last-child { grid-column:1/-1; min-height:82px; }
+  .milestone-panel .life-section-heading { align-items:flex-start; flex-direction:column; }.milestone-panel .primary-button { width:100%; }
+}
+@media (max-width:350px) {
+  .graduate-shell { padding-left:10px; padding-right:10px; }.journey-stats { gap:7px; }.journey-stats article { padding:11px 9px; }.journey-stats strong { font-size:16px; }
+}

@@ -10,18 +10,19 @@ class MemoryStorage {
 }
 const json=value=>JSON.stringify(value),date="2026-09-08T10:00:00.000Z";
 
-assert.equal(backup.specs.length,16,"backup registry must cover all 16 persistent keys");
+assert.equal(backup.specs.length,17,"backup registry must cover all 17 persistent keys");
 const source=new MemoryStorage({
   legacySentinel:"keep-me",
   xiaoluXiaogVocabularyV2:"{bad json",
   xiaoluXiaogWishlistV1:json([{id:"w1",title:"看海",status:"done",completedAt:date}]),
   xiaoluXiaogTimelineV1:json({schemaVersion:2,memories:[],futureField:{keep:true}}),
   xiaoluXiaogNotesV1:json({schemaVersion:2,notebooks:[],notes:[]}),
-  xiaoluXiaogGiftsV1:json({schemaVersion:1,gifts:[{id:"g1",name:"情书"}]})
+  xiaoluXiaogGiftsV1:json({schemaVersion:1,gifts:[{id:"g1",name:"情书"}]}),
+  xiaoluXiaogGraduateJourneyV1:json({schemaVersion:1,settings:{admissionMonth:"2026-09",graduationMonth:"2029-06"},milestones:[]})
 });
 const payload=backup.createBackup(source,new Date(date));
 assert.equal(payload.backupSchemaVersion,1);
-assert.equal(payload.app.version,"2.5");
+assert.equal(payload.app.version,"2.6");
 assert.equal(payload.modules.gifts.entries.xiaoluXiaogGiftsV1.value.gifts[0].id,"g1");
 assert.equal(payload.modules.english.entries.xiaoluXiaogVocabularyV2.format,"raw","broken JSON must still be preserved in export");
 assert.equal(payload.modules.timeline.entries.xiaoluXiaogTimelineV1.value.futureField.keep,true,"unknown fields must survive export");
@@ -30,7 +31,7 @@ const inspection=backup.inspectBackup(payload,target);
 assert.equal(inspection.valid,true);
 assert.ok(inspection.skipped.some(x=>x.key==="xiaoluXiaogVocabularyV2"),"invalid module must be skipped independently");
 const restored=backup.restoreBackup(payload,target);
-assert.equal(restored.restored.length,4);
+assert.equal(restored.restored.length,5);
 assert.equal(target.getItem("legacySentinel"),"keep-me");
 assert.equal(target.getItem("unrelatedApp"),"untouched");
 assert.equal(JSON.parse(target.getItem("xiaoluXiaogTimelineV1")).futureField.keep,true);

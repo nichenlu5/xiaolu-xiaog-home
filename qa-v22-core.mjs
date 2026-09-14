@@ -5,6 +5,7 @@ const exercise = require("./js/exercise-storage.js");
 const timeline = require("./js/timeline-storage.js");
 const notes = require("./js/notes-storage.js");
 const gifts = require("./js/gifts-storage.js");
+const graduate = require("./js/graduate-journey-core.js");
 
 const fakeStorage = raw => ({ getItem: () => raw, setItem(key, value) { this.saved = { key, value }; } });
 const broken = fakeStorage("{bad json");
@@ -12,6 +13,7 @@ assert.equal(exercise.load(broken).locked, true, "malformed exercise data must b
 assert.equal(timeline.load(broken).locked, true, "malformed timeline data must be protected");
 assert.equal(notes.load(broken).locked, true, "malformed notes data must be protected");
 assert.equal(gifts.load(broken).locked, true, "malformed gifts data must be protected");
+assert.equal(graduate.load(broken).locked, true, "malformed graduate journey data must be protected");
 assert.equal(exercise.load(fakeStorage('{"schemaVersion":3,"records":[]}')).locked, true, "future exercise schema must be read-only");
 
 const exerciseState = exercise.normalizeState({ records: [null, { type: "有氧", durationMinutes: "35", status: "completed", posturePhotoRefs: ["future-photo-id", 2] }] });
@@ -46,7 +48,8 @@ assert.equal(exercise.save(exerciseState, isolatedStorage), true);
 assert.equal(timeline.save({ memories:[memory] }, isolatedStorage), true);
 assert.equal(notes.save(noteState, isolatedStorage), true);
 assert.equal(gifts.save({gifts:[]},isolatedStorage),true);
+assert.equal(graduate.save({milestones:[]},isolatedStorage),true);
 assert.equal(values.get("legacySentinel"), "keep-me");
-assert.deepEqual([...values.keys()].sort(), [exercise.KEY, gifts.KEY, "legacySentinel", notes.KEY, timeline.KEY].sort());
+assert.deepEqual([...values.keys()].sort(), [exercise.KEY, gifts.KEY, graduate.KEY, "legacySentinel", notes.KEY, timeline.KEY].sort());
 
-console.log("PASS v2.2-v2.5 compatibility: schema migration, alias normalization, malformed JSON protection, storage isolation, references");
+console.log("PASS v2.2-v2.6 compatibility: schema migration, alias normalization, malformed JSON protection, storage isolation, references");

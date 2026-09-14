@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 3,
+  "schemaVersion": 4,
   "shell": "xiaolu-xiaog-home",
   "modules": [
     {"id":"english","name":"一起背单词","kind":"internal","route":"./study.html","status":"active"},
@@ -11,6 +11,7 @@
     {"id":"notes","name":"笔记","kind":"internal","route":"./notes.html","status":"active"},
     {"id":"achievements","name":"我们的成就","kind":"internal","route":"./achievements.html","status":"active"},
     {"id":"gifts","name":"礼物盒","kind":"internal","route":"./gifts.html","status":"active","placement":"secondary"},
+    {"id":"graduate-journey","name":"研究生旅程","kind":"internal","route":"./graduate-journey.html","status":"active","placement":"secondary"},
     {"id":"data-center","name":"数据备份与恢复","kind":"internal","route":"./data-center.html","status":"active"},
     {"id":"embedded-lab","name":"嵌入式实验室","kind":"external-repository","repository":"xiaolu-embedded-lab","status":"independent"},
     {"id":"career-radar","name":"职业雷达","kind":"external-repository","repository":"xiaolu-career-radar","status":"independent"},

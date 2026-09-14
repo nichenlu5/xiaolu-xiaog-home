@@ -35,7 +35,7 @@
       mastery: {},
       books: {},
       legacyBooks: {},
-      preferences: { dailyGoal: 50 },
+      preferences: { dailyGoal: 50, academicDailyGoal: 30, lastAcademicWord: "" },
       migration: null
     };
   }
@@ -46,6 +46,7 @@
       name: meta.name,
       source: meta.source,
       totalWords: meta.totalWords,
+      catalogVersion: clampInt(meta.catalogVersion ?? 1, 1, 10_000),
       currentPosition: 0,
       history: [],
       session: null
@@ -54,7 +55,7 @@
 
   function sanitizeHistory(value) {
     return (Array.isArray(value) ? value : []).filter(item => {
-      return isObject(item) && validDate(item.date) && ["daily", "review"].includes(item.mode);
+      return isObject(item) && validDate(item.date) && ["daily", "review", "academic"].includes(item.mode);
     }).slice(0, 366).map(item => ({
       date: new Date(item.date).toISOString(),
       mode: item.mode,
@@ -69,12 +70,14 @@
         "en-zh": clampInt(item.directions?.["en-zh"], 0, 20_000),
         "zh-en": clampInt(item.directions?.["zh-en"], 0, 20_000)
       },
-      durationSeconds: clampInt(item.durationSeconds, 0, 86_400)
+      durationSeconds: clampInt(item.durationSeconds, 0, 86_400),
+      academicWords: clampInt(item.academicWords, 0, 10_000),
+      generalWords: clampInt(item.generalWords, 0, 10_000)
     }));
   }
 
   function sanitizeSession(value, validIds, currentPosition) {
-    if (!isObject(value) || !["daily", "review"].includes(value.mode)) return null;
+    if (!isObject(value) || !["daily", "review", "academic"].includes(value.mode)) return null;
     const queue = uniqueStrings(value.queue).filter(id => !validIds || validIds.has(id)).slice(0, 5000);
     if (!queue.length) return null;
     return {
@@ -89,7 +92,11 @@
         simple: clampInt(value.ratings?.simple ?? value.skipped, 0, 20_000)
       },
       startedAt: isoOr(value.startedAt, new Date().toISOString()),
-      scanCursor: clampInt(value.scanCursor, currentPosition, Number.MAX_SAFE_INTEGER)
+      scanCursor: clampInt(value.scanCursor, currentPosition, Number.MAX_SAFE_INTEGER),
+      generalScanCursor: clampInt(value.generalScanCursor ?? value.scanCursor, currentPosition, Number.MAX_SAFE_INTEGER),
+      academicScanCursor: clampInt(value.academicScanCursor, 0, Number.MAX_SAFE_INTEGER),
+      academicWords: clampInt(value.academicWords, 0, queue.length),
+      generalWords: clampInt(value.generalWords, 0, queue.length)
     };
   }
 
@@ -161,25 +168,47 @@
     };
   }
 
-  function sanitizeV4(raw, metas) {
+  function sanitizeV4(raw, metas, catalogs = {}) {
     const input = object(raw);
     const result = blankRoot();
-    const activeIds = new Set(metas.filter(meta => meta.active !== false).map(meta => meta.bookId));
-    result.selectedBookId = activeIds.has(input.selectedBookId) ? input.selectedBookId : (activeIds.has(ACTIVE_DEFAULT) ? ACTIVE_DEFAULT : [...activeIds][0]);
+    const activeMetas = metas.filter(meta => meta.active !== false);
+    const selectableIds = new Set(activeMetas.filter(meta => meta.kind !== "academic").map(meta => meta.bookId));
+    const allCatalogIds = new Set(activeMetas.flatMap(meta => (Array.isArray(catalogs[meta.bookId]) ? catalogs[meta.bookId] : []).map(item => item.id)));
+    result.selectedBookId = selectableIds.has(input.selectedBookId) ? input.selectedBookId : (selectableIds.has(ACTIVE_DEFAULT) ? ACTIVE_DEFAULT : [...selectableIds][0]);
     result.preferences.dailyGoal = clampInt(input.preferences?.dailyGoal, 5, 100);
+    result.preferences.academicDailyGoal = clampInt(input.preferences?.academicDailyGoal ?? 30, 0, result.preferences.dailyGoal);
+    result.preferences.lastAcademicWord = String(input.preferences?.lastAcademicWord || "").trim().slice(0, 120);
     for (const [key, value] of Object.entries(object(input.mastery))) {
       const normalized = normalizeWord(key || value?.word);
       if (!normalized || normalized.length > 120) continue;
       const clean = sanitizeMastery(value, normalized);
       if (clean) result.mastery[normalized] = clean;
     }
-    for (const meta of metas.filter(meta => meta.active !== false)) {
-      result.books[meta.bookId] = sanitizeBook(input.books?.[meta.bookId], meta);
+    for (const meta of activeMetas) {
+      result.books[meta.bookId] = sanitizeBook(input.books?.[meta.bookId], meta, allCatalogIds.size ? allCatalogIds : undefined);
+    }
+    const academicMeta = activeMetas.find(meta => meta.kind === "academic");
+    const oldAcademic = object(input.books?.[academicMeta?.bookId]);
+    const academicCatalogChanged = academicMeta && Object.keys(oldAcademic).length
+      && clampInt(oldAcademic.catalogVersion ?? 1, 1, 10_000) < clampInt(academicMeta.catalogVersion ?? 1, 1, 10_000);
+    if (academicCatalogChanged) {
+      result.books[academicMeta.bookId].currentPosition = 0;
+      for (const data of Object.values(result.books)) {
+        if (data.session?.queue.some(id => id.startsWith("academic-priority-"))) data.session.academicScanCursor = 0;
+      }
+      result.migration = {
+        ...(isObject(input.migration) ? input.migration : {}),
+        academicCatalog: {
+          fromVersion: clampInt(oldAcademic.catalogVersion ?? 1, 1, 10_000),
+          toVersion: clampInt(academicMeta.catalogVersion ?? 1, 1, 10_000),
+          migratedAt: new Date().toISOString()
+        }
+      };
     }
     for (const meta of metas.filter(meta => meta.active === false)) {
       if (input.legacyBooks?.[meta.bookId]) result.legacyBooks[meta.bookId] = sanitizeBook(input.legacyBooks[meta.bookId], meta);
     }
-    result.migration = isObject(input.migration) ? input.migration : null;
+    if (!academicCatalogChanged) result.migration = isObject(input.migration) ? input.migration : null;
     return result;
   }
 
@@ -275,6 +304,107 @@
     return Boolean(entry && entry.status !== "simple" && validDate(entry.nextReviewAt) && Date.parse(entry.nextReviewAt) <= Number(now));
   }
 
+  function eligibleSlice(words, mastery, start, count, excluded = [], excludedWords = []) {
+    const ids = [], blocked = new Set(excluded), blockedWords = new Set(excludedWords.map(normalizeWord));
+    let index = Math.max(0, Math.trunc(finiteNumber(start)));
+    while (index < words.length && ids.length < count) {
+      const word = words[index++];
+      const key = normalizeWord(word?.word);
+      if (word && !blocked.has(word.id) && !blockedWords.has(key) && object(mastery)[key]?.status !== "simple") {
+        ids.push(word.id);
+        blockedWords.add(key);
+      }
+    }
+    return { ids, next: index };
+  }
+
+  function buildDailyPlan(generalWords, academicWords, mastery, generalStart = 0, academicStart = 0, dailyGoal = 50, academicGoal = 30) {
+    const total = clampInt(dailyGoal, 1, 100), academicTarget = clampInt(academicGoal, 0, total);
+    let academic = eligibleSlice(academicWords, mastery, academicStart, academicTarget);
+    const academicChosenWords = academic.ids.map(id => academicWords.find(word => word.id === id)?.word).filter(Boolean);
+    let general = eligibleSlice(generalWords, mastery, generalStart, total - academic.ids.length, academic.ids, academicChosenWords);
+    if (academic.ids.length + general.ids.length < total) {
+      const generalChosenWords = general.ids.map(id => generalWords.find(word => word.id === id)?.word).filter(Boolean);
+      const extraAcademic = eligibleSlice(academicWords, mastery, academic.next, total - academic.ids.length - general.ids.length, [...academic.ids, ...general.ids], generalChosenWords);
+      academic = { ids: academic.ids.concat(extraAcademic.ids), next: extraAcademic.next };
+    }
+    if (academic.ids.length + general.ids.length < total) {
+      const allAcademicWords = academic.ids.map(id => academicWords.find(word => word.id === id)?.word).filter(Boolean);
+      const extraGeneral = eligibleSlice(generalWords, mastery, general.next, total - academic.ids.length - general.ids.length, [...academic.ids, ...general.ids], allAcademicWords);
+      general = { ids: general.ids.concat(extraGeneral.ids), next: extraGeneral.next };
+    }
+    return {
+      ids: academic.ids.concat(general.ids),
+      academicIds: academic.ids,
+      generalIds: general.ids,
+      academicNext: academic.next,
+      generalNext: general.next
+    };
+  }
+
+  function prioritizeDueWords(words, mastery, now = Date.now()) {
+    const seen = new Set();
+    return words.filter(word => {
+      const key = normalizeWord(word?.word);
+      if (!key || seen.has(key) || !isDue(object(mastery)[key], now)) return false;
+      seen.add(key);
+      return true;
+    }).sort((a, b) => {
+      const left = object(mastery)[normalizeWord(a.word)], right = object(mastery)[normalizeWord(b.word)];
+      return (STATUS[right?.status]?.weight || 0) - (STATUS[left?.status]?.weight || 0)
+        || Number(b.source === "academic") - Number(a.source === "academic")
+        || String(left?.nextReviewAt || "").localeCompare(String(right?.nextReviewAt || ""));
+    });
+  }
+
+  function academicQuestion(word, index = 0, round = 0) {
+    const collocation = Array.isArray(word?.collocations) ? word.collocations[0] : null;
+    const meaning = String(word?.academicMeaning || word?.meaning || "暂无论文语境释义");
+    if (round) return { type: "zh-en", direction: "zh-en", label: "根据论文语境，说出英文词", prompt: meaning };
+    const types = ["academic-meaning", "collocation", "example", "confusable"];
+    let type = types[Math.max(0, index) % types.length];
+    if (type === "collocation" && !collocation?.text) type = "academic-meaning";
+    if (type === "example" && !word?.example) type = "academic-meaning";
+    if (type === "confusable" && (!Array.isArray(word?.confusableWith) || !word.confusableWith.length)) type = "academic-meaning";
+    if (type === "collocation") return { type, direction: "en-zh", label: "理解这组高频学术搭配", prompt: collocation.text };
+    if (type === "example") return { type, direction: "en-zh", label: "理解例句中的学术含义", prompt: word.example };
+    if (type === "confusable") return { type, direction: "en-zh", label: `与 ${word.confusableWith.join(" / ")} 对比理解`, prompt: word.word };
+    return { type, direction: "en-zh", label: "说出它在论文语境中的核心含义", prompt: word.word };
+  }
+
+  function sanitizeAcademicWord(value) {
+    if (!isObject(value) || typeof value.id !== "string" || !value.id.startsWith("academic-priority-") || typeof value.word !== "string") return null;
+    const word = value.word.trim().slice(0, 120), academicMeaning = String(value.academicMeaning || value.meaning || "").trim().slice(0, 500);
+    if (!word || !academicMeaning) return null;
+    const cleanCollocation = item => isObject(item) ? {
+      text: String(item.text || "").trim().slice(0, 160), translation: String(item.translation || "").trim().slice(0, 200)
+    } : null;
+    const cleanExample = item => isObject(item) ? {
+      text: String(item.text || "").trim().slice(0, 500), translation: String(item.translation || "").trim().slice(0, 500)
+    } : null;
+    const cleanSense = item => isObject(item) ? {
+      sectionId: String(item.sectionId || "").trim().slice(0, 40), section: String(item.section || "").trim().slice(0, 120),
+      academicMeaning: String(item.academicMeaning || "").trim().slice(0, 500),
+      collocation: cleanCollocation(item.collocation), example: String(item.example || "").trim().slice(0, 500),
+      translation: String(item.translation || "").trim().slice(0, 500)
+    } : null;
+    return {
+      id: value.id.slice(0, 120), word,
+      phonetic: String(value.phonetic || "").trim().slice(0, 120),
+      partOfSpeech: String(value.partOfSpeech || "").trim().slice(0, 40),
+      meaning: String(value.meaning || academicMeaning).trim().slice(0, 500), academicMeaning,
+      frequency: clampInt(value.frequency, 0, 5), frequencyLabel: String(value.frequencyLabel || "").trim().slice(0, 5),
+      collocations: (Array.isArray(value.collocations) ? value.collocations : []).slice(0, 12).map(cleanCollocation).filter(item => item?.text),
+      example: String(value.example || "").trim().slice(0, 500), translation: String(value.translation || "").trim().slice(0, 500),
+      examples: (Array.isArray(value.examples) ? value.examples : []).slice(0, 12).map(cleanExample).filter(item => item?.text),
+      senses: (Array.isArray(value.senses) ? value.senses : []).slice(0, 12).map(cleanSense).filter(item => item?.academicMeaning),
+      source: "academic", sectionId: String(value.sectionId || "").trim().slice(0, 40), section: String(value.section || "").trim().slice(0, 120),
+      top100Rank: Number.isInteger(Number(value.top100Rank)) && Number(value.top100Rank) >= 1 && Number(value.top100Rank) <= 100 ? Number(value.top100Rank) : null,
+      tags: uniqueStrings(value.tags).slice(0, 12), confusableWith: uniqueStrings(value.confusableWith).slice(0, 12),
+      confusableNote: String(value.confusableNote || "").trim().slice(0, 500), masteryStatus: null
+    };
+  }
+
   function parseMeaning(meaning) {
     const cleaned = String(meaning || "").replace(/\[[^\]]+\]/g, "").replace(/\s+/g, " ").trim();
     const chunks = cleaned.split(/[；;]/).flatMap(part => {
@@ -329,6 +459,6 @@
   return {
     VERSION, STATUS, DIRECTIONS, ACTIVE_DEFAULT,
     blankRoot, emptyBook, normalizeWord, sanitizeBook, sanitizeV4, migrateV3,
-    rateMastery, isDue, parseMeaning, report, validDate
+    rateMastery, isDue, eligibleSlice, buildDailyPlan, prioritizeDueWords, academicQuestion, sanitizeAcademicWord, parseMeaning, report, validDate
   };
 });

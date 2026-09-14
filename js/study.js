@@ -10,7 +10,12 @@
 
   let allManifest = [];
   let manifest = [];
+  let academicMeta = null;
   let words = [];
+  let academicWords = [];
+  let academicIds = new Set();
+  let academicCatalogInfo = null;
+  let catalogs = {};
   let byId = new Map();
   let byWord = new Map();
   let practice = { collocations: [], confusables: [] };
@@ -51,19 +56,29 @@
 
   const meta = () => manifest.find(item => item.bookId === state.selectedBookId);
   const book = () => state.books[state.selectedBookId];
+  const academicBook = () => academicMeta && state.books[academicMeta.bookId];
   const current = () => active && byId.get(active.queue[active.index]);
   const formatWord = word => `${word.word}${word.phonetic ? ` ${word.phonetic}` : ""}`;
   const masteryFor = word => state.mastery[Core.normalizeWord(word)];
   const statusText = entry => entry ? `${Core.STATUS[entry.status].icon} ${Core.STATUS[entry.status].label}` : "⚪ 未学习";
 
   async function fetchCatalog(bookMeta) {
+    if (catalogs[bookMeta.bookId]) return catalogs[bookMeta.bookId];
     const response = await fetch(bookMeta.file);
     if (!response.ok) throw new Error(`词书读取失败：${response.status}`);
     const payload = await response.json();
     if (payload.bookId !== bookMeta.bookId || !Array.isArray(payload.words)) throw new Error("词书格式不正确");
-    return payload.words.filter(item => {
+    if (bookMeta.kind === "academic" && ![1, 2].includes(payload.schemaVersion)) throw new Error("学术词库 schema 暂不支持");
+    if (bookMeta.kind === "academic") academicCatalogInfo = {
+      complete: payload.complete === true,
+      sourceEntryCount: Number(payload.sourceEntryCount) || payload.words.length,
+      uniqueWordCount: Number(payload.uniqueWordCount) || payload.words.length
+    };
+    const clean = payload.words.filter(item => {
       return item && typeof item.id === "string" && typeof item.word === "string" && typeof item.meaning === "string";
-    });
+    }).map(item => bookMeta.kind === "academic" ? Core.sanitizeAcademicWord(item) : item).filter(Boolean);
+    catalogs[bookMeta.bookId] = clean;
+    return clean;
   }
 
   async function migrateIfNeeded() {
@@ -72,15 +87,12 @@
       return;
     }
     if (rawState.version === 3) {
-      const catalogs = {};
-      const loaded = await Promise.all(allManifest.map(async item => [item.bookId, await fetchCatalog(item)]));
-      for (const [bookId, catalog] of loaded) catalogs[bookId] = catalog;
       state = Core.migrateV3(rawState, allManifest, catalogs);
       storageLocked = false;
       save();
       return;
     }
-    state = Core.sanitizeV4(rawState, allManifest);
+    state = Core.sanitizeV4(rawState, allManifest, catalogs);
     save();
   }
 
@@ -90,10 +102,15 @@
       if (!manifestResponse.ok) throw new Error(`词书清单读取失败：${manifestResponse.status}`);
       allManifest = await manifestResponse.json();
       if (!Array.isArray(allManifest)) throw new Error("词书清单格式不正确");
-      manifest = allManifest.filter(item => item.active !== false);
-      if (manifest.length !== 2 || !manifest.some(item => item.bookId === "kaoyan-complete") || !manifest.some(item => item.bookId === "cet6")) {
+      const activeManifest = allManifest.filter(item => item.active !== false);
+      manifest = activeManifest.filter(item => item.kind !== "academic");
+      academicMeta = activeManifest.find(item => item.kind === "academic") || null;
+      if (manifest.length !== 2 || !manifest.some(item => item.bookId === "kaoyan-complete") || !manifest.some(item => item.bookId === "cet6") || !academicMeta) {
         throw new Error("v2.1 主词书清单不完整");
       }
+      await Promise.all((rawState?.version === 3 ? allManifest : activeManifest).map(fetchCatalog));
+      academicWords = catalogs[academicMeta.bookId];
+      academicIds = new Set(academicWords.map(item => item.id));
       if (practiceResponse.ok) {
         const payload = await practiceResponse.json();
         practice = {
@@ -114,48 +131,43 @@
   async function loadBook(id) {
     const chosen = manifest.find(item => item.bookId === id) || manifest[0];
     words = await fetchCatalog(chosen);
-    byId = new Map(words.map(item => [item.id, item]));
-    byWord = new Map(words.map(item => [Core.normalizeWord(item.word), item]));
+    const combined = [...academicWords, ...words];
+    byId = new Map(combined.map(item => [item.id, item]));
+    byWord = new Map(combined.map(item => [Core.normalizeWord(item.word), item]));
     state.selectedBookId = chosen.bookId;
     state.books[chosen.bookId] = Core.sanitizeBook(state.books[chosen.bookId], chosen, new Set(byId.keys()));
+    state.books[academicMeta.bookId] = Core.sanitizeBook(state.books[academicMeta.bookId], academicMeta, new Set(byId.keys()));
     save();
     renderDashboard();
   }
 
   function eligibleFrom(start, count, excluded = []) {
-    const ids = [];
-    const blocked = new Set(excluded);
-    let index = Math.max(0, start);
-    while (index < words.length && ids.length < count) {
-      const word = words[index++];
-      const mastery = masteryFor(word.word);
-      if (mastery?.status !== "simple" && !blocked.has(word.id)) ids.push(word.id);
-    }
-    return { ids, next: index };
+    const excludedWords = excluded.map(id => byId.get(id)?.word).filter(Boolean);
+    return Core.eligibleSlice(words, state.mastery, start, count, excluded, excludedWords);
   }
 
   function dueIds() {
-    const found = [];
-    const seen = new Set();
-    for (const word of words) {
-      const key = Core.normalizeWord(word.word);
-      if (!seen.has(key) && Core.isDue(state.mastery[key])) {
-        found.push(word.id);
-        seen.add(key);
-      }
-    }
-    return found;
+    return Core.prioritizeDueWords([...academicWords, ...words], state.mastery).map(word => word.id);
   }
 
   function nextPlan() {
-    return eligibleFrom(book().currentPosition, DAILY).ids.map(id => byId.get(id));
+    const plan = Core.buildDailyPlan(words, academicWords, state.mastery, book().currentPosition, academicBook().currentPosition, DAILY, 30);
+    return plan.ids.map(id => byId.get(id));
+  }
+
+  function academicModePlan() {
+    let found = Core.eligibleSlice(academicWords, state.mastery, academicBook().currentPosition, DAILY);
+    if (!found.ids.length && academicBook().currentPosition >= academicWords.length) found = Core.eligibleSlice(academicWords, state.mastery, 0, DAILY);
+    return found;
   }
 
   function newSession(mode) {
     const data = book();
     const found = mode === "daily"
-      ? eligibleFrom(data.currentPosition, DAILY)
-      : { ids: dueIds(), next: data.currentPosition };
+      ? Core.buildDailyPlan(words, academicWords, state.mastery, data.currentPosition, academicBook().currentPosition, DAILY, state.preferences.academicDailyGoal)
+      : mode === "academic"
+        ? { ...academicModePlan(), academicIds: [], generalIds: [] }
+        : { ids: dueIds(), next: data.currentPosition, academicIds: [], generalIds: [] };
     if (!found.ids.length) return null;
     return {
       mode,
@@ -164,7 +176,11 @@
       index: 0,
       ratings: { unknown: 0, fuzzy: 0, known: 0, simple: 0 },
       startedAt: new Date().toISOString(),
-      scanCursor: found.next
+      scanCursor: found.generalNext ?? found.next,
+      generalScanCursor: found.generalNext ?? data.currentPosition,
+      academicScanCursor: found.academicNext ?? (mode === "academic" ? found.next : academicBook().currentPosition),
+      academicWords: mode === "academic" ? found.ids.length : found.academicIds.length,
+      generalWords: found.generalIds.length
     };
   }
 
@@ -188,6 +204,14 @@
     const selectedMeta = meta();
     const summary = dashboardReport();
     const due = dueIds().length;
+    const today = new Date().toLocaleDateString("sv-SE");
+    const allHistory = Object.values(state.books).flatMap(item => Array.isArray(item.history) ? item.history : []);
+    const todayHistory = allHistory.filter(item => item.mode === "daily" && new Date(item.date).toLocaleDateString("sv-SE") === today);
+    const completedTotal = todayHistory.reduce((sum, item) => sum + item.words, 0);
+    const completedAcademic = todayHistory.reduce((sum, item) => sum + (item.academicWords || 0), 0);
+    const live = data.session?.mode === "daily" && data.session.round === 0 ? data.session : null;
+    const liveSeen = live ? live.queue.slice(0, live.index) : [];
+    const liveAcademic = liveSeen.filter(id => academicIds.has(id)).length;
     $("dashboard").hidden = false;
     $("session").hidden = true;
     $("result").hidden = true;
@@ -198,6 +222,13 @@
     $("day-count").textContent = summary.studyDays;
     $("review-badge").textContent = due;
     $("review-button").disabled = !due;
+    $("academic-today").textContent = `${Math.min(30, completedAcademic + liveAcademic)} / 30`;
+    $("total-today").textContent = `${Math.min(50, completedTotal + liveSeen.length)} / 50`;
+    $("academic-latest").textContent = state.preferences.lastAcademicWord || "还没有";
+    $("academic-button").disabled = !academicModePlan().ids.length;
+    $("academic-data-note").textContent = academicCatalogInfo?.complete
+      ? `完整手册：${academicCatalogInfo.sourceEntryCount} 个源词条，合并为 ${academicCatalogInfo.uniqueWordCount} 个去重学习词条。`
+      : `当前为 ${academicWords.length} 个已核对种子词；完整手册数据导入后会自动扩展。`;
 
     const plan = nextPlan();
     $("daily-range").textContent = plan.length
@@ -207,12 +238,15 @@
 
     $("resume-banner").hidden = !data.session;
     if (data.session) {
-      $("resume-copy").textContent = `《${selectedMeta.name}》· ${data.session.mode === "daily" ? "每日学习" : "到期复习"} · 第 ${data.session.round + 1} 轮 · ${Math.min(data.session.index + 1, data.session.queue.length)} / ${data.session.queue.length}`;
+      const sessionName = data.session.mode === "daily" ? "每日学习" : data.session.mode === "academic" ? "论文模式" : "到期复习";
+      $("resume-copy").textContent = `《${selectedMeta.name}》· ${sessionName} · 第 ${data.session.round + 1} 轮 · ${Math.min(data.session.index + 1, data.session.queue.length)} / ${data.session.queue.length}`;
     }
 
     const migrationNote = $("migration-note");
     migrationNote.hidden = !state.migration;
-    if (state.migration) migrationNote.textContent = "旧版学习数据已安全迁移：原词书进度保留，重复单词已合并为共享掌握状态。";
+    if (state.migration) migrationNote.textContent = state.migration.academicCatalog
+      ? "Academic Priority 已从种子库升级为完整手册：原四状态与复习记录保留，学习游标已安全重排。"
+      : "旧版学习数据已安全迁移：原词书进度保留，重复单词已合并为共享掌握状态。";
 
     $("achievement-list").innerHTML = achievements(summary).map(item => {
       return `<span class="study-achievement ${item.on ? "unlocked" : ""}"><b>${item.icon}</b>${item.name}</span>`;
@@ -240,10 +274,24 @@
     $("meaning-extra-wrap").hidden = !meaning.extra.length;
     $("meaning-extra-wrap").open = false;
 
-    const matches = practice.collocations.filter(item => Core.normalizeWord(item.word) === Core.normalizeWord(word.word));
+    const matches = word.source === "academic"
+      ? (Array.isArray(word.collocations) ? word.collocations.map(item => ({ prompt: item.text, answer: "", meaning: item.translation })) : [])
+      : practice.collocations.filter(item => Core.normalizeWord(item.word) === Core.normalizeWord(word.word));
     const collocations = $("word-collocations");
     collocations.hidden = !matches.length;
     collocations.querySelector("ul").innerHTML = matches.map(item => `<li><strong>${item.prompt.replace("___", item.answer)}</strong><span>${item.meaning}</span></li>`).join("");
+    const academicDetail = $("academic-detail");
+    academicDetail.hidden = word.source !== "academic";
+    if (word.source === "academic") {
+      const academicExamples = Array.isArray(word.examples) && word.examples.length ? word.examples : [{ text: word.example, translation: word.translation }];
+      $("academic-meaning").textContent = word.academicMeaning || word.meaning;
+      $("academic-example").textContent = academicExamples.map((item, index) => `${academicExamples.length > 1 ? `${index + 1}. ` : ""}${item.text}`).join("\n") || "暂无例句";
+      $("academic-translation").textContent = academicExamples.map((item, index) => `${academicExamples.length > 1 ? `${index + 1}. ` : ""}${item.translation}`).join("\n");
+      $("academic-confusable").textContent = word.confusableNote || "";
+      $("academic-confusable").hidden = !word.confusableNote;
+      const stars = "★".repeat(Math.max(0, Math.min(5, Number(word.frequency) || 0)));
+      $("academic-meta").textContent = [word.partOfSpeech, stars, ...(Array.isArray(word.tags) ? word.tags : [])].filter(Boolean).join(" · ");
+    }
   }
 
   function showWord() {
@@ -252,18 +300,21 @@
       completeRound();
       return;
     }
-    const enToZh = active.round === 0;
+    const academic = active.mode === "academic" && word.source === "academic";
+    const question = academic ? Core.academicQuestion(word, active.index, active.round) : null;
+    const enToZh = question ? question.direction === "en-zh" : active.round === 0;
+    active.currentDirection = enToZh ? "en-zh" : "zh-en";
     const entry = masteryFor(word.word);
-    $("round-label").textContent = `${active.mode === "review" ? "到期复习" : "今日 50 词"} · 第 ${active.round + 1} 轮`;
+    $("round-label").textContent = `${active.mode === "review" ? "到期复习" : active.mode === "academic" ? "Academic Mode" : "今日 50 词"} · 第 ${active.round + 1} 轮`;
     $("direction-label").textContent = enToZh ? "英 → 中主动回忆" : "中 → 英主动回忆";
     $("session-progress-text").textContent = `${active.index + 1} / ${active.queue.length}`;
     $("session-progress-bar").style.width = `${active.queue.length ? active.index / active.queue.length * 100 : 0}%`;
-    $("unit-label").textContent = meta().name;
+    $("unit-label").textContent = word.source === "academic" ? "Academic Priority" : meta().name;
     $("current-status").textContent = statusText(entry);
     $("current-status").className = `current-status ${entry ? `status-${entry.status}` : ""}`;
-    $("prompt-label").textContent = enToZh ? "看到英文，说出核心中文语义" : "看到中文，说出英文并拼写";
+    $("prompt-label").textContent = question?.label || (enToZh ? "看到英文，说出核心中文语义" : "看到中文，说出英文并拼写");
     const meaning = Core.parseMeaning(word.meaning);
-    $("word-prompt").textContent = enToZh ? formatWord(word) : [meaning.core.text, ...meaning.common.slice(0, 2).map(item => item.text)].join("；");
+    $("word-prompt").textContent = question?.prompt || (enToZh ? formatWord(word) : [meaning.core.text, ...meaning.common.slice(0, 2).map(item => item.text)].join("；"));
     $("answer-english").textContent = enToZh ? "" : formatWord(word);
     renderMeaning(word);
     $("answer-panel").hidden = true;
@@ -273,18 +324,40 @@
   function rate(status) {
     const word = current();
     if (!word || !Core.STATUS[status]) return;
-    const direction = active.round === 0 ? "en-zh" : "zh-en";
+    const direction = active.currentDirection || (active.round === 0 ? "en-zh" : "zh-en");
     const key = Core.normalizeWord(word.word);
     state.mastery[key] = Core.rateMastery(state.mastery[key], word.word, status, direction);
+    if (word.source === "academic") state.preferences.lastAcademicWord = word.word;
     active.ratings[status]++;
 
     if (status === "simple" && active.round === 0) {
+      const wasAcademic = academicIds.has(word.id);
       active.queue.splice(active.index, 1);
+      if (wasAcademic) active.academicWords = Math.max(0, active.academicWords - 1);
+      else active.generalWords = Math.max(0, active.generalWords - 1);
       if (active.mode === "daily" && active.round === 0) {
-        const fill = eligibleFrom(active.scanCursor, 1, active.queue);
+        const excludedWords = active.queue.map(id => byId.get(id)?.word).filter(Boolean);
+        let fill = wasAcademic ? Core.eligibleSlice(academicWords, state.mastery, active.academicScanCursor, 1, active.queue, excludedWords) : { ids: [] };
         if (fill.ids.length) {
           active.queue.push(fill.ids[0]);
-          active.scanCursor = fill.next;
+          active.academicScanCursor = fill.next;
+          active.academicWords++;
+        } else {
+          fill = eligibleFrom(active.generalScanCursor, 1, active.queue);
+          if (fill.ids.length) {
+            active.queue.push(fill.ids[0]);
+            active.generalScanCursor = fill.next;
+            active.scanCursor = fill.next;
+            active.generalWords++;
+          }
+        }
+      } else if (active.mode === "academic") {
+        const excludedWords = active.queue.map(id => byId.get(id)?.word).filter(Boolean);
+        const fill = Core.eligibleSlice(academicWords, state.mastery, active.academicScanCursor, 1, active.queue, excludedWords);
+        if (fill.ids.length) {
+          active.queue.push(fill.ids[0]);
+          active.academicScanCursor = fill.next;
+          active.academicWords++;
         }
       }
       if (active.index >= active.queue.length) {
@@ -313,7 +386,11 @@
 
   function finish() {
     const data = book();
-    if (active.mode === "daily") data.currentPosition = Math.max(data.currentPosition, active.scanCursor);
+    if (active.mode === "daily") {
+      data.currentPosition = Math.max(data.currentPosition, active.generalScanCursor);
+      academicBook().currentPosition = Math.max(academicBook().currentPosition, active.academicScanCursor);
+    }
+    if (active.mode === "academic") academicBook().currentPosition = Math.max(academicBook().currentPosition, active.academicScanCursor);
     const durationSeconds = Math.max(0, Math.round((Date.now() - Date.parse(active.startedAt)) / 1000));
     data.history.unshift({
       date: new Date().toISOString(),
@@ -321,7 +398,9 @@
       words: active.queue.length,
       ratings: { ...active.ratings },
       directions: { "en-zh": active.queue.length, "zh-en": active.queue.length },
-      durationSeconds
+      durationSeconds,
+      academicWords: active.queue.filter(id => academicIds.has(id)).length,
+      generalWords: active.queue.filter(id => !academicIds.has(id)).length
     });
     data.history = data.history.slice(0, 366);
     data.session = null;
@@ -329,10 +408,10 @@
 
     $("session").hidden = true;
     $("result").hidden = false;
-    $("result-title").textContent = active.mode === "daily" ? "今天的双向回忆完成啦" : "到期复习完成啦";
+    $("result-title").textContent = active.mode === "daily" ? "今天的双向回忆完成啦" : active.mode === "academic" ? "论文模式完成啦" : "到期复习完成啦";
     $("result-copy").textContent = active.mode === "daily"
       ? "英→中和中→英都认真回忆过了，复习日期已经按掌握程度安排。"
-      : "新的掌握程度和下次复习日期已经更新。";
+      : active.mode === "academic" ? "论文语境、搭配和例句都练过了，四级掌握状态已经同步更新。" : "新的掌握程度和下次复习日期已经更新。";
     $("result-stats").innerHTML = Object.entries(active.ratings).map(([status, count]) => {
       return `<span><strong>${Core.STATUS[status].icon} ${count}</strong> ${Core.STATUS[status].label}</span>`;
     }).join("");
@@ -343,7 +422,8 @@
     const history = book().history;
     $("history-list").innerHTML = history.length ? history.map(item => {
       const ratings = item.ratings || {};
-      return `<article class="history-entry"><strong>${item.mode === "daily" ? "每日学习" : "到期复习"} · ${new Date(item.date).toLocaleString("zh-CN")}</strong><small>${item.words} 词 · 🔴 ${ratings.unknown || 0} · 🟠 ${ratings.fuzzy || 0} · 🟢 ${ratings.known || 0} · 🟡 ${ratings.simple || 0}${item.durationSeconds ? ` · ${Math.ceil(item.durationSeconds / 60)} 分钟` : ""}</small></article>`;
+      const modeName = item.mode === "daily" ? "每日学习" : item.mode === "academic" ? "论文模式" : "到期复习";
+      return `<article class="history-entry"><strong>${modeName} · ${new Date(item.date).toLocaleString("zh-CN")}</strong><small>${item.words} 词${item.academicWords ? ` · 学术 ${item.academicWords}` : ""} · 🔴 ${ratings.unknown || 0} · 🟠 ${ratings.fuzzy || 0} · 🟢 ${ratings.known || 0} · 🟡 ${ratings.simple || 0}${item.durationSeconds ? ` · ${Math.ceil(item.durationSeconds / 60)} 分钟` : ""}</small></article>`;
     }).join("") : '<p class="empty-message">这本词书还没有学习记录。</p>';
   }
 
@@ -440,10 +520,10 @@
     const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
     const anchor = document.createElement("a");
     anchor.href = URL.createObjectURL(blob);
-    anchor.download = `一起背单词-v2.1-${new Date().toLocaleDateString("sv-SE")}.json`;
+    anchor.download = `一起背单词-v2.6-${new Date().toLocaleDateString("sv-SE")}.json`;
     anchor.click();
     setTimeout(() => URL.revokeObjectURL(anchor.href), 1000);
-    $("data-message").textContent = "v2.1 学习数据已导出。";
+    $("data-message").textContent = "v2.6 学习数据已导出（含 Academic Priority）。";
   }
 
   async function importData(file) {
@@ -454,12 +534,10 @@
         throw new Error("不是可识别的词汇学习备份");
       }
       if (payload.schemaVersion === 3) {
-        const catalogs = {};
-        const loaded = await Promise.all(allManifest.map(async item => [item.bookId, await fetchCatalog(item)]));
-        for (const [bookId, catalog] of loaded) catalogs[bookId] = catalog;
+        await Promise.all(allManifest.map(fetchCatalog));
         state = Core.migrateV3(payload.data, allManifest, catalogs);
       } else {
-        state = Core.sanitizeV4(payload.data, allManifest);
+        state = Core.sanitizeV4(payload.data, allManifest, catalogs);
       }
       storageLocked = false;
       await loadBook(state.selectedBookId);
@@ -477,6 +555,7 @@
     await loadBook(event.target.value);
   };
   $("start-button").onclick = () => begin(newSession("daily"));
+  $("academic-button").onclick = () => begin(newSession("academic"));
   $("review-button").onclick = () => begin(newSession("review"));
   $("resume-button").onclick = () => begin(book().session);
   $("reveal-button").onclick = () => { $("reveal-button").hidden = true; $("answer-panel").hidden = false; };
@@ -499,6 +578,7 @@
     getState: () => state,
     getBook: book,
     getWords: () => words,
+    getAcademicWords: () => academicWords,
     rate,
     dueIds,
     renderReport
