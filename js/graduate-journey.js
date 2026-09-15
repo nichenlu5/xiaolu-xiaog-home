@@ -30,7 +30,7 @@
   function renderOverview() {
     const metrics = core.journeyMetrics(state.settings);
     const graduation = metrics.graduationDate ? core.formatTarget(metrics.graduationDate) : `${core.formatMonth(metrics.graduationMonth)}（预计）`;
-    $("#journey-date-range").textContent = `${core.formatMonth(metrics.admissionMonth)}入学 → ${graduation}`;
+    $("#journey-date-range").textContent = `${core.formatTarget(metrics.admissionDate)}入学 → ${graduation}`;
     $("#journey-phase").textContent = metrics.phase.name;
     $("#journey-remaining").textContent = metrics.phase.id === "graduated" ? "已到达" : `${metrics.approximateGraduation ? "约 " : ""}${metrics.remainingDays} 天`;
     $("#journey-elapsed").textContent = metrics.current < metrics.start ? "尚未入学" : `约 ${metrics.elapsedDays} 天`;
@@ -70,7 +70,7 @@
   function render() { renderOverview(); renderGrowth(); renderMilestones(); }
 
   function openSettings() {
-    settingsForm.reset(); $("#admission-month").value = state.settings.admissionMonth; $("#graduation-month").value = state.settings.graduationMonth; $("#graduation-date").value = state.settings.graduationDate; settingsDialog.showModal();
+    settingsForm.reset(); $("#admission-date").value = state.settings.admissionDate; $("#graduation-month").value = state.settings.graduationMonth; $("#graduation-date").value = state.settings.graduationDate; settingsDialog.showModal();
   }
   function openMilestone(item = null) {
     milestoneForm.reset(); const currentPhase = core.journeyMetrics(state.settings).phase.id;
@@ -83,10 +83,10 @@
   $("#graduation-date").addEventListener("change", event => { if (event.target.value) $("#graduation-month").value = event.target.value.slice(0, 7); });
   settingsForm.addEventListener("submit", event => {
     event.preventDefault(); if (locked) return;
-    const raw = { admissionMonth: $("#admission-month").value, graduationMonth: $("#graduation-month").value, graduationDate: $("#graduation-date").value };
+    const raw = { admissionDate: $("#admission-date").value, admissionMonth: $("#admission-date").value.slice(0, 7), graduationMonth: $("#graduation-month").value, graduationDate: $("#graduation-date").value };
     if (raw.graduationDate) raw.graduationMonth = raw.graduationDate.slice(0, 7);
     const graduationBoundary = raw.graduationDate || `${raw.graduationMonth}-31`;
-    if (graduationBoundary <= `${raw.admissionMonth}-01`) { notify("毕业时间必须晚于入学时间"); return; }
+    if (graduationBoundary <= raw.admissionDate) { notify("毕业时间必须晚于入学时间"); return; }
     const normalized = core.normalizeSettings(raw);
     state.settings = normalized; if (persist()) { settingsDialog.close(); render(); notify("旅程时间已更新"); }
   });

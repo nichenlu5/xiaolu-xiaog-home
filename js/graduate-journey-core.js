@@ -8,7 +8,7 @@
   const KEY = "xiaoluXiaogGraduateJourneyV1";
   const SCHEMA_VERSION = 1;
   const DAY_MS = 86400000;
-  const DEFAULT_SETTINGS = Object.freeze({ admissionMonth: "2026-09", graduationMonth: "2029-06", graduationDate: "" });
+  const DEFAULT_SETTINGS = Object.freeze({ admissionDate: "2026-09-14", admissionMonth: "2026-09", graduationMonth: "2029-06", graduationDate: "" });
   const STATUSES = Object.freeze(["todo", "doing", "done"]);
   const STATUS_NAMES = Object.freeze({ todo: "未开始", doing: "进行中", done: "已完成" });
   const CATEGORIES = Object.freeze(["课程", "科研", "文献", "技能", "项目", "实习", "求职", "论文", "答辩", "其他"]);
@@ -50,30 +50,38 @@
   };
 
   function normalizeSettings(input = {}) {
-    let admissionMonth = isValidMonth(input.admissionMonth) ? input.admissionMonth : DEFAULT_SETTINGS.admissionMonth;
+    const suppliedMonth = isValidMonth(input.admissionMonth) ? input.admissionMonth : "";
+    let admissionDate = isValidDate(input.admissionDate)
+      ? input.admissionDate
+      : suppliedMonth
+        ? (suppliedMonth === DEFAULT_SETTINGS.admissionMonth ? DEFAULT_SETTINGS.admissionDate : `${suppliedMonth}-01`)
+        : DEFAULT_SETTINGS.admissionDate;
+    let admissionMonth = admissionDate.slice(0, 7);
     let graduationMonth = isValidMonth(input.graduationMonth) ? input.graduationMonth : DEFAULT_SETTINGS.graduationMonth;
     let graduationDate = isValidDate(input.graduationDate) ? input.graduationDate : "";
     if (graduationDate) graduationMonth = graduationDate.slice(0, 7);
-    if ((graduationDate ? exactDay(graduationDate) : monthEnd(graduationMonth)) <= monthStart(admissionMonth)) {
+    if ((graduationDate ? exactDay(graduationDate) : monthEnd(graduationMonth)) <= exactDay(admissionDate)) {
+      admissionDate = DEFAULT_SETTINGS.admissionDate;
       admissionMonth = DEFAULT_SETTINGS.admissionMonth;
       graduationMonth = DEFAULT_SETTINGS.graduationMonth;
       graduationDate = "";
     }
-    return { admissionMonth, graduationMonth, graduationDate };
+    return { admissionDate, admissionMonth, graduationMonth, graduationDate };
   }
 
   function journeyMetrics(settings, now = new Date()) {
     const normalized = normalizeSettings(settings);
-    const start = monthStart(normalized.admissionMonth);
+    const start = exactDay(normalized.admissionDate);
     const end = normalized.graduationDate ? exactDay(normalized.graduationDate) : monthEnd(normalized.graduationMonth);
     const current = todayDay(now);
-    const totalDays = Math.max(1, Math.round((end - start) / DAY_MS));
-    const elapsedDays = Math.max(0, Math.min(totalDays, Math.floor((current - start) / DAY_MS)));
+    const totalDays = Math.max(1, Math.round((end - start) / DAY_MS) + 1);
+    const elapsedDays = current < start ? 0 : Math.min(totalDays, Math.floor((current - start) / DAY_MS) + 1);
     const remainingDays = Math.max(0, Math.ceil((end - current) / DAY_MS));
     const progress = Math.max(0, Math.min(100, Math.round(elapsedDays / totalDays * 1000) / 10));
-    const [year, month] = normalized.admissionMonth.split("-").map(Number);
-    const year2Start = Date.UTC(year + 1, month - 1, 1);
-    const year3Start = Date.UTC(year + 2, month - 1, 1);
+    const [year, month, day] = normalized.admissionDate.split("-").map(Number);
+    const anniversary = offset => Date.UTC(year + offset, month - 1, Math.min(day, new Date(Date.UTC(year + offset, month, 0)).getUTCDate()));
+    const year2Start = anniversary(1);
+    const year3Start = anniversary(2);
     let phase;
     if (current < start) phase = { id: "before", name: "入学前", description: "距离研究生旅程开始还有一段准备时间" };
     else if (current >= end) phase = { id: "graduated", name: "已毕业", description: "这段研究生旅程已经走到终点" };
