@@ -1,106 +1,46 @@
 (() => {
   "use strict";
-  const core = window.XiaoluGraduateJourney;
-  const loaded = core.load();
-  let state = loaded.state, locked = Boolean(loaded.locked), stageFilter = "all";
-  const $ = selector => document.querySelector(selector);
-  const settingsDialog = $("#journey-settings-dialog"), settingsForm = $("#journey-settings-form"), milestoneDialog = $("#milestone-dialog"), milestoneForm = $("#milestone-form");
-  let toastTimer;
-
-  if (loaded.warning) { $("#storage-warning").hidden = false; $("#storage-warning").textContent = loaded.warning; }
-  core.CATEGORIES.forEach(category => $("#milestone-category").append(Object.assign(document.createElement("option"), { value: category, textContent: category })));
-  if (locked) [$("#open-settings"), $("#add-milestone")].forEach(button => { button.disabled = true; });
-
-  function notify(message) {
-    let toast = document.querySelector(".save-toast");
-    if (!toast) { toast = document.createElement("div"); toast.className = "save-toast"; toast.setAttribute("role", "status"); document.body.append(toast); }
-    toast.textContent = message; toast.hidden = false; clearTimeout(toastTimer); toastTimer = setTimeout(() => { toast.hidden = true; }, 2200);
-  }
-  function persist() {
-    if (locked) return false;
-    const ok = core.save(state);
-    if (!ok) { $("#storage-warning").hidden = false; $("#storage-warning").textContent = "浏览器存储空间不足，本次修改未保存。"; }
-    return ok;
-  }
-  function actionButton(label, action, className = "") {
-    const button = document.createElement("button"); button.type = "button"; button.textContent = label; button.dataset.action = action; button.className = className; return button;
-  }
-  function statusClass(status) { return status === "done" ? "is-done" : status === "doing" ? "is-doing" : "is-todo"; }
-
-  function renderOverview() {
-    const metrics = core.journeyMetrics(state.settings);
-    const graduation = metrics.graduationDate ? core.formatTarget(metrics.graduationDate) : `${core.formatMonth(metrics.graduationMonth)}（预计）`;
-    $("#journey-date-range").textContent = `${core.formatTarget(metrics.admissionDate)}入学 → ${graduation}`;
-    $("#journey-phase").textContent = metrics.phase.name;
-    $("#journey-remaining").textContent = metrics.phase.id === "graduated" ? "已到达" : `${metrics.approximateGraduation ? "约 " : ""}${metrics.remainingDays} 天`;
-    $("#journey-elapsed").textContent = metrics.current < metrics.start ? "尚未入学" : `约 ${metrics.elapsedDays} 天`;
-    $("#journey-percent").textContent = `${metrics.progress}%`;
-    $("#journey-progress-bar").style.width = `${metrics.progress}%`;
-    $(".journey-progress").setAttribute("aria-valuenow", String(metrics.progress));
-    $("#journey-phase-copy").textContent = metrics.phase.description;
-    $("#phase-map").replaceChildren(...core.PHASES.map(phase => {
-      const card = document.createElement("article"); card.className = "phase-card" + (metrics.phase.id === phase.id ? " current" : ""); card.dataset.stage = phase.id;
-      const count = state.milestones.filter(item => item.stage === phase.id).length, done = state.milestones.filter(item => item.stage === phase.id && item.status === "done").length;
-      card.append(Object.assign(document.createElement("span"), { textContent: metrics.phase.id === phase.id ? "正在这里" : phase.name }), Object.assign(document.createElement("h3"), { textContent: phase.name }), Object.assign(document.createElement("p"), { textContent: phase.description }), Object.assign(document.createElement("small"), { textContent: `${done} / ${count} 个目标已完成` }));
-      return card;
-    }));
-  }
-
-  function renderGrowth() {
-    const stats = core.readGrowthStats();
-    Object.entries(stats).forEach(([key, item]) => { const element = $("#growth-" + key); if (element) element.textContent = item.available ? item.label + (key === "study" ? " 次" : " 条") : "暂无数据"; });
-  }
-
-  function milestoneCard(item) {
-    const phase = core.PHASES.find(value => value.id === item.stage);
-    const card = document.createElement("article"); card.className = `record-card milestone-card ${statusClass(item.status)}`; card.dataset.id = item.id;
-    const top = document.createElement("div"), title = document.createElement("h3"), badge = document.createElement("span"); top.className = "record-top"; title.textContent = item.title; badge.className = "milestone-status"; badge.textContent = core.STATUS_NAMES[item.status]; top.append(title, badge); card.append(top);
-    const meta = document.createElement("div"); meta.className = "record-meta"; [phase?.name, item.category, core.formatTarget(item.targetDate, item.estimated)].filter(Boolean).forEach(value => meta.append(Object.assign(document.createElement("span"), { textContent: value }))); card.append(meta);
-    if (item.note) card.append(Object.assign(document.createElement("p"), { textContent: item.note }));
-    const actions = document.createElement("div"); actions.className = "record-actions"; actions.append(actionButton("编辑", "edit"), actionButton("删除", "delete", "delete-action")); card.append(actions); return card;
-  }
-
-  function renderMilestones() {
-    const statusOrder = { doing: 0, todo: 1, done: 2 };
-    const rows = state.milestones.filter(item => stageFilter === "all" || item.stage === stageFilter).sort((a, b) => statusOrder[a.status] - statusOrder[b.status] || (a.targetDate || "9999-99-99").localeCompare(b.targetDate || "9999-99-99") || b.updatedAt.localeCompare(a.updatedAt));
-    $("#milestone-summary").textContent = `共 ${rows.length} 个目标 · ${rows.filter(item => item.status === "done").length} 个已完成`;
-    if (rows.length) $("#milestone-list").replaceChildren(...rows.map(milestoneCard));
-    else { const empty = document.createElement("div"); empty.className = "empty-state"; empty.append(Object.assign(document.createElement("span"), { textContent: "🎯" }), Object.assign(document.createElement("p"), { textContent: "这个阶段还没有目标，写下第一件想完成的事吧。" })); $("#milestone-list").replaceChildren(empty); }
-  }
-  function render() { renderOverview(); renderGrowth(); renderMilestones(); }
-
-  function openSettings() {
-    settingsForm.reset(); $("#admission-date").value = state.settings.admissionDate; $("#graduation-month").value = state.settings.graduationMonth; $("#graduation-date").value = state.settings.graduationDate; settingsDialog.showModal();
-  }
-  function openMilestone(item = null) {
-    milestoneForm.reset(); const currentPhase = core.journeyMetrics(state.settings).phase.id;
-    $("#milestone-id").value = item?.id || ""; $("#milestone-title-input").value = item?.title || ""; $("#milestone-stage").value = item?.stage || (stageFilter !== "all" ? stageFilter : core.PHASES.some(phase => phase.id === currentPhase) ? currentPhase : "year1"); $("#milestone-category").value = item?.category || "科研"; $("#milestone-date").value = item?.targetDate?.length === 10 ? item.targetDate : ""; $("#milestone-estimated").checked = Boolean(item?.estimated); $("#milestone-status").value = item?.status || "todo"; $("#milestone-note").value = item?.note || ""; $("#milestone-dialog-title").textContent = item ? "编辑目标" : "添加目标"; milestoneDialog.showModal();
-  }
-
-  $("#open-settings").addEventListener("click", openSettings); $("#add-milestone").addEventListener("click", () => openMilestone());
-  document.querySelectorAll(".dialog-close,.cancel-button").forEach(button => button.addEventListener("click", () => button.closest("dialog").close()));
-  document.querySelectorAll("dialog").forEach(dialog => dialog.addEventListener("click", event => { if (event.target === dialog) dialog.close(); }));
-  $("#graduation-date").addEventListener("change", event => { if (event.target.value) $("#graduation-month").value = event.target.value.slice(0, 7); });
-  settingsForm.addEventListener("submit", event => {
-    event.preventDefault(); if (locked) return;
-    const raw = { admissionDate: $("#admission-date").value, admissionMonth: $("#admission-date").value.slice(0, 7), graduationMonth: $("#graduation-month").value, graduationDate: $("#graduation-date").value };
-    if (raw.graduationDate) raw.graduationMonth = raw.graduationDate.slice(0, 7);
-    const graduationBoundary = raw.graduationDate || `${raw.graduationMonth}-31`;
-    if (graduationBoundary <= raw.admissionDate) { notify("毕业时间必须晚于入学时间"); return; }
-    const normalized = core.normalizeSettings(raw);
-    state.settings = normalized; if (persist()) { settingsDialog.close(); render(); notify("旅程时间已更新"); }
-  });
-  milestoneForm.addEventListener("submit", event => {
-    event.preventDefault(); if (locked) return;
-    const previous = state.milestones.find(item => item.id === $("#milestone-id").value), input = { id: $("#milestone-id").value, title: $("#milestone-title-input").value, stage: $("#milestone-stage").value, category: $("#milestone-category").value, targetDate: $("#milestone-date").value, estimated: $("#milestone-estimated").checked, status: $("#milestone-status").value, note: $("#milestone-note").value };
-    state = core.upsertMilestone(state, input); if (persist()) { milestoneDialog.close(); render(); notify(previous ? "目标已更新" : "目标已添加"); }
-  });
-  $("#milestone-list").addEventListener("click", event => {
-    const action = event.target.closest("[data-action]"), card = event.target.closest("[data-id]"); if (!action || !card) return;
-    const item = state.milestones.find(value => value.id === card.dataset.id); if (!item) return;
-    if (action.dataset.action === "edit") openMilestone(item);
-    else if (action.dataset.action === "delete" && confirm(`确定删除目标“${item.title}”吗？`)) { state = core.removeMilestone(state, item.id); if (persist()) { render(); notify("目标已删除"); } }
-  });
-  document.querySelectorAll("[data-stage-filter]").forEach(button => button.addEventListener("click", () => { stageFilter = button.dataset.stageFilter; document.querySelectorAll("[data-stage-filter]").forEach(item => { const active = item === button; item.classList.toggle("active", active); item.setAttribute("aria-pressed", String(active)); }); renderMilestones(); }));
-  render();
+  const core=window.XiaoluGraduateJourney,loaded=core.load(),$=selector=>document.querySelector(selector);
+  let state=loaded.state,locked=Boolean(loaded.locked),stageFilter="all",toastTimer;
+  const dialogs={settings:$("#journey-settings-dialog"),milestone:$("#milestone-dialog"),daily:$("#daily-dialog"),communication:$("#communication-dialog"),experiment:$("#experiment-dialog")};
+  const forms={settings:$("#journey-settings-form"),milestone:$("#milestone-form"),daily:$("#daily-form"),communication:$("#communication-form"),experiment:$("#experiment-form")};
+  const today=()=>{const d=new Date(),y=d.getFullYear(),m=String(d.getMonth()+1).padStart(2,"0"),day=String(d.getDate()).padStart(2,"0");return `${y}-${m}-${day}`};
+  const value=id=>$(id).value,set=(id,v="")=>{$(id).value=v??""};
+  if(loaded.warning){$("#storage-warning").hidden=false;$("#storage-warning").textContent=loaded.warning}
+  core.CATEGORIES.forEach(x=>$("#milestone-category").append(new Option(x,x)));core.COMMUNICATION_TYPES.forEach(x=>$("#communication-type").append(new Option(x,x)));
+  if(locked)["#open-settings","#add-milestone","#add-daily","#add-communication","#add-experiment"].forEach(id=>$(id).disabled=true);
+  function notify(message){let toast=$(".save-toast");if(!toast){toast=document.createElement("div");toast.className="save-toast";toast.setAttribute("role","status");document.body.append(toast)}toast.textContent=message;toast.hidden=false;clearTimeout(toastTimer);toastTimer=setTimeout(()=>toast.hidden=true,2200)}
+  function persist(){if(locked)return false;const ok=core.save(state);if(!ok){$("#storage-warning").hidden=false;$("#storage-warning").textContent="浏览器存储空间不足，本次修改未保存。"}return ok}
+  function button(label,action,className=""){const el=document.createElement("button");el.type="button";el.textContent=label;el.dataset.action=action;el.className=className;return el}
+  const fmt=date=>date?core.formatTarget(date):"日期未填写";
+  function empty(message){const el=document.createElement("div");el.className="empty-state";el.append(Object.assign(document.createElement("p"),{textContent:message}));return el}
+  function details(rows){const detail=document.createElement("details");detail.className="record-details";detail.append(Object.assign(document.createElement("summary"),{textContent:"查看详细记录"}));rows.filter(([,v])=>v).forEach(([label,v])=>{const box=document.createElement("div"),strong=document.createElement("strong"),p=document.createElement("p");strong.textContent=label;p.textContent=v;box.append(strong,p);detail.append(box)});return detail}
+  function renderOverview(){const m=core.journeyMetrics(state.settings),graduation=m.graduationDate?core.formatTarget(m.graduationDate):`${core.formatMonth(m.graduationMonth)}（预计）`;$("#journey-date-range").textContent=`${core.formatTarget(m.admissionDate)}入学 → ${graduation}`;$("#journey-phase").textContent=m.phase.name;$("#journey-remaining").textContent=m.phase.id==="graduated"?"已到达":`${m.approximateGraduation?"约 ":""}${m.remainingDays} 天`;$("#journey-elapsed").textContent=m.current<m.start?"尚未入学":`约 ${m.elapsedDays} 天`;$("#journey-percent").textContent=`${m.progress}%`;$("#journey-progress-bar").style.width=`${m.progress}%`;$(".journey-progress").setAttribute("aria-valuenow",String(m.progress));$("#journey-phase-copy").textContent=m.phase.description;$("#phase-map").replaceChildren(...core.PHASES.map(phase=>{const card=document.createElement("article"),rows=state.milestones.filter(x=>x.stage===phase.id);card.className="phase-card"+(m.phase.id===phase.id?" current":"");card.innerHTML=`<span>${m.phase.id===phase.id?"正在这里":phase.name}</span><h3>${phase.name}</h3><p>${phase.description}</p><small>${rows.filter(x=>x.status==="done").length} / ${rows.length} 个目标已完成</small>`;return card}))}
+  function renderGrowth(){const stats=core.readGrowthStats();Object.entries(stats).forEach(([key,item])=>{const el=$("#growth-"+key);if(el)el.textContent=item.available?item.label+(key==="study"?" 次":" 条"):"暂无数据"})}
+  function milestoneCard(item){const phase=core.PHASES.find(x=>x.id===item.stage),card=document.createElement("article"),top=document.createElement("div");card.className=`record-card milestone-card is-${item.status}`;card.dataset.id=item.id;top.className="record-top";const h=document.createElement("h3");h.textContent=item.title;const badge=document.createElement("span");badge.className="milestone-status";badge.textContent=core.STATUS_NAMES[item.status];top.append(h,badge);card.append(top);const meta=document.createElement("div");meta.className="record-meta";[phase?.name,item.category,core.formatTarget(item.targetDate,item.estimated)].forEach(v=>meta.append(Object.assign(document.createElement("span"),{textContent:v})));card.append(meta);if(item.note)card.append(Object.assign(document.createElement("p"),{textContent:item.note}));const actions=document.createElement("div");actions.className="record-actions";actions.append(button("编辑","edit"),button("删除","delete","delete-action"));card.append(actions);return card}
+  function renderMilestones(){const order={doing:0,todo:1,done:2},rows=state.milestones.filter(x=>stageFilter==="all"||x.stage===stageFilter).sort((a,b)=>order[a.status]-order[b.status]||(a.targetDate||"9999").localeCompare(b.targetDate||"9999"));$("#milestone-summary").textContent=`共 ${rows.length} 个目标 · ${rows.filter(x=>x.status==="done").length} 个已完成`;$("#milestone-list").replaceChildren(...(rows.length?rows.map(milestoneCard):[empty("这个阶段还没有目标，写下第一件想完成的事吧。")]))}
+  function dailyCard(item){const card=document.createElement("article"),top=document.createElement("div");card.className="record-card daily-card";card.dataset.id=item.id;top.className="record-top";const h=document.createElement("h3");h.textContent=fmt(item.date);const mood=document.createElement("span");mood.className="tag";mood.textContent=item.mood||"平常的一天";top.append(h,mood);card.append(top);if(item.sentence)card.append(Object.assign(document.createElement("p"),{className:"daily-sentence",textContent:item.sentence}));const chips=document.createElement("div");chips.className="record-meta";[["学习",item.study],["科研",item.research],["文献",item.literature],["实验",item.experiment],["英语",item.english],["生活",item.life]].filter(([,v])=>v).forEach(([k])=>chips.append(Object.assign(document.createElement("span"),{textContent:k})));card.append(chips,details([["课程 / 学习",item.study],["科研",item.research],["文献",item.literature],["实验",item.experiment],["英语",item.english],["运动 / 生活",item.life],["备注",item.note]]));const actions=document.createElement("div");actions.className="record-actions";actions.append(button("编辑","daily-edit"),button("删除","daily-delete","delete-action"));card.append(actions);return card}
+  function renderDaily(){const rows=[...state.dailyRecords].sort((a,b)=>b.date.localeCompare(a.date));$("#daily-list").replaceChildren(...(rows.length?rows.map(dailyCard):[empty("还没有日常记录。今天发生了什么，随手记一点吧。")]))}
+  function renderWeekly(){const s=core.weeklySummary(state);$("#weekly-range").textContent=`${s.start} — ${s.end}`;const box=$("#weekly-summary");if(!s.recordedDays&&!s.communicationCount&&!s.milestoneCount&&!s.experimentCount){box.replaceChildren(empty("本周还没有记录。写下今天之后，这里会自动形成真实摘要。"));return}const facts=[["记录天数",`${s.recordedDays} 天`],["学习",`${s.studyDays} 天`],["科研 / 文献",`${s.researchDays} / ${s.literatureDays} 天`],["实验",`${s.experimentDays} 天`],["重要交流",`${s.communicationCount} 次`],["阶段进展",`${s.milestoneCount} 项`]];box.replaceChildren(...facts.map(([k,v])=>{const a=document.createElement("article");a.innerHTML=`<small>${k}</small><strong>${v}</strong>`;return a}));const notes=[s.communicationSubjects.length&&`交流：${s.communicationSubjects.join("、")}`,s.milestoneTitles.length&&`完成：${s.milestoneTitles.join("、")}`,s.completedExperiments&&`完成实验预演 ${s.completedExperiments} 项`].filter(Boolean);if(notes.length)box.append(Object.assign(document.createElement("p"),{className:"weekly-notes",textContent:notes.join(" · ")}))}
+  function communicationCard(item){const card=document.createElement("article"),top=document.createElement("div");card.className="record-card communication-card";card.dataset.id=item.id;top.className="record-top";const h=document.createElement("h3");h.textContent=item.subject;const tag=document.createElement("span");tag.className="tag";tag.textContent=item.type;top.append(h,tag);card.append(top);const meta=document.createElement("div");meta.className="record-meta";[fmt(item.date),item.deadline?`截止 ${fmt(item.deadline)}`:""].filter(Boolean).forEach(v=>meta.append(Object.assign(document.createElement("span"),{textContent:v})));card.append(meta);if(item.nextStep)card.append(Object.assign(document.createElement("p"),{className:"next-step",textContent:`下一步：${item.nextStep}`}));card.append(details([["核心内容",item.content],["对方建议",item.advice],["我的问题",item.questions],["下一步行动",item.nextStep],["备注",item.note]]));const actions=document.createElement("div");actions.className="record-actions";actions.append(button("编辑","communication-edit"));if(item.nextStep)actions.append(button(item.milestoneId?"已加入里程碑":"转为里程碑","communication-milestone",item.milestoneId?"is-linked":""));actions.append(button("删除","communication-delete","delete-action"));card.append(actions);return card}
+  function renderCommunications(){const rows=[...state.communications].sort((a,b)=>b.date.localeCompare(a.date));$("#communication-list").replaceChildren(...(rows.length?rows.map(communicationCard):[empty("还没有交流记录。下一次讨论后，把建议和下一步留在这里。")]))}
+  function experimentCard(item){const card=document.createElement("article"),top=document.createElement("div");card.className=`record-card experiment-card status-${item.status}`;card.dataset.id=item.id;top.className="record-top";const h=document.createElement("h3");h.textContent=item.name;const tag=document.createElement("span");tag.className="experiment-status";tag.textContent=core.EXPERIMENT_STATUS_NAMES[item.status];top.append(h,tag);card.append(top);const meta=document.createElement("div");meta.className="record-meta";meta.append(Object.assign(document.createElement("span"),{textContent:fmt(item.date)}));card.append(meta,details([["实验目的",item.purpose],["为什么要做",item.reason],["理论依据",item.theory],["仪器 / 样品",item.materials],["实验步骤",item.steps],["关键参数",item.parameters],["参数选择原因",item.parameterReason],["预期现象 / 结果",item.expected],["可能问题",item.problems],["解决方案",item.solutions],["数据处理准备",item.dataPlan],["注意事项",item.cautions],["备注",item.note]]));const actions=document.createElement("div");actions.className="record-actions";actions.append(button("编辑","experiment-edit"));if(item.status==="draft")actions.append(button("标记已预演","experiment-rehearse"));if(item.status==="rehearsed")actions.append(button("标记已完成","experiment-complete"));actions.append(button("删除","experiment-delete","delete-action"));card.append(actions);return card}
+  function renderExperiments(){const order={draft:0,rehearsed:1,completed:2},rows=[...state.experiments].sort((a,b)=>order[a.status]-order[b.status]||b.updatedAt.localeCompare(a.updatedAt));$("#experiment-list").replaceChildren(...(rows.length?rows.map(experimentCard):[empty("还没有实验预演。开始实验前，先把思路完整走一遍。")]))}
+  function render(){renderOverview();renderGrowth();renderDaily();renderWeekly();renderCommunications();renderExperiments();renderMilestones()}
+  function openSettings(){forms.settings.reset();set("#admission-date",state.settings.admissionDate);set("#graduation-month",state.settings.graduationMonth);set("#graduation-date",state.settings.graduationDate);dialogs.settings.showModal()}
+  function openMilestone(item=null){forms.milestone.reset();const phase=core.journeyMetrics(state.settings).phase.id;set("#milestone-id",item?.id);set("#milestone-title-input",item?.title);set("#milestone-stage",item?.stage||(stageFilter!=="all"?stageFilter:core.PHASES.some(x=>x.id===phase)?phase:"year1"));set("#milestone-category",item?.category||"科研");set("#milestone-date",item?.targetDate?.length===10?item.targetDate:"");$("#milestone-estimated").checked=Boolean(item?.estimated);set("#milestone-status",item?.status||"todo");set("#milestone-note",item?.note);$("#milestone-dialog-title").textContent=item?"编辑目标":"添加目标";dialogs.milestone.showModal()}
+  function openDaily(item=null){forms.daily.reset();set("#daily-id",item?.id);set("#daily-date",item?.date||today());["study","research","literature","experiment","english","life","mood","sentence","note"].forEach(k=>set(`#daily-${k}`,item?.[k]));$("#daily-dialog-title").textContent=item?"编辑今天的小路":"记录今天的小路";dialogs.daily.showModal()}
+  function openCommunication(item=null){forms.communication.reset();set("#communication-id",item?.id);set("#communication-date",item?.date||today());["type","subject","content","advice","questions","nextStep","deadline","note"].forEach(k=>set(`#communication-${k==="nextStep"?"next":k}`,item?.[k]||(k==="type"?core.COMMUNICATION_TYPES[0]:"")));$("#communication-dialog-title").textContent=item?"编辑交流":"添加交流";dialogs.communication.showModal()}
+  function openExperiment(item=null){forms.experiment.reset();set("#experiment-id",item?.id);set("#experiment-date",item?.date||today());["name","status","purpose","reason","theory","materials","steps","parameters","parameterReason","expected","problems","solutions","dataPlan","cautions","note"].forEach(k=>set(`#experiment-${k.replace(/[A-Z]/g,m=>"-"+m.toLowerCase())}`,item?.[k]||(k==="status"?"draft":"")));$("#experiment-dialog-title").textContent=item?"编辑实验预演":"新建实验预演";dialogs.experiment.showModal()}
+  $("#open-settings").onclick=openSettings;$("#add-milestone").onclick=()=>openMilestone();$("#add-daily").onclick=()=>openDaily();$("#add-communication").onclick=()=>openCommunication();$("#add-experiment").onclick=()=>openExperiment();document.querySelectorAll(".dialog-close,.cancel-button").forEach(x=>x.onclick=()=>x.closest("dialog").close());document.querySelectorAll("dialog").forEach(d=>d.onclick=e=>{if(e.target===d)d.close()});$("#graduation-date").onchange=e=>{if(e.target.value)set("#graduation-month",e.target.value.slice(0,7))};
+  forms.settings.onsubmit=e=>{e.preventDefault();const raw={admissionDate:value("#admission-date"),admissionMonth:value("#admission-date").slice(0,7),graduationMonth:value("#graduation-month"),graduationDate:value("#graduation-date")};if(raw.graduationDate)raw.graduationMonth=raw.graduationDate.slice(0,7);if((raw.graduationDate||`${raw.graduationMonth}-31`)<=raw.admissionDate){notify("毕业时间必须晚于入学时间");return}state.settings=core.normalizeSettings(raw);if(persist()){dialogs.settings.close();render();notify("旅程时间已更新")}};
+  forms.milestone.onsubmit=e=>{e.preventDefault();const old=state.milestones.find(x=>x.id===value("#milestone-id"));state=core.upsertMilestone(state,{id:value("#milestone-id"),title:value("#milestone-title-input"),stage:value("#milestone-stage"),category:value("#milestone-category"),targetDate:value("#milestone-date"),estimated:$("#milestone-estimated").checked,status:value("#milestone-status"),note:value("#milestone-note")});if(persist()){dialogs.milestone.close();render();notify(old?"目标已更新":"目标已添加")}};
+  forms.daily.onsubmit=e=>{e.preventDefault();const date=value("#daily-date"),old=state.dailyRecords.find(x=>x.date===date);state=core.upsertDailyRecord(state,{id:value("#daily-id"),date,...Object.fromEntries(["study","research","literature","experiment","english","life","mood","sentence","note"].map(k=>[k,value(`#daily-${k}`)]))});if(persist()){dialogs.daily.close();render();notify(old?"当天记录已更新":"今天已记录")}};
+  forms.communication.onsubmit=e=>{e.preventDefault();const old=state.communications.find(x=>x.id===value("#communication-id"));state=core.upsertCommunication(state,{id:value("#communication-id"),date:value("#communication-date"),type:value("#communication-type"),subject:value("#communication-subject"),content:value("#communication-content"),advice:value("#communication-advice"),questions:value("#communication-questions"),nextStep:value("#communication-next"),deadline:value("#communication-deadline"),note:value("#communication-note")});if(persist()){dialogs.communication.close();render();notify(old?"交流记录已更新":"交流记录已添加")}};
+  forms.experiment.onsubmit=e=>{e.preventDefault();const keys=["name","date","status","purpose","reason","theory","materials","steps","parameters","parameterReason","expected","problems","solutions","dataPlan","cautions","note"],input={id:value("#experiment-id")};keys.forEach(k=>input[k]=value(`#experiment-${k.replace(/[A-Z]/g,m=>"-"+m.toLowerCase())}`));const old=state.experiments.find(x=>x.id===input.id);state=core.upsertExperiment(state,input);if(persist()){dialogs.experiment.close();render();notify(old?"实验预演已更新":"实验预演已保存")}};
+  $("#milestone-list").onclick=e=>{const a=e.target.closest("[data-action]"),card=e.target.closest("[data-id]");if(!a||!card)return;const item=state.milestones.find(x=>x.id===card.dataset.id);if(a.dataset.action==="edit")openMilestone(item);else if(confirm(`确定删除目标“${item.title}”吗？`)){state=core.removeMilestone(state,item.id);if(persist()){render();notify("目标已删除")}}};
+  $("#daily-list").onclick=e=>{const a=e.target.closest("[data-action]"),card=e.target.closest("[data-id]");if(!a||!card)return;const item=state.dailyRecords.find(x=>x.id===card.dataset.id);if(a.dataset.action==="daily-edit")openDaily(item);else if(confirm(`确定删除 ${item.date} 的记录吗？`)){state=core.removeDailyRecord(state,item.id);if(persist()){render();notify("日常记录已删除")}}};
+  $("#communication-list").onclick=e=>{const a=e.target.closest("[data-action]"),card=e.target.closest("[data-id]");if(!a||!card)return;const item=state.communications.find(x=>x.id===card.dataset.id);if(a.dataset.action==="communication-edit")openCommunication(item);else if(a.dataset.action==="communication-milestone"){if(item.milestoneId){notify("这项行动已经加入里程碑");return}state=core.convertCommunicationToMilestone(state,item.id,{stage:core.journeyMetrics(state.settings).phase.id});if(persist()){render();notify("下一步已加入里程碑")}}else if(confirm(`确定删除交流记录“${item.subject}”吗？`)){state=core.removeCommunication(state,item.id);if(persist()){render();notify("交流记录已删除")}}};
+  $("#experiment-list").onclick=e=>{const a=e.target.closest("[data-action]"),card=e.target.closest("[data-id]");if(!a||!card)return;const item=state.experiments.find(x=>x.id===card.dataset.id);if(a.dataset.action==="experiment-edit")openExperiment(item);else if(a.dataset.action==="experiment-delete"){if(confirm(`确定删除实验预演“${item.name}”吗？`)){state=core.removeExperiment(state,item.id);if(persist()){render();notify("实验预演已删除")}}}else{state=core.upsertExperiment(state,{...item,status:a.dataset.action==="experiment-rehearse"?"rehearsed":"completed"});if(persist()){render();notify("实验状态已更新")}}};
+  document.querySelectorAll("[data-stage-filter]").forEach(b=>b.onclick=()=>{stageFilter=b.dataset.stageFilter;document.querySelectorAll("[data-stage-filter]").forEach(x=>{const active=x===b;x.classList.toggle("active",active);x.setAttribute("aria-pressed",String(active))});renderMilestones()});render();
 })();

@@ -11,7 +11,7 @@ class MemoryStorage { constructor(seed = {}) { this.values = new Map(Object.entr
 
 const defaults = journey.normalizeState();
 assert.deepEqual(defaults.settings, { admissionDate: "2026-09-14", admissionMonth: "2026-09", graduationMonth: "2029-06", graduationDate: "" });
-assert.equal(defaults.schemaVersion, 1);
+assert.equal(defaults.schemaVersion, 2);
 const start = journey.journeyMetrics(defaults.settings, "2026-09-14"), secondDay = journey.journeyMetrics(defaults.settings, "2026-09-15"), leapBefore = journey.journeyMetrics(defaults.settings, "2028-02-28"), leapDay = journey.journeyMetrics(defaults.settings, "2028-02-29"), finish = journey.journeyMetrics(defaults.settings, "2029-06-30");
 assert.equal(start.elapsedDays, 1, "admission day must count as the first journey day");
 assert.equal(secondDay.elapsedDays, 2, "the day after admission must display about two days");
@@ -38,7 +38,7 @@ state = journey.upsertMilestone(state, { title: "准备开题", category: "科�
 assert.equal(state.milestones.length, 2); assert.equal(journey.nextMilestone(state, "2027-09-01").title, "准备开题");
 state = journey.removeMilestone(state, "legacy"); assert.equal(state.milestones.length, 1);
 assert.equal(journey.load(new MemoryStorage({ [journey.KEY]: "{bad" })).locked, true);
-assert.equal(journey.load(new MemoryStorage({ [journey.KEY]: json({ schemaVersion: 2, settings: defaults.settings, milestones: [] }) })).locked, true);
+assert.equal(journey.load(new MemoryStorage({ [journey.KEY]: json({ schemaVersion: 3, settings: defaults.settings, milestones: [] }) })).locked, true);
 
 const growthStorage = new MemoryStorage({
   xiaoluXiaogVocabularyV2: json({ books: { cet6: { history: [{ words: 50 }, { words: 20 }] } } }),
@@ -52,7 +52,7 @@ assert.deepEqual([growth.study.value, growth.exercise.value, growth.memories.val
 assert.equal(journey.readGrowthStats(new MemoryStorage()).study.available, false);
 
 const journeyValue = json(state), source = new MemoryStorage({ [journey.KEY]: journeyValue }), payload = backup.createBackup(source, new Date("2026-09-14T00:00:00.000Z"));
-assert.equal(backup.APP_VERSION, "2.6"); assert.equal(backup.specs.length, 17); assert.equal(payload.modules.graduateJourney.entries[journey.KEY].value.milestones.length, 1);
+assert.equal(backup.APP_VERSION, "2.7"); assert.equal(backup.specs.length, 17); assert.equal(payload.modules.graduateJourney.entries[journey.KEY].value.milestones.length, 1);
 const oldPayload = structuredClone(payload); delete oldPayload.modules.graduateJourney; oldPayload.app.version = "2.5";
 const target = new MemoryStorage({ [journey.KEY]: journeyValue, unrelated: "keep" });
 assert.equal(backup.inspectBackup(oldPayload, target).valid, true); backup.restoreBackup(oldPayload, target); assert.equal(target.getItem(journey.KEY), journeyValue, "old backup must not clear current journey"); assert.equal(target.getItem("unrelated"), "keep");
@@ -60,7 +60,7 @@ assert.equal(backup.inspectBackup(oldPayload, target).valid, true); backup.resto
 const html = await read("index.html"), homeJs = await read("js/home.js"), page = await read("graduate-journey.html"), sw = await read("sw.js"), manifest = JSON.parse(await read("manifest.webmanifest"));
 for (const id of ["home-journey-phase", "home-journey-remaining", "home-journey-elapsed", "home-journey-percent", "home-journey-goal", "home-journey-bar"]) assert.ok(html.includes(`id="${id}"`));
 for (const id of ["journey-phase", "journey-remaining", "journey-elapsed", "journey-percent", "milestone-list", "growth-study"]) assert.ok(page.includes(`id="${id}"`));
-assert.ok(sw.includes("xiaolu-home-v2.6-shell-4") && sw.includes("./graduate-journey.html") && sw.includes("./js/graduate-journey-core.js"));
+assert.ok(sw.includes("xiaolu-home-v2.7-shell-1") && sw.includes("./graduate-journey.html") && sw.includes("./js/graduate-journey-core.js"));
 assert.ok(manifest.shortcuts.some(item => item.url === "./graduate-journey.html"));
 for (const file of ["graduate-journey.html", "js/graduate-journey-core.js", "js/graduate-journey.js"]) await access(resolve(root, file));
 
