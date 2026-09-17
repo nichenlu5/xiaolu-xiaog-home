@@ -87,27 +87,35 @@ try {
 
   await click("#start-button");
   await assert(await evaluate("StudyApp.getBook().session.queue.length===50 && StudyApp.getBook().session.queue.slice(0,30).every(id=>id.startsWith('academic-priority-')) && StudyApp.getBook().session.queue.filter(id=>id.startsWith('academic-priority-')).length===30"), "academic-first 30+20 daily plan failed");
+  await evaluate("sessionStorage.setItem('v272Queue',JSON.stringify(StudyApp.getBook().session.queue))");
   await click("#reveal-button");
   await click('[data-rating="unknown"]');
   await click("#reveal-button");
   await click('[data-rating="simple"]');
-  await assert(await evaluate("StudyApp.getBook().session.queue.length===50 && StudyApp.getBook().session.queue.filter(id=>id.startsWith('academic-priority-')).length===30"), "too-simple did not refill the academic target");
+  await assert(await evaluate("JSON.stringify(StudyApp.getBook().session.queue)===sessionStorage.getItem('v272Queue')"), "SRS rating changed the fixed session queue");
   await assert(await evaluate("Object.values(StudyApp.getState().mastery).some(x=>x.status==='unknown') && Object.values(StudyApp.getState().mastery).some(x=>x.status==='simple')"), "four-level mastery was not saved");
+  await evaluate("(()=>{const s=StudyApp.getBook().session;const all=[...StudyApp.getAcademicWords(),...StudyApp.getWords()];sessionStorage.setItem('v272KnownWord',all.find(x=>x.id===s.queue[s.index]).word.toLowerCase());StudyApp.rate('known');while(StudyApp.getBook().session.index<5)StudyApp.rate('known');sessionStorage.setItem('v272Next5',StudyApp.getBook().session.queue[5])})()");
+  await click("#exit-button");
+  await open("study.html");
+  await ready();
+  await assert(await evaluate("StudyApp.getBook().session.index===5 && StudyApp.getBook().session.queue[5]===sessionStorage.getItem('v272Next5') && JSON.stringify(StudyApp.getBook().session.queue)===sessionStorage.getItem('v272Queue')"), "5/50 refresh did not resume at word 6 with the same queue");
+  await assert(await evaluate("!document.querySelector('#resume-banner').hidden && document.querySelector('#start-button').hidden && document.querySelector('#daily-range').textContent.includes('当前任务进行中')"), "unfinished-session UX still exposed duplicate primary actions");
+  await click("#resume-button");
   await evaluate("(()=>{while(StudyApp.getBook().session.index<20)StudyApp.rate('known');const session=StudyApp.getBook().session;sessionStorage.setItem('v271Queue',JSON.stringify(session.queue));sessionStorage.setItem('v271Completed',JSON.stringify(session.queue.slice(0,20)));sessionStorage.setItem('v271Next',session.queue[20])})()");
   await assert(await evaluate("JSON.parse(localStorage.getItem('xiaoluXiaogVocabularyV2')).books['kaoyan-complete'].session.index===20"), "20/50 breakpoint was not persisted immediately");
   await click("#exit-button");
   await open("study.html");
   await ready();
   await assert(await evaluate("!document.querySelector('#resume-banner').hidden && StudyApp.getBook().session.round===0 && StudyApp.getBook().session.index===20 && JSON.stringify(StudyApp.getBook().session.queue)===sessionStorage.getItem('v271Queue')"), "20/50 queue and index were not restored");
-  await assert(await evaluate("document.querySelector('#resume-copy').textContent.includes('本轮学习 20 / 50') && document.querySelector('#resume-copy').textContent.includes('从第 21 个继续') && document.querySelector('#start-button').textContent==='继续学习'"), "resume UX did not show the saved 20/50 breakpoint");
+  await assert(await evaluate("document.querySelector('#resume-copy').textContent.includes('本轮学习 20 / 50') && document.querySelector('#resume-copy').textContent.includes('从第 21 个继续') && document.querySelector('#start-button').hidden"), "resume UX did not show the saved 20/50 breakpoint");
   await assert(await evaluate("document.querySelector('#academic-button').disabled && document.querySelector('#review-button').disabled"), "another mode could overwrite the unfinished session");
-  await click("#start-button");
+  await click("#resume-button");
   await assert(await evaluate("StudyApp.getBook().session.queue[StudyApp.getBook().session.index]===sessionStorage.getItem('v271Next') && !JSON.parse(sessionStorage.getItem('v271Completed')).includes(StudyApp.getBook().session.queue[StudyApp.getBook().session.index])"), "resume did not continue from word 21");
   await evaluate("(()=>{while(StudyApp.getBook().session)StudyApp.rate('known')})()");
   await assert(await evaluate("StudyApp.getBook().history.length===1 && StudyApp.getBook().currentPosition>=20 && StudyApp.getState().books['academic-priority'].currentPosition>=30 && StudyApp.getBook().history[0].academicWords===30"), "completion/history/cursors failed");
 
   await click("#result-home");
-  await assert(await evaluate("(()=>{const next=StudyApp.newSession('daily');return next&&next.index===0&&JSON.stringify(next.queue)!==sessionStorage.getItem('v271Queue')})()"), "the next daily session was not generated normally after completion");
+  await assert(await evaluate("(()=>{const next=StudyApp.newSession('daily');if(!next||next.index!==0)return false;const all=[...StudyApp.getAcademicWords(),...StudyApp.getWords()];const known=sessionStorage.getItem('v272KnownWord');return JSON.stringify(next.queue)!==sessionStorage.getItem('v271Queue')&&!next.queue.some(id=>all.find(x=>x.id===id)?.word.toLowerCase()===known)})()"), "the next daily session repeated a just-learned word");
   await evaluate("(()=>{const s=StudyApp.getState();const key=Object.keys(s.mastery).find(k=>s.mastery[k].status==='unknown');s.mastery[key].nextReviewAt='2000-01-01T00:00:00.000Z';s.mastery[key].directions['en-zh'].nextReviewAt='2000-01-01T00:00:00.000Z';localStorage.setItem('xiaoluXiaogVocabularyV2',JSON.stringify(s));location.reload()})()");
   await pause(350);
   await ready();
@@ -117,7 +125,7 @@ try {
   await assert(await evaluate(`StudyApp.getState().mastery[${JSON.stringify(sharedWord.toLowerCase())}].status==='fuzzy' && StudyApp.getBook().currentPosition===12`), "shared mastery or independent book progress failed");
 
   await click("#academic-button");
-  await assert(await evaluate("StudyApp.getBook().session.mode==='academic' && StudyApp.getBook().session.queue.every(id=>id.startsWith('academic-priority-')) && document.querySelector('#round-label').textContent.includes('Academic Mode')"), "paper mode did not isolate academic words");
+  await assert(await evaluate("StudyApp.getBook().session.mode==='academic' && StudyApp.getBook().session.queue.every(id=>id.startsWith('academic-priority-')) && document.querySelector('#round-label').textContent.includes('Academic Mode') && document.querySelector('#direction-label').textContent.includes('论文语境') && document.querySelector('#unit-label').textContent.includes('论文语境') && /论文|搭配|例句|辨析/.test(document.querySelector('#prompt-label').textContent)"), "paper mode did not provide distinct academic-context training");
   await evaluate("(()=>{while(StudyApp.getBook().session)StudyApp.rate('known')})()");
   await click("#result-home");
 
@@ -152,7 +160,7 @@ try {
   }
   await open("index.html", 320);
   await assert(await evaluate("!!document.querySelector('a[href=\"./study.html\"]')"), "home study entry missing");
-  console.log("PASS v2.7.1 study browser: fixed daily 50, 20/50 reload resume, no overwrite, completion, next session, damaged data, backup import, SRS and responsive");
+  console.log("PASS v2.7.2 study browser: SRS filtering, fixed 5/50 and 20/50 resume, distinct paper mode, backup, report and responsive");
 } finally {
   proc.kill();
   server.close();

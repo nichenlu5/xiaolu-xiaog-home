@@ -141,11 +141,6 @@
     renderDashboard();
   }
 
-  function eligibleFrom(start, count, excluded = []) {
-    const excludedWords = excluded.map(id => byId.get(id)?.word).filter(Boolean);
-    return Core.eligibleSlice(words, state.mastery, start, count, excluded, excludedWords);
-  }
-
   function dueIds() {
     return Core.prioritizeDueWords([...academicWords, ...words], state.mastery).map(word => word.id);
   }
@@ -235,11 +230,14 @@
       : `当前为 ${academicWords.length} 个已核对种子词；完整手册数据导入后会自动扩展。`;
 
     const plan = nextPlan();
-    $("daily-range").textContent = plan.length
-      ? `${formatWord(plan[0])} → ${formatWord(plan.at(-1))}（${plan.length} 词）`
-      : `《${selectedMeta.name}》已全部走完，可以继续到期复习。`;
-    $("start-button").disabled = !data.session && !plan.length;
-    $("start-button").textContent = data.session ? "继续学习" : "开始主动回忆";
+    $("daily-range").textContent = data.session
+      ? "当前任务进行中；完成后再按 SRS 生成新的每日任务。"
+      : plan.length
+        ? `${formatWord(plan[0])} → ${formatWord(plan.at(-1))}（${plan.length} 词）`
+        : `《${selectedMeta.name}》暂无可加入普通任务的新词，请完成到期复习或切换词书。`;
+    $("start-button").hidden = Boolean(data.session);
+    $("start-button").disabled = !plan.length;
+    $("start-button").textContent = "开始主动回忆";
 
     $("resume-banner").hidden = !data.session;
     if (data.session) {
@@ -302,7 +300,17 @@
   }
 
   function showWord() {
-    const word = current();
+    let word = current();
+    let skippedSimple = false;
+    while (active?.round === 1 && word && masteryFor(word.word)?.status === "simple") {
+      active.index++;
+      skippedSimple = true;
+      word = current();
+    }
+    if (skippedSimple) {
+      book().session = active;
+      save();
+    }
     if (!word) {
       completeRound();
       return;
@@ -313,10 +321,10 @@
     active.currentDirection = enToZh ? "en-zh" : "zh-en";
     const entry = masteryFor(word.word);
     $("round-label").textContent = `${active.mode === "review" ? "到期复习" : active.mode === "academic" ? "Academic Mode" : "今日 50 词"} · 第 ${active.round + 1} 轮`;
-    $("direction-label").textContent = enToZh ? "英 → 中主动回忆" : "中 → 英主动回忆";
+    $("direction-label").textContent = academic && !active.round ? "论文语境主动辨析" : enToZh ? "英 → 中主动回忆" : "中 → 英主动回忆";
     $("session-progress-text").textContent = `${active.index + 1} / ${active.queue.length}`;
     $("session-progress-bar").style.width = `${active.queue.length ? active.index / active.queue.length * 100 : 0}%`;
-    $("unit-label").textContent = word.source === "academic" ? "Academic Priority" : meta().name;
+    $("unit-label").textContent = academic ? `论文语境${word.section ? ` · ${word.section}` : ""}` : word.source === "academic" ? "Academic Priority" : meta().name;
     $("current-status").textContent = statusText(entry);
     $("current-status").className = `current-status ${entry ? `status-${entry.status}` : ""}`;
     $("prompt-label").textContent = question?.label || (enToZh ? "看到英文，说出核心中文语义" : "看到中文，说出英文并拼写");
@@ -337,43 +345,7 @@
     if (word.source === "academic") state.preferences.lastAcademicWord = word.word;
     active.ratings[status]++;
 
-    if (status === "simple" && active.round === 0) {
-      const wasAcademic = academicIds.has(word.id);
-      active.queue.splice(active.index, 1);
-      if (wasAcademic) active.academicWords = Math.max(0, active.academicWords - 1);
-      else active.generalWords = Math.max(0, active.generalWords - 1);
-      if (active.mode === "daily" && active.round === 0) {
-        const excludedWords = active.queue.map(id => byId.get(id)?.word).filter(Boolean);
-        let fill = wasAcademic ? Core.eligibleSlice(academicWords, state.mastery, active.academicScanCursor, 1, active.queue, excludedWords) : { ids: [] };
-        if (fill.ids.length) {
-          active.queue.push(fill.ids[0]);
-          active.academicScanCursor = fill.next;
-          active.academicWords++;
-        } else {
-          fill = eligibleFrom(active.generalScanCursor, 1, active.queue);
-          if (fill.ids.length) {
-            active.queue.push(fill.ids[0]);
-            active.generalScanCursor = fill.next;
-            active.scanCursor = fill.next;
-            active.generalWords++;
-          }
-        }
-      } else if (active.mode === "academic") {
-        const excludedWords = active.queue.map(id => byId.get(id)?.word).filter(Boolean);
-        const fill = Core.eligibleSlice(academicWords, state.mastery, active.academicScanCursor, 1, active.queue, excludedWords);
-        if (fill.ids.length) {
-          active.queue.push(fill.ids[0]);
-          active.academicScanCursor = fill.next;
-          active.academicWords++;
-        }
-      }
-      if (active.index >= active.queue.length) {
-        completeRound();
-        return;
-      }
-    } else {
-      active.index++;
-    }
+    active.index++;
     book().session = active;
     save();
     showWord();
@@ -581,7 +553,6 @@
   window.StudyApp = {
     loadBook,
     newSession,
-    eligibleFrom,
     getState: () => state,
     getBook: book,
     getWords: () => words,

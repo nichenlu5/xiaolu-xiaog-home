@@ -321,7 +321,8 @@
     while (index < words.length && ids.length < count) {
       const word = words[index++];
       const key = normalizeWord(word?.word);
-      if (word && !blocked.has(word.id) && !blockedWords.has(key) && object(mastery)[key]?.status !== "simple") {
+      const learned = validStatus(object(mastery)[key]?.status);
+      if (word && !blocked.has(word.id) && !blockedWords.has(key) && !learned) {
         ids.push(word.id);
         blockedWords.add(key);
       }
@@ -369,18 +370,28 @@
   }
 
   function academicQuestion(word, index = 0, round = 0) {
-    const collocation = Array.isArray(word?.collocations) ? word.collocations[0] : null;
     const meaning = String(word?.academicMeaning || word?.meaning || "暂无论文语境释义");
     if (round) return { type: "zh-en", direction: "zh-en", label: "根据论文语境，说出英文词", prompt: meaning };
-    const types = ["academic-meaning", "collocation", "example", "confusable"];
-    let type = types[Math.max(0, index) % types.length];
-    if (type === "collocation" && !collocation?.text) type = "academic-meaning";
-    if (type === "example" && !word?.example) type = "academic-meaning";
-    if (type === "confusable" && (!Array.isArray(word?.confusableWith) || !word.confusableWith.length)) type = "academic-meaning";
-    if (type === "collocation") return { type, direction: "en-zh", label: "理解这组高频学术搭配", prompt: collocation.text };
-    if (type === "example") return { type, direction: "en-zh", label: "理解例句中的学术含义", prompt: word.example };
-    if (type === "confusable") return { type, direction: "en-zh", label: `与 ${word.confusableWith.join(" / ")} 对比理解`, prompt: word.word };
-    return { type, direction: "en-zh", label: "说出它在论文语境中的核心含义", prompt: word.word };
+    const collocations = (Array.isArray(word?.collocations) ? word.collocations : []).filter(item => item?.text);
+    const examples = (Array.isArray(word?.examples) && word.examples.length ? word.examples : [{ text: word?.example }]).filter(item => item?.text);
+    const confusableWith = Array.isArray(word?.confusableWith) ? word.confusableWith.filter(Boolean) : [];
+    const activities = ["academic-meaning"];
+    if (collocations.length) activities.push("collocation");
+    if (examples.length) activities.push("example");
+    if (confusableWith.length) activities.push("confusable");
+    const position = Math.max(0, Math.trunc(finiteNumber(index)));
+    const type = activities[position % activities.length];
+    const variant = Math.floor(position / activities.length);
+    if (type === "collocation") {
+      const collocation = collocations[variant % collocations.length];
+      return { type, direction: "en-zh", label: "理解这组高频论文搭配", prompt: collocation.text };
+    }
+    if (type === "example") {
+      const example = examples[variant % examples.length];
+      return { type, direction: "en-zh", label: "结合论文例句判断语境义", prompt: example.text };
+    }
+    if (type === "confusable") return { type, direction: "en-zh", label: `与 ${confusableWith.join(" / ")} 辨析`, prompt: word.word };
+    return { type, direction: "en-zh", label: "说出它在论文中的核心语义", prompt: word.word };
   }
 
   function sanitizeAcademicWord(value) {
@@ -458,13 +469,20 @@
       return { bookId: meta.bookId, name: meta.name, position, total: meta.totalWords, percent: meta.totalWords ? Math.round(position / meta.totalWords * 100) : 0 };
     });
     const history = activeBooks.flatMap(meta => sanitizeHistory(state.books?.[meta.bookId]?.history));
+    const studyDates = new Set(history.map(item => item.date.slice(0, 10)));
+    for (const meta of activeBooks) {
+      const session = state.books?.[meta.bookId]?.session;
+      const hasProgress = clampInt(session?.index, 0, Number.MAX_SAFE_INTEGER) > 0
+        || Object.values(object(session?.ratings)).some(value => clampInt(value, 0, 20_000) > 0);
+      if (hasProgress && validDate(session?.startedAt)) studyDates.add(new Date(session.startedAt).toISOString().slice(0, 10));
+    }
     const lastSeven = Number(now) - 7 * DAY;
     const recent = history.filter(item => Date.parse(item.date) >= lastSeven);
     const ratings = recent.reduce((sum, item) => {
       for (const status of Object.keys(counts)) sum[status] += item.ratings[status] || 0;
       return sum;
     }, { unknown: 0, fuzzy: 0, known: 0, simple: 0 });
-    return { counts, directionCounts, due, books: activeBooks, sessions: history.length, studyDays: new Set(history.map(item => item.date.slice(0, 10))).size, recentSessions: recent.length, recentRatings: ratings };
+    return { counts, directionCounts, due, books: activeBooks, sessions: history.length, studyDays: studyDates.size, recentSessions: recent.length, recentRatings: ratings };
   }
 
   return {
