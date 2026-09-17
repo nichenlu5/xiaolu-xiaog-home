@@ -22,7 +22,7 @@ const source=new MemoryStorage({
 });
 const payload=backup.createBackup(source,new Date(date));
 assert.equal(payload.backupSchemaVersion,1);
-assert.equal(payload.app.version,"2.6");
+assert.equal(payload.app.version,"2.7");
 assert.equal(payload.modules.gifts.entries.xiaoluXiaogGiftsV1.value.gifts[0].id,"g1");
 assert.equal(payload.modules.english.entries.xiaoluXiaogVocabularyV2.format,"raw","broken JSON must still be preserved in export");
 assert.equal(payload.modules.timeline.entries.xiaoluXiaogTimelineV1.value.futureField.keep,true,"unknown fields must survive export");
