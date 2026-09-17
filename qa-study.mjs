@@ -93,16 +93,21 @@ try {
   await click('[data-rating="simple"]');
   await assert(await evaluate("StudyApp.getBook().session.queue.length===50 && StudyApp.getBook().session.queue.filter(id=>id.startsWith('academic-priority-')).length===30"), "too-simple did not refill the academic target");
   await assert(await evaluate("Object.values(StudyApp.getState().mastery).some(x=>x.status==='unknown') && Object.values(StudyApp.getState().mastery).some(x=>x.status==='simple')"), "four-level mastery was not saved");
-  await evaluate("(()=>{while(StudyApp.getBook().session.round===0)StudyApp.rate('known');for(let i=0;i<3;i++)StudyApp.rate('known')})()");
+  await evaluate("(()=>{while(StudyApp.getBook().session.index<20)StudyApp.rate('known');const session=StudyApp.getBook().session;sessionStorage.setItem('v271Queue',JSON.stringify(session.queue));sessionStorage.setItem('v271Completed',JSON.stringify(session.queue.slice(0,20)));sessionStorage.setItem('v271Next',session.queue[20])})()");
+  await assert(await evaluate("JSON.parse(localStorage.getItem('xiaoluXiaogVocabularyV2')).books['kaoyan-complete'].session.index===20"), "20/50 breakpoint was not persisted immediately");
   await click("#exit-button");
   await open("study.html");
   await ready();
-  await assert(await evaluate("!document.querySelector('#resume-banner').hidden && StudyApp.getBook().session.round===1 && StudyApp.getBook().session.index===3"), "breakpoint resume failed");
-  await click("#resume-button");
+  await assert(await evaluate("!document.querySelector('#resume-banner').hidden && StudyApp.getBook().session.round===0 && StudyApp.getBook().session.index===20 && JSON.stringify(StudyApp.getBook().session.queue)===sessionStorage.getItem('v271Queue')"), "20/50 queue and index were not restored");
+  await assert(await evaluate("document.querySelector('#resume-copy').textContent.includes('本轮学习 20 / 50') && document.querySelector('#resume-copy').textContent.includes('从第 21 个继续') && document.querySelector('#start-button').textContent==='继续学习'"), "resume UX did not show the saved 20/50 breakpoint");
+  await assert(await evaluate("document.querySelector('#academic-button').disabled && document.querySelector('#review-button').disabled"), "another mode could overwrite the unfinished session");
+  await click("#start-button");
+  await assert(await evaluate("StudyApp.getBook().session.queue[StudyApp.getBook().session.index]===sessionStorage.getItem('v271Next') && !JSON.parse(sessionStorage.getItem('v271Completed')).includes(StudyApp.getBook().session.queue[StudyApp.getBook().session.index])"), "resume did not continue from word 21");
   await evaluate("(()=>{while(StudyApp.getBook().session)StudyApp.rate('known')})()");
   await assert(await evaluate("StudyApp.getBook().history.length===1 && StudyApp.getBook().currentPosition>=20 && StudyApp.getState().books['academic-priority'].currentPosition>=30 && StudyApp.getBook().history[0].academicWords===30"), "completion/history/cursors failed");
 
   await click("#result-home");
+  await assert(await evaluate("(()=>{const next=StudyApp.newSession('daily');return next&&next.index===0&&JSON.stringify(next.queue)!==sessionStorage.getItem('v271Queue')})()"), "the next daily session was not generated normally after completion");
   await evaluate("(()=>{const s=StudyApp.getState();const key=Object.keys(s.mastery).find(k=>s.mastery[k].status==='unknown');s.mastery[key].nextReviewAt='2000-01-01T00:00:00.000Z';s.mastery[key].directions['en-zh'].nextReviewAt='2000-01-01T00:00:00.000Z';localStorage.setItem('xiaoluXiaogVocabularyV2',JSON.stringify(s));location.reload()})()");
   await pause(350);
   await ready();
@@ -115,6 +120,11 @@ try {
   await assert(await evaluate("StudyApp.getBook().session.mode==='academic' && StudyApp.getBook().session.queue.every(id=>id.startsWith('academic-priority-')) && document.querySelector('#round-label').textContent.includes('Academic Mode')"), "paper mode did not isolate academic words");
   await evaluate("(()=>{while(StudyApp.getBook().session)StudyApp.rate('known')})()");
   await click("#result-home");
+
+  await evaluate("(()=>{const s=StudyApp.getState();s.books[s.selectedBookId].session={mode:'broken',queue:[null,'missing'],index:999};localStorage.setItem('xiaoluXiaogVocabularyV2',JSON.stringify(s));location.reload()})()");
+  await pause(350);
+  await ready();
+  await assert(await evaluate("StudyApp.getBook().session===null && document.querySelector('#dashboard').hidden===false"), "damaged session did not fall back safely");
 
   await click("#collocation-button");
   await assert(await evaluate("document.querySelector('#practice-dialog').open && document.querySelectorAll('[data-practice-answer]').length>=2"), "collocation practice structure failed");
@@ -142,7 +152,7 @@ try {
   }
   await open("index.html", 320);
   await assert(await evaluate("!!document.querySelector('a[href=\"./study.html\"]')"), "home study entry missing");
-  console.log("PASS v2.6 study browser: two main books; academic priority; daily 50; paper mode; v3 migration; shared four-state mastery; SRS; practice; report; safe storage; import; responsive");
+  console.log("PASS v2.7.1 study browser: fixed daily 50, 20/50 reload resume, no overwrite, completion, next session, damaged data, backup import, SRS and responsive");
 } finally {
   proc.kill();
   server.close();

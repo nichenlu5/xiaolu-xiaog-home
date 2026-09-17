@@ -184,6 +184,10 @@
     };
   }
 
+  function startOrResume(mode) {
+    begin(book().session || newSession(mode));
+  }
+
   function dashboardReport() {
     return Core.report(state, allManifest);
   }
@@ -221,11 +225,11 @@
     $("due-count").textContent = summary.due;
     $("day-count").textContent = summary.studyDays;
     $("review-badge").textContent = due;
-    $("review-button").disabled = !due;
+    $("review-button").disabled = Boolean(data.session) || !due;
     $("academic-today").textContent = `${Math.min(30, completedAcademic + liveAcademic)} / 30`;
     $("total-today").textContent = `${Math.min(50, completedTotal + liveSeen.length)} / 50`;
     $("academic-latest").textContent = state.preferences.lastAcademicWord || "还没有";
-    $("academic-button").disabled = !academicModePlan().ids.length;
+    $("academic-button").disabled = Boolean(data.session) || !academicModePlan().ids.length;
     $("academic-data-note").textContent = academicCatalogInfo?.complete
       ? `完整手册：${academicCatalogInfo.sourceEntryCount} 个源词条，合并为 ${academicCatalogInfo.uniqueWordCount} 个去重学习词条。`
       : `当前为 ${academicWords.length} 个已核对种子词；完整手册数据导入后会自动扩展。`;
@@ -234,12 +238,15 @@
     $("daily-range").textContent = plan.length
       ? `${formatWord(plan[0])} → ${formatWord(plan.at(-1))}（${plan.length} 词）`
       : `《${selectedMeta.name}》已全部走完，可以继续到期复习。`;
-    $("start-button").disabled = !plan.length;
+    $("start-button").disabled = !data.session && !plan.length;
+    $("start-button").textContent = data.session ? "继续学习" : "开始主动回忆";
 
     $("resume-banner").hidden = !data.session;
     if (data.session) {
       const sessionName = data.session.mode === "daily" ? "每日学习" : data.session.mode === "academic" ? "论文模式" : "到期复习";
-      $("resume-copy").textContent = `《${selectedMeta.name}》· ${sessionName} · 第 ${data.session.round + 1} 轮 · ${Math.min(data.session.index + 1, data.session.queue.length)} / ${data.session.queue.length}`;
+      const completed = Math.min(data.session.index, data.session.queue.length);
+      const next = Math.min(completed + 1, data.session.queue.length);
+      $("resume-copy").textContent = `《${selectedMeta.name}》· ${sessionName} · 第 ${data.session.round + 1} 轮 · 本轮学习 ${completed} / ${data.session.queue.length}${completed < data.session.queue.length ? ` · 从第 ${next} 个继续` : ""}`;
     }
 
     const migrationNote = $("migration-note");
@@ -554,9 +561,9 @@
     }
     await loadBook(event.target.value);
   };
-  $("start-button").onclick = () => begin(newSession("daily"));
-  $("academic-button").onclick = () => begin(newSession("academic"));
-  $("review-button").onclick = () => begin(newSession("review"));
+  $("start-button").onclick = () => startOrResume("daily");
+  $("academic-button").onclick = () => startOrResume("academic");
+  $("review-button").onclick = () => startOrResume("review");
   $("resume-button").onclick = () => begin(book().session);
   $("reveal-button").onclick = () => { $("reveal-button").hidden = true; $("answer-panel").hidden = false; };
   document.querySelectorAll("[data-rating]").forEach(button => button.onclick = () => rate(button.dataset.rating));

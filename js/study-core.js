@@ -78,13 +78,24 @@
 
   function sanitizeSession(value, validIds, currentPosition) {
     if (!isObject(value) || !["daily", "review", "academic"].includes(value.mode)) return null;
-    const queue = uniqueStrings(value.queue).filter(id => !validIds || validIds.has(id)).slice(0, 5000);
+    const rawQueue = Array.isArray(value.queue)
+      ? value.queue.filter(id => typeof id === "string" && id.length <= 120).slice(0, 5000)
+      : [];
+    const rawIndex = clampInt(value.index, 0, rawQueue.length);
+    const seen = new Set(), queue = [];
+    let index = 0;
+    rawQueue.forEach((id, position) => {
+      if (seen.has(id) || (validIds && !validIds.has(id))) return;
+      seen.add(id);
+      queue.push(id);
+      if (position < rawIndex) index++;
+    });
     if (!queue.length) return null;
     return {
       mode: value.mode,
       queue,
       round: value.round === 1 ? 1 : 0,
-      index: clampInt(value.index, 0, queue.length),
+      index: clampInt(index, 0, queue.length),
       ratings: {
         unknown: clampInt(value.ratings?.unknown ?? value.wrong, 0, 20_000),
         fuzzy: clampInt(value.ratings?.fuzzy, 0, 20_000),
