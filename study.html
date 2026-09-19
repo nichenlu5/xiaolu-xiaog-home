@@ -17,9 +17,9 @@
   <main class="study-shell">
     <section class="study-hero">
       <div>
-        <p class="eyebrow">STUDY TOGETHER · V2.6</p>
+        <p class="eyebrow">STUDY TOGETHER · V2.8</p>
         <h1>一起背单词 <span aria-hidden="true">📖</span></h1>
-        <p>考研 + CET-6 + Academic Priority · 双向主动回忆 · 共享四级掌握状态</p>
+        <p>考研 + CET-6 + Academic Priority · 识别与输出独立训练 · 中英双向 SRS</p>
       </div>
       <div class="study-stats" aria-label="学习概览">
         <span><strong id="mastered-count">0</strong><small>认识</small></span>
@@ -87,11 +87,25 @@
       </div>
       <div class="session-progress"><span id="session-progress-text"></span><div><i id="session-progress-bar"></i></div></div>
       <article class="word-card">
-        <div class="word-meta"><span id="unit-label" class="unit-pill"></span><span id="current-status" class="current-status"></span></div>
+        <div class="word-meta">
+          <span id="unit-label" class="unit-pill"></span>
+          <span id="current-status" class="current-status">
+            <span id="recognition-status"></span><span id="production-status"></span>
+          </span>
+        </div>
         <p id="prompt-label" class="prompt-label"></p>
         <h3 id="word-prompt"></h3>
-        <p class="recall-hint">先在心里或纸上说出答案，再点击揭晓。</p>
+        <p id="recall-hint" class="recall-hint">先在心里或纸上说出答案，再点击揭晓。</p>
         <button id="reveal-button" class="primary-button">显示答案</button>
+        <form id="spelling-form" class="spelling-form" hidden autocomplete="off">
+          <label for="spelling-input">输入英文单词</label>
+          <input id="spelling-input" name="spelling" type="text" inputmode="text" enterkeyhint="done" autocapitalize="none" autocomplete="off" autocorrect="off" spellcheck="false" maxlength="120" placeholder="输入英文单词">
+          <div class="spelling-actions">
+            <button id="spelling-submit" class="primary-button" type="submit">提交</button>
+            <button id="spelling-forget" class="soft-button" type="button">想不起来</button>
+          </div>
+          <p id="spelling-feedback" class="spelling-feedback" role="status" aria-live="polite"></p>
+        </form>
         <div id="answer-panel" class="answer-panel" hidden>
           <div id="answer-english" class="answer-english"></div>
           <div id="meaning-view" class="meaning-view">
@@ -106,14 +120,17 @@
             <p id="academic-confusable"></p>
             <p id="academic-meta"></p>
           </div>
-          <p class="rating-question">这一次主动回忆得怎么样？</p>
-          <div class="rating-actions">
-            <button data-rating="unknown" class="rating-button unknown">🔴<span>不认识</span></button>
-            <button data-rating="fuzzy" class="rating-button fuzzy">🟠<span>模糊</span></button>
-            <button data-rating="known" class="rating-button known">🟢<span>认识</span></button>
-            <button data-rating="simple" class="rating-button simple">🟡<span>太简单</span></button>
+          <div id="recognition-rating">
+            <p class="rating-question">这一次识别得怎么样？</p>
+            <div class="rating-actions">
+              <button data-rating="unknown" class="rating-button unknown">🔴<span>不认识</span></button>
+              <button data-rating="fuzzy" class="rating-button fuzzy">🟠<span>模糊</span></button>
+              <button data-rating="known" class="rating-button known">🟢<span>认识</span></button>
+              <button data-rating="simple" class="rating-button simple">🟡<span>太简单</span></button>
+            </div>
+            <small class="rating-note">这里只更新“识别”；中→英输出拥有独立状态和复习日期。</small>
           </div>
-          <small class="rating-note">认识后会暂离普通新词任务，到期再复习；太简单不再进入普通计划。掌握状态跨词书共享，学习位置仍各自独立。</small>
+          <button id="spelling-next" class="primary-button spelling-next" type="button" hidden>继续</button>
         </div>
       </article>
     </section>

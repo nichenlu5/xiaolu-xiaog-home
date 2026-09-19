@@ -25,7 +25,7 @@ for(const icon of manifest.icons) await access(resolve(root,icon.src));
 assert.equal(manifest.shortcuts.length,5);
 assert.ok(sw.includes("request.mode===\"navigate\""),"service worker needs an offline navigation strategy");
 assert.ok(!sw.includes("localStorage"),"service worker must not touch localStorage");
-assert.equal(backup.APP_VERSION,"2.7");
+assert.equal(backup.APP_VERSION,"2.8");
 assert.equal(backup.specs.length,17,"v2.6 adds graduate journey to the backup registry");
 assert.equal(modules.schemaVersion,4);
 assert.equal(modules.modules.filter(module=>module.kind==="internal"&&module.status==="active").length,11,"module registry must cover eight apps, gifts, graduate journey and data center");

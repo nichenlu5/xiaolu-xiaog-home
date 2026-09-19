@@ -60,7 +60,10 @@
   const current = () => active && byId.get(active.queue[active.index]);
   const formatWord = word => `${word.word}${word.phonetic ? ` ${word.phonetic}` : ""}`;
   const masteryFor = word => state.mastery[Core.normalizeWord(word)];
-  const statusText = entry => entry ? `${Core.STATUS[entry.status].icon} ${Core.STATUS[entry.status].label}` : "⚪ 未学习";
+  function directionStatusText(entry, direction, label) {
+    const status = entry?.directions?.[direction]?.status;
+    return status ? `${label}：${Core.STATUS[status].label}` : `${label}：— 未训练`;
+  }
 
   async function fetchCatalog(bookMeta) {
     if (catalogs[bookMeta.bookId]) return catalogs[bookMeta.bookId];
@@ -141,8 +144,15 @@
     renderDashboard();
   }
 
+  function duePlan() {
+    return Core.prioritizeDueWords([...academicWords, ...words], state.mastery).map(word => ({
+      id: word.id,
+      directions: Core.dueDirections(masteryFor(word.word))
+    }));
+  }
+
   function dueIds() {
-    return Core.prioritizeDueWords([...academicWords, ...words], state.mastery).map(word => word.id);
+    return duePlan().map(item => item.id);
   }
 
   function nextPlan() {
@@ -158,11 +168,18 @@
 
   function newSession(mode) {
     const data = book();
+    const reviewPlan = mode === "review" ? duePlan() : [];
     const found = mode === "daily"
       ? Core.buildDailyPlan(words, academicWords, state.mastery, data.currentPosition, academicBook().currentPosition, DAILY, state.preferences.academicDailyGoal)
       : mode === "academic"
         ? { ...academicModePlan(), academicIds: [], generalIds: [] }
-        : { ids: dueIds(), next: data.currentPosition, academicIds: [], generalIds: [] };
+        : {
+            ids: reviewPlan.map(item => item.id),
+            next: data.currentPosition,
+            academicIds: [],
+            generalIds: [],
+            reviewDirections: Object.fromEntries(reviewPlan.map(item => [item.id, item.directions]))
+          };
     if (!found.ids.length) return null;
     return {
       mode,
@@ -170,6 +187,9 @@
       round: 0,
       index: 0,
       ratings: { unknown: 0, fuzzy: 0, known: 0, simple: 0 },
+      directionRatings: { "en-zh": 0, "zh-en": 0 },
+      reviewDirections: found.reviewDirections || {},
+      spelling: null,
       startedAt: new Date().toISOString(),
       scanCursor: found.generalNext ?? found.next,
       generalScanCursor: found.generalNext ?? data.currentPosition,
@@ -299,15 +319,62 @@
     }
   }
 
+  function directionForRound() {
+    return active?.round === 0 ? "en-zh" : "zh-en";
+  }
+
+  function shouldSkip(word, direction) {
+    if (masteryFor(word.word)?.directions?.[direction]?.status === "simple") return true;
+    if (active.mode !== "review") return false;
+    return !active.reviewDirections?.[word.id]?.includes(direction);
+  }
+
+  function ensureSpelling(word) {
+    if (active.spelling?.wordId === word.id) return active.spelling;
+    active.spelling = { wordId: word.id, attempts: 0, hadClose: false, hadWrong: false, resolved: false, result: "" };
+    book().session = active;
+    save();
+    return active.spelling;
+  }
+
+  function renderSpelling(word) {
+    const spelling = ensureSpelling(word);
+    const resolved = spelling.resolved;
+    $("spelling-form").hidden = false;
+    $("spelling-input").hidden = resolved;
+    $("spelling-form").querySelector("label").hidden = resolved;
+    $("spelling-form").querySelector(".spelling-actions").hidden = resolved;
+    $("spelling-next").hidden = !resolved;
+    $("recognition-rating").hidden = true;
+    $("answer-panel").hidden = !resolved;
+    const feedback = $("spelling-feedback");
+    feedback.className = `spelling-feedback${resolved ? " correct" : ""}`;
+    feedback.textContent = resolved
+      ? spelling.result === "known"
+        ? "✓ 拼写正确"
+        : spelling.result === "fuzzy"
+          ? "✓ 已经想起来了，稍后再巩固"
+          : "正确答案如下；输出会更早复习。"
+      : spelling.attempts
+        ? "继续尝试，答案还没有揭示。"
+        : "";
+    if (!resolved) {
+      $("spelling-input").value = "";
+      requestAnimationFrame(() => $("spelling-input").focus({ preventScroll: true }));
+    }
+  }
+
   function showWord() {
     let word = current();
-    let skippedSimple = false;
-    while (active?.round === 1 && word && masteryFor(word.word)?.status === "simple") {
+    const direction = directionForRound();
+    let skipped = false;
+    while (word && shouldSkip(word, direction)) {
       active.index++;
-      skippedSimple = true;
+      active.spelling = null;
+      skipped = true;
       word = current();
     }
-    if (skippedSimple) {
+    if (skipped) {
       book().session = active;
       save();
     }
@@ -317,44 +384,91 @@
     }
     const academic = active.mode === "academic" && word.source === "academic";
     const question = academic ? Core.academicQuestion(word, active.index, active.round) : null;
-    const enToZh = question ? question.direction === "en-zh" : active.round === 0;
-    active.currentDirection = enToZh ? "en-zh" : "zh-en";
+    const enToZh = direction === "en-zh";
+    active.currentDirection = direction;
     const entry = masteryFor(word.word);
-    $("round-label").textContent = `${active.mode === "review" ? "到期复习" : active.mode === "academic" ? "Academic Mode" : "今日 50 词"} · 第 ${active.round + 1} 轮`;
-    $("direction-label").textContent = academic && !active.round ? "论文语境主动辨析" : enToZh ? "英 → 中主动回忆" : "中 → 英主动回忆";
+    $("round-label").textContent = `${active.mode === "review" ? "到期复习" : active.mode === "academic" ? "Academic Mode" : "今日 50 词"} · ${enToZh ? "Recognition" : "Production"}`;
+    $("direction-label").textContent = academic && enToZh ? "论文语境主动辨析" : enToZh ? "英 → 中识别" : "中 → 英拼写";
     $("session-progress-text").textContent = `${active.index + 1} / ${active.queue.length}`;
     $("session-progress-bar").style.width = `${active.queue.length ? active.index / active.queue.length * 100 : 0}%`;
     $("unit-label").textContent = academic ? `论文语境${word.section ? ` · ${word.section}` : ""}` : word.source === "academic" ? "Academic Priority" : meta().name;
-    $("current-status").textContent = statusText(entry);
-    $("current-status").className = `current-status ${entry ? `status-${entry.status}` : ""}`;
-    $("prompt-label").textContent = question?.label || (enToZh ? "看到英文，说出核心中文语义" : "看到中文，说出英文并拼写");
+    $("recognition-status").textContent = directionStatusText(entry, "en-zh", "识别");
+    $("production-status").textContent = directionStatusText(entry, "zh-en", "输出");
+    $("prompt-label").textContent = question?.label || (enToZh ? "看到英文，说出核心中文语义" : "看到中文，输入正确英文单词");
     const meaning = Core.parseMeaning(word.meaning);
     $("word-prompt").textContent = question?.prompt || (enToZh ? formatWord(word) : [meaning.core.text, ...meaning.common.slice(0, 2).map(item => item.text)].join("；"));
     $("answer-english").textContent = enToZh ? "" : formatWord(word);
     renderMeaning(word);
+    $("recall-hint").textContent = enToZh ? "先在心里说出含义，再点击揭晓。" : "请直接输入英文；大小写和首尾空格不影响判断。";
+    $("spelling-form").hidden = enToZh;
+    $("reveal-button").hidden = !enToZh;
+    $("recognition-rating").hidden = !enToZh;
+    $("spelling-next").hidden = true;
     $("answer-panel").hidden = true;
-    $("reveal-button").hidden = false;
+    if (!enToZh) renderSpelling(word);
+  }
+
+  function applyRating(word, status, direction) {
+    const key = Core.normalizeWord(word.word);
+    state.mastery[key] = Core.rateMastery(state.mastery[key], word.word, status, direction);
+    if (word.source === "academic") state.preferences.lastAcademicWord = word.word;
+    active.ratings[status]++;
+    active.directionRatings ||= { "en-zh": 0, "zh-en": 0 };
+    active.directionRatings[direction]++;
+  }
+
+  function advance() {
+    active.index++;
+    active.spelling = null;
+    book().session = active;
+    save();
+    showWord();
   }
 
   function rate(status) {
     const word = current();
     if (!word || !Core.STATUS[status]) return;
-    const direction = active.currentDirection || (active.round === 0 ? "en-zh" : "zh-en");
-    const key = Core.normalizeWord(word.word);
-    state.mastery[key] = Core.rateMastery(state.mastery[key], word.word, status, direction);
-    if (word.source === "academic") state.preferences.lastAcademicWord = word.word;
-    active.ratings[status]++;
+    const direction = active.currentDirection || directionForRound();
+    applyRating(word, status, direction);
+    advance();
+  }
 
-    active.index++;
+  function resolveSpelling(status) {
+    const word = current(), spelling = active?.spelling;
+    if (!word || !spelling || spelling.resolved) return;
+    applyRating(word, status, "zh-en");
+    spelling.resolved = true;
+    spelling.result = status;
     book().session = active;
     save();
     showWord();
+  }
+
+  function submitSpelling() {
+    const word = current(), spelling = active?.spelling;
+    if (!word || !spelling || spelling.resolved) return;
+    const result = Core.checkSpelling($("spelling-input").value, word.word);
+    if (result === "correct") {
+      resolveSpelling(spelling.attempts ? "fuzzy" : "known");
+      return;
+    }
+    spelling.attempts++;
+    spelling.hadClose ||= result === "close";
+    spelling.hadWrong ||= result === "wrong";
+    book().session = active;
+    save();
+    const feedback = $("spelling-feedback");
+    feedback.className = `spelling-feedback ${result}`;
+    feedback.textContent = result === "close" ? "很接近，再试一次。" : "还不对，再想想；也可以选择“想不起来”。";
+    $("spelling-input").focus();
+    $("spelling-input").select();
   }
 
   function completeRound() {
     if (active.round === 0 && active.queue.length) {
       active.round = 1;
       active.index = 0;
+      active.spelling = null;
       book().session = active;
       save();
       showWord();
@@ -376,7 +490,7 @@
       mode: active.mode,
       words: active.queue.length,
       ratings: { ...active.ratings },
-      directions: { "en-zh": active.queue.length, "zh-en": active.queue.length },
+      directions: { ...(active.directionRatings || { "en-zh": active.queue.length, "zh-en": active.queue.length }) },
       durationSeconds,
       academicWords: active.queue.filter(id => academicIds.has(id)).length,
       generalWords: active.queue.filter(id => !academicIds.has(id)).length
@@ -422,13 +536,14 @@
         <span><strong>${solid}%</strong><small>近 7 天稳固率</small></span>
         <span><strong>${summary.due}</strong><small>当前待复习</small></span>
       </div>
+      <h3>Recognition 识别状态</h3>
       <div class="status-report">
         ${Object.entries(summary.counts).map(([status, count]) => `<span class="status-${status}">${Core.STATUS[status].icon} ${Core.STATUS[status].label}<strong>${count}</strong></span>`).join("")}
       </div>
       <div class="direction-report">
-        <h3>双向掌握</h3>
-        <article><span>英 → 中</span><div class="report-bar"><i style="width:${directionPercent("en-zh")}%"></i></div><strong>${directionPercent("en-zh")}%</strong></article>
-        <article><span>中 → 英</span><div class="report-bar"><i style="width:${directionPercent("zh-en")}%"></i></div><strong>${directionPercent("zh-en")}%</strong></article>
+        <h3>Recognition × Production</h3>
+        <article><span>识别</span><div class="report-bar"><i style="width:${directionPercent("en-zh")}%"></i></div><strong>${directionPercent("en-zh")}%</strong></article>
+        <article><span>输出</span><div class="report-bar"><i style="width:${directionPercent("zh-en")}%"></i></div><strong>${directionPercent("zh-en")}%</strong></article>
       </div>
       <div class="book-report">
         <h3>词书进度</h3>
@@ -499,10 +614,10 @@
     const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
     const anchor = document.createElement("a");
     anchor.href = URL.createObjectURL(blob);
-    anchor.download = `一起背单词-v2.6-${new Date().toLocaleDateString("sv-SE")}.json`;
+    anchor.download = `一起背单词-v2.8-${new Date().toLocaleDateString("sv-SE")}.json`;
     anchor.click();
     setTimeout(() => URL.revokeObjectURL(anchor.href), 1000);
-    $("data-message").textContent = "v2.6 学习数据已导出（含 Academic Priority）。";
+    $("data-message").textContent = "v2.8 学习数据已导出（含 Recognition、Production 与 Academic Priority）。";
   }
 
   async function importData(file) {
@@ -538,6 +653,9 @@
   $("review-button").onclick = () => startOrResume("review");
   $("resume-button").onclick = () => begin(book().session);
   $("reveal-button").onclick = () => { $("reveal-button").hidden = true; $("answer-panel").hidden = false; };
+  $("spelling-form").onsubmit = event => { event.preventDefault(); submitSpelling(); };
+  $("spelling-forget").onclick = () => resolveSpelling("unknown");
+  $("spelling-next").onclick = advance;
   document.querySelectorAll("[data-rating]").forEach(button => button.onclick = () => rate(button.dataset.rating));
   $("exit-button").onclick = renderDashboard;
   $("result-home").onclick = renderDashboard;
@@ -558,6 +676,8 @@
     getWords: () => words,
     getAcademicWords: () => academicWords,
     rate,
+    submitSpelling,
+    resolveSpelling,
     dueIds,
     renderReport
   };

@@ -46,13 +46,26 @@ assert.deepEqual(migrated.legacyBooks["kaoyan-required"].session.queue, ["kaoyan
 
 let mastery = Core.rateMastery(null, "adapt", "known", "en-zh", at);
 mastery = Core.rateMastery(mastery, "adapt", "unknown", "zh-en", at);
-assert.equal(mastery.status, "unknown", "shared word status should use the weaker direction");
+assert.equal(mastery.status, "known", "compatibility status must follow recognition instead of the weaker direction");
 assert.equal(mastery.directions["en-zh"].status, "known");
 assert.equal(mastery.directions["zh-en"].status, "unknown");
 assert.equal(Core.isDue(mastery, Date.parse("2026-09-09T00:00:01.000Z")), true);
 mastery = Core.rateMastery(mastery, "adapt", "simple", "en-zh", at);
 assert.equal(mastery.status, "simple");
-assert.equal(mastery.nextReviewAt, null);
+assert.equal(mastery.directions["en-zh"].status, "simple", "recognition simple must update only recognition");
+assert.equal(mastery.directions["zh-en"].status, "unknown", "recognition simple must not overwrite production");
+assert.deepEqual(Core.dueDirections(mastery, Date.parse("2026-09-09T00:00:01.000Z")), ["zh-en"]);
+
+let productionSimple = Core.rateMastery(null, "produce", "known", "en-zh", at);
+productionSimple = Core.rateMastery(productionSimple, "produce", "simple", "zh-en", at);
+assert.equal(productionSimple.directions["en-zh"].status, "known", "production simple must not overwrite recognition");
+assert.equal(productionSimple.directions["zh-en"].status, "simple");
+
+assert.equal(Core.checkSpelling("significant", "significant"), "correct");
+assert.equal(Core.checkSpelling("Significant", "significant"), "correct");
+assert.equal(Core.checkSpelling(" significant ", "significant"), "correct");
+assert.equal(Core.checkSpelling("signficant", "significant"), "close", "a small typo should allow another attempt");
+assert.equal(Core.checkSpelling("different", "significant"), "wrong", "unrelated words must not be accepted as close");
 
 const firstKnown = Core.rateMastery(null, "resolution", "known", "en-zh", "2026-09-01T00:00:00.000Z");
 assert.equal(firstKnown.nextReviewAt, "2026-09-08T00:00:00.000Z", "first known rating must schedule a future review");
@@ -79,6 +92,17 @@ const eligibilityMastery = {
 };
 assert.deepEqual(Core.eligibleSlice(eligibilityWords, eligibilityMastery, 0, 10).ids, ["new", "malformed"], "daily eligibility must include only unseen valid data");
 assert.deepEqual(Core.prioritizeDueWords(eligibilityWords, eligibilityMastery, Date.parse("2026-09-10T00:00:00.000Z")).map(word => word.id), ["due"], "due words must be isolated in review");
+
+const splitDue = Core.rateMastery(
+  Core.rateMastery(null, "split", "known", "en-zh", "2026-09-01T00:00:00.000Z"),
+  "split", "known", "zh-en", "2026-09-09T00:00:00.000Z"
+);
+assert.deepEqual(Core.dueDirections(splitDue, Date.parse("2026-09-08T00:00:00.000Z")), ["en-zh"], "recognition due must select recognition only");
+const productionDue = Core.rateMastery(
+  Core.rateMastery(null, "split", "known", "en-zh", "2026-09-09T00:00:00.000Z"),
+  "split", "unknown", "zh-en", "2026-09-01T00:00:00.000Z"
+);
+assert.deepEqual(Core.dueDirections(productionDue, Date.parse("2026-09-02T00:00:00.000Z")), ["zh-en"], "production due must select production only");
 
 const meaning = Core.parseMeaning("n. 状态, 情形, 国家, 政府；vt. 说明, 陈述, 规定；[计] 状态");
 assert.equal(meaning.core.text, "状态");
@@ -108,11 +132,31 @@ const sessionBook = Core.sanitizeBook({
 assert.deepEqual(sessionBook.session.queue, sessionQueue, "unfinished session must keep its fixed 50-word queue");
 assert.equal(sessionBook.session.index, 20, "unfinished session must resume after the first 20 words");
 assert.equal(sessionBook.session.queue[sessionBook.session.index], sessionQueue[20], "the next word must be word 21");
+assert.deepEqual(sessionBook.session.directionRatings, { "en-zh": 20, "zh-en": 0 }, "legacy unfinished sessions must derive completed direction counts");
 for (const resumeIndex of [1, 49]) {
   const boundary = Core.sanitizeBook({ session: { ...sessionBook.session, index: resumeIndex } }, kaoyan, new Set(sessionQueue));
   assert.equal(boundary.session.index, resumeIndex, `${resumeIndex}/50 breakpoint must be preserved`);
   assert.equal(boundary.session.queue[boundary.session.index], sessionQueue[resumeIndex], `${resumeIndex}/50 must continue at the next word`);
 }
+
+const spellingResume = Core.sanitizeBook({
+  session: {
+    mode: "daily", queue: sessionQueue, round: 1, index: 4, ratings: { fuzzy: 1 },
+    directionRatings: { "en-zh": 50, "zh-en": 3 }, startedAt: at,
+    spelling: { wordId: sessionQueue[4], attempts: 1, hadClose: true, resolved: false, result: "" }
+  }
+}, kaoyan, new Set(sessionQueue));
+assert.equal(spellingResume.session.index, 4);
+assert.deepEqual(spellingResume.session.spelling, { wordId: sessionQueue[4], attempts: 1, hadClose: true, hadWrong: false, resolved: false, result: "" }, "unfinished spelling attempt must resume without persisting an answer");
+
+const reviewResume = Core.sanitizeBook({
+  session: {
+    mode: "review", queue: sessionQueue.slice(0, 2), round: 0, index: 0, startedAt: at,
+    reviewDirections: { [sessionQueue[0]]: ["en-zh"], [sessionQueue[1]]: ["zh-en"] }
+  }
+}, kaoyan, new Set(sessionQueue));
+assert.deepEqual(reviewResume.session.reviewDirections[sessionQueue[0]], ["en-zh"]);
+assert.deepEqual(reviewResume.session.reviewDirections[sessionQueue[1]], ["zh-en"]);
 
 const changedIds = new Set(sessionQueue.filter(id => id !== sessionQueue[4] && id !== sessionQueue[24]));
 const changedBook = Core.sanitizeBook(sessionBook, kaoyan, changedIds);
@@ -154,4 +198,17 @@ const srsRestored = Core.sanitizeV4(JSON.parse(srsTarget.getItem("xiaoluXiaogVoc
 assert.equal(srsRestored.mastery.resolution.nextReviewAt, secondKnown.nextReviewAt, "backup restore must preserve nextReviewAt");
 assert.equal(srsRestored.mastery.resolution.directions["en-zh"].streak, 2, "backup restore must preserve SRS streak");
 
-console.log("PASS v2.7.2 study core: migration, SRS intervals, daily/review eligibility, fixed resume, backup restore and report");
+const splitBackupState = structuredClone(sessionState);
+splitBackupState.mastery.adapt = mastery;
+splitBackupState.books[kaoyan.bookId] = spellingResume;
+const splitBackup = backup.createBackup(new MemoryStorage({ xiaoluXiaogVocabularyV2: JSON.stringify(splitBackupState) }), new Date(at));
+const splitTarget = new MemoryStorage();
+backup.restoreBackup(splitBackup, splitTarget);
+const splitRestored = Core.sanitizeV4(JSON.parse(splitTarget.getItem("xiaoluXiaogVocabularyV2")), manifest, catalogs);
+assert.equal(splitRestored.mastery.adapt.directions["en-zh"].status, "simple");
+assert.equal(splitRestored.mastery.adapt.directions["zh-en"].status, "unknown");
+assert.equal(splitRestored.mastery.adapt.directions["zh-en"].nextReviewAt, mastery.directions["zh-en"].nextReviewAt);
+assert.equal(splitRestored.books[kaoyan.bookId].session.spelling.attempts, 1, "backup restore must preserve the unfinished spelling attempt");
+assert.equal(splitRestored.books[kaoyan.bookId].session.directionRatings["zh-en"], 3);
+
+console.log("PASS v2.8 study core: independent recognition/production, spelling tolerance, directional SRS, migration, fixed resume and backup restore");

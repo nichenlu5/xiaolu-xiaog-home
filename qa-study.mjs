@@ -111,15 +111,50 @@ try {
   await assert(await evaluate("document.querySelector('#academic-button').disabled && document.querySelector('#review-button').disabled"), "another mode could overwrite the unfinished session");
   await click("#resume-button");
   await assert(await evaluate("StudyApp.getBook().session.queue[StudyApp.getBook().session.index]===sessionStorage.getItem('v271Next') && !JSON.parse(sessionStorage.getItem('v271Completed')).includes(StudyApp.getBook().session.queue[StudyApp.getBook().session.index])"), "resume did not continue from word 21");
+  await evaluate("(()=>{while(StudyApp.getBook().session?.round===0)StudyApp.rate('known');while(StudyApp.getBook().session.index<2)StudyApp.rate('known');const s=StudyApp.getBook().session,all=[...StudyApp.getAcademicWords(),...StudyApp.getWords()];while(all.find(x=>x.id===s.queue[s.index]).word.length<5)StudyApp.rate('known');sessionStorage.setItem('v28SpellIndex',String(s.index));sessionStorage.setItem('v28SpellWord',all.find(x=>x.id===s.queue[s.index]).word)})()");
+  await assert(await evaluate("!document.querySelector('#spelling-form').hidden && document.querySelector('#reveal-button').hidden && document.querySelector('#answer-panel').hidden && document.querySelector('#recognition-status').textContent.includes('认识') && document.querySelector('#production-status').textContent.includes('未训练')"), "production UI did not show independent untrained spelling state");
+  await evaluate("(()=>{const word=sessionStorage.getItem('v28SpellWord');const cut=Math.floor(word.length/2);const input=document.querySelector('#spelling-input');input.value=word.slice(0,cut)+word.slice(cut+1);document.querySelector('#spelling-form').requestSubmit()})()");
+  await assert(await evaluate("document.querySelector('#spelling-feedback').textContent.includes('很接近') && document.querySelector('#answer-panel').hidden && StudyApp.getBook().session.spelling.attempts===1 && StudyApp.getState().mastery[sessionStorage.getItem('v28SpellWord').toLowerCase()].directions['en-zh'].status==='known' && !StudyApp.getState().mastery[sessionStorage.getItem('v28SpellWord').toLowerCase()].directions['zh-en']"), "close typo revealed the answer or changed recognition");
+  await click("#exit-button");
+  await open("study.html");
+  await ready();
+  await click("#resume-button");
+  await assert(await evaluate("StudyApp.getBook().session.round===1 && StudyApp.getBook().session.index===Number(sessionStorage.getItem('v28SpellIndex')) && StudyApp.getBook().session.spelling.attempts===1 && !document.querySelector('#spelling-form').hidden && document.querySelector('#answer-panel').hidden"), "unfinished spelling attempt did not resume safely");
+  await evaluate("(()=>{const input=document.querySelector('#spelling-input');input.value='  '+sessionStorage.getItem('v28SpellWord').toUpperCase()+'  ';document.querySelector('#spelling-form').requestSubmit()})()");
+  await assert(await evaluate("!document.querySelector('#answer-panel').hidden && document.querySelector('#spelling-feedback').textContent.includes('稍后再巩固') && StudyApp.getState().mastery[sessionStorage.getItem('v28SpellWord').toLowerCase()].directions['en-zh'].status==='known' && StudyApp.getState().mastery[sessionStorage.getItem('v28SpellWord').toLowerCase()].directions['zh-en'].status==='fuzzy'"), "corrected typo did not become fuzzy production while preserving recognition");
+  await click("#spelling-next");
+  await evaluate("sessionStorage.setItem('v28ForgotWord',[...StudyApp.getAcademicWords(),...StudyApp.getWords()].find(x=>x.id===StudyApp.getBook().session.queue[StudyApp.getBook().session.index]).word.toLowerCase());document.querySelector('#spelling-input').value='completely-wrong';document.querySelector('#spelling-form').requestSubmit()");
+  await assert(await evaluate("document.querySelector('#spelling-feedback').textContent.includes('还不对') && StudyApp.getState().mastery[sessionStorage.getItem('v28ForgotWord')].directions['en-zh'].status==='known'"), "wrong spelling changed recognition");
+  await click("#spelling-forget");
+  await assert(await evaluate("StudyApp.getState().mastery[sessionStorage.getItem('v28ForgotWord')].directions['en-zh'].status==='known' && StudyApp.getState().mastery[sessionStorage.getItem('v28ForgotWord')].directions['zh-en'].status==='unknown' && !document.querySelector('#answer-panel').hidden"), "give-up did not isolate production unknown");
+  await click("#spelling-next");
+  await evaluate("(()=>{const all=[...StudyApp.getAcademicWords(),...StudyApp.getWords()],word=all.find(x=>x.id===StudyApp.getBook().session.queue[StudyApp.getBook().session.index]).word;sessionStorage.setItem('v28ExactWord',word.toLowerCase());document.querySelector('#spelling-input').value=word;document.querySelector('#spelling-form').requestSubmit()})()");
+  await assert(await evaluate("StudyApp.getState().mastery[sessionStorage.getItem('v28ExactWord')].directions['en-zh'].status==='known' && StudyApp.getState().mastery[sessionStorage.getItem('v28ExactWord')].directions['zh-en'].status==='known' && document.querySelector('#spelling-feedback').textContent.includes('拼写正确')"), "first-try correct spelling did not produce independent known output");
+  await evaluate("document.querySelector('#spelling-form').requestSubmit()");
+  await assert(await evaluate("StudyApp.getState().mastery[sessionStorage.getItem('v28ExactWord')].directions['zh-en'].streak===1"), "resolved spelling accepted a duplicate Enter/submit");
+  await click("#spelling-next");
   await evaluate("(()=>{while(StudyApp.getBook().session)StudyApp.rate('known')})()");
   await assert(await evaluate("StudyApp.getBook().history.length===1 && StudyApp.getBook().currentPosition>=20 && StudyApp.getState().books['academic-priority'].currentPosition>=30 && StudyApp.getBook().history[0].academicWords===30"), "completion/history/cursors failed");
 
   await click("#result-home");
   await assert(await evaluate("(()=>{const next=StudyApp.newSession('daily');if(!next||next.index!==0)return false;const all=[...StudyApp.getAcademicWords(),...StudyApp.getWords()];const known=sessionStorage.getItem('v272KnownWord');return JSON.stringify(next.queue)!==sessionStorage.getItem('v271Queue')&&!next.queue.some(id=>all.find(x=>x.id===id)?.word.toLowerCase()===known)})()"), "the next daily session repeated a just-learned word");
-  await evaluate("(()=>{const s=StudyApp.getState();const key=Object.keys(s.mastery).find(k=>s.mastery[k].status==='unknown');s.mastery[key].nextReviewAt='2000-01-01T00:00:00.000Z';s.mastery[key].directions['en-zh'].nextReviewAt='2000-01-01T00:00:00.000Z';localStorage.setItem('xiaoluXiaogVocabularyV2',JSON.stringify(s));location.reload()})()");
+  await evaluate("(()=>{const s=StudyApp.getState(),key=sessionStorage.getItem('v28ForgotWord');for(const entry of Object.values(s.mastery)){for(const direction of Object.values(entry.directions||{})){if(direction.status!=='simple')direction.nextReviewAt='2999-01-01T00:00:00.000Z'}entry.nextReviewAt='2999-01-01T00:00:00.000Z'}s.mastery[key].directions['en-zh'].nextReviewAt='2999-01-01T00:00:00.000Z';s.mastery[key].directions['zh-en'].nextReviewAt='2000-01-01T00:00:00.000Z';s.mastery[key].nextReviewAt='2000-01-01T00:00:00.000Z';localStorage.setItem('xiaoluXiaogVocabularyV2',JSON.stringify(s));location.reload()})()");
   await pause(350);
   await ready();
   await assert(await evaluate("StudyApp.dueIds().length>0 && !document.querySelector('#review-button').disabled"), "due review scheduling failed");
+  await click("#review-button");
+  await assert(await evaluate("StudyApp.getBook().session.mode==='review' && StudyApp.getBook().session.reviewDirections[StudyApp.getBook().session.queue[0]].includes('zh-en') && !StudyApp.getBook().session.reviewDirections[StudyApp.getBook().session.queue[0]].includes('en-zh') && !document.querySelector('#spelling-form').hidden"), "production due did not open a zh-en spelling review");
+  await click("#spelling-forget");
+  await click("#spelling-next");
+  await click("#result-home");
+  await evaluate("(()=>{const s=StudyApp.getState(),key=sessionStorage.getItem('v28ForgotWord');s.mastery[key].directions['en-zh'].status='known';s.mastery[key].directions['en-zh'].nextReviewAt='2000-01-01T00:00:00.000Z';s.mastery[key].directions['zh-en'].nextReviewAt='2999-01-01T00:00:00.000Z';s.mastery[key].status='known';s.mastery[key].nextReviewAt='2000-01-01T00:00:00.000Z';localStorage.setItem('xiaoluXiaogVocabularyV2',JSON.stringify(s));location.reload()})()");
+  await pause(350);
+  await ready();
+  await click("#review-button");
+  await assert(await evaluate("StudyApp.getBook().session.reviewDirections[StudyApp.getBook().session.queue[0]].includes('en-zh') && !StudyApp.getBook().session.reviewDirections[StudyApp.getBook().session.queue[0]].includes('zh-en') && !document.querySelector('#reveal-button').hidden && document.querySelector('#spelling-form').hidden"), "recognition due did not open an en-zh recognition review");
+  await click("#reveal-button");
+  await click('[data-rating="known"]');
+  await click("#result-home");
 
   const sharedWord = await evaluate("(async()=>{const first=StudyApp.getWords()[0].word;StudyApp.getState().mastery[first.toLowerCase()]={word:first,status:'fuzzy',updatedAt:new Date().toISOString(),nextReviewAt:new Date().toISOString(),directions:{'en-zh':{status:'fuzzy',updatedAt:new Date().toISOString(),nextReviewAt:new Date().toISOString(),streak:0,misses:0}}};await StudyApp.loadBook('cet6');return first})()");
   await assert(await evaluate(`StudyApp.getState().mastery[${JSON.stringify(sharedWord.toLowerCase())}].status==='fuzzy' && StudyApp.getBook().currentPosition===12`), "shared mastery or independent book progress failed");
@@ -152,7 +187,7 @@ try {
   await pause(350);
   await assert(await evaluate("StudyApp.getState().version===4 && localStorage.getItem('v21Sentinel')==='keep-me'"), "validated import or storage isolation failed");
 
-  for (const width of [320, 360, 375, 390, 430, 1024]) {
+  for (const width of [320, 360, 375, 390, 430, 768, 1024]) {
     await open("study.html", width);
     await ready();
     const size = await evaluate("({scroll:document.documentElement.scrollWidth,client:document.documentElement.clientWidth})");
@@ -160,8 +195,9 @@ try {
   }
   await open("index.html", 320);
   await assert(await evaluate("!!document.querySelector('a[href=\"./study.html\"]')"), "home study entry missing");
-  console.log("PASS v2.7.2 study browser: SRS filtering, fixed 5/50 and 20/50 resume, distinct paper mode, backup, report and responsive");
+  console.log("PASS v2.8 study browser: independent states, spelling/typo/give-up, directional review, resume, Academic, backup and responsive");
 } finally {
+  socket?.close();
   proc.kill();
   server.close();
 }

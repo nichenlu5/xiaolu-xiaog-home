@@ -52,7 +52,7 @@ assert.deepEqual([growth.study.value, growth.exercise.value, growth.memories.val
 assert.equal(journey.readGrowthStats(new MemoryStorage()).study.available, false);
 
 const journeyValue = json(state), source = new MemoryStorage({ [journey.KEY]: journeyValue }), payload = backup.createBackup(source, new Date("2026-09-14T00:00:00.000Z"));
-assert.equal(backup.APP_VERSION, "2.7"); assert.equal(backup.specs.length, 17); assert.equal(payload.modules.graduateJourney.entries[journey.KEY].value.milestones.length, 1);
+assert.equal(backup.APP_VERSION, "2.8"); assert.equal(backup.specs.length, 17); assert.equal(payload.modules.graduateJourney.entries[journey.KEY].value.milestones.length, 1);
 const oldPayload = structuredClone(payload); delete oldPayload.modules.graduateJourney; oldPayload.app.version = "2.5";
 const target = new MemoryStorage({ [journey.KEY]: journeyValue, unrelated: "keep" });
 assert.equal(backup.inspectBackup(oldPayload, target).valid, true); backup.restoreBackup(oldPayload, target); assert.equal(target.getItem(journey.KEY), journeyValue, "old backup must not clear current journey"); assert.equal(target.getItem("unrelated"), "keep");
@@ -60,7 +60,7 @@ assert.equal(backup.inspectBackup(oldPayload, target).valid, true); backup.resto
 const html = await read("index.html"), homeJs = await read("js/home.js"), page = await read("graduate-journey.html"), sw = await read("sw.js"), manifest = JSON.parse(await read("manifest.webmanifest"));
 for (const id of ["home-journey-phase", "home-journey-remaining", "home-journey-elapsed", "home-journey-percent", "home-journey-goal", "home-journey-bar"]) assert.ok(html.includes(`id="${id}"`));
 for (const id of ["journey-phase", "journey-remaining", "journey-elapsed", "journey-percent", "milestone-list", "growth-study"]) assert.ok(page.includes(`id="${id}"`));
-assert.ok(sw.includes("xiaolu-home-v2.7-shell-1") && sw.includes("./graduate-journey.html") && sw.includes("./js/graduate-journey-core.js"));
+assert.ok(sw.includes("xiaolu-home-v2.8-shell-1") && sw.includes("./graduate-journey.html") && sw.includes("./js/graduate-journey-core.js"));
 assert.ok(manifest.shortcuts.some(item => item.url === "./graduate-journey.html"));
 for (const file of ["graduate-journey.html", "js/graduate-journey-core.js", "js/graduate-journey.js"]) await access(resolve(root, file));
 

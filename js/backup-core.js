@@ -6,7 +6,7 @@
   "use strict";
   const BACKUP_SCHEMA_VERSION = 1;
   const APP_ID = "xiaolu-xiaog-home";
-  const APP_VERSION = "2.7";
+  const APP_VERSION = "2.8";
   const MAX_IMPORT_BYTES = 12 * 1024 * 1024;
   const specs = [
     ["english", "英语学习", "xiaoluXiaogVocabularyV2", "object", "version"],

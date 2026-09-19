@@ -66,10 +66,21 @@
 .word-meta { display: flex; justify-content: center; flex-wrap: wrap; gap: 8px; }
 .unit-pill,.current-status { display: inline-block; padding: 6px 11px; border-radius: 99px; font-size: 13px; font-weight: 800; }
 .unit-pill { color: #567461; background: #eef7f0; }
-.current-status { color: var(--muted); background: #f3efeb; }
+.current-status { display: inline-flex; flex-wrap: wrap; justify-content: center; gap: 4px 10px; color: var(--muted); background: #f3efeb; }
+.current-status span { white-space: nowrap; }
 .prompt-label { margin: 28px 0 8px; color: var(--muted); font-size: 14px; }
 .word-card > h3 { margin: 0 auto 8px; font-size: clamp(30px,7vw,52px); line-height: 1.35; overflow-wrap: anywhere; }
 .recall-hint { margin: 0 0 28px; color: var(--muted); font-size: 13px; }
+.spelling-form { width: min(100%,520px); margin: 22px auto 0; text-align: left; }
+.spelling-form > label { display: block; margin-bottom: 8px; color: var(--muted); font-size: 13px; font-weight: 800; }
+.spelling-form input { width: 100%; min-width: 0; min-height: 54px; padding: 0 15px; border: 2px solid var(--line); border-radius: 14px; color: var(--ink); background: #fff; font: inherit; font-size: 18px; }
+.spelling-form input:focus { border-color: var(--green); outline: 3px solid rgba(127,168,140,.18); }
+.spelling-actions { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: 10px; margin-top: 12px; }
+.spelling-actions button { width: 100%; }
+.spelling-feedback { min-height: 24px; margin: 12px 0 0; color: var(--muted); text-align: center; line-height: 1.55; }
+.spelling-feedback.close { color: #97571e; }
+.spelling-feedback.wrong { color: #963b42; }
+.spelling-feedback.correct { color: #477259; font-weight: 800; }
 .answer-panel { padding-top: 24px; border-top: 1px solid var(--line); text-align: left; }
 .answer-english { margin-bottom: 16px; text-align: center; font-size: clamp(25px,6vw,38px); font-weight: 800; }
 .meaning-view { display: grid; gap: 12px; }
@@ -96,6 +107,7 @@
 .rating-button.known { color: #477259; background: #edf8f0; border-color: #bdddc6; }
 .rating-button.simple { color: #7c681f; background: #fff9d9; border-color: #ecdf9f; }
 .rating-note { display: block; margin-top: 12px; color: var(--muted); text-align: center; line-height: 1.6; }
+.spelling-next { display: block; width: min(100%,320px); margin: 22px auto 0; }
 
 .result-card { text-align: center; }
 .result-card .result-icon { font-size: 56px; }
@@ -165,6 +177,7 @@
   .resume-banner .primary-button { width: 100%; margin-top: 14px; }
   .study-card { padding: 20px 16px; border-radius: 22px; }
   .rating-actions { grid-template-columns: repeat(2,1fr); }
+  .spelling-actions { grid-template-columns: 1fr; }
   .word-card { min-height: 400px; padding: 28px 14px; }
   .session-heading { align-items: center; }
   .session-heading h2 { font-size: 20px; }
@@ -183,4 +196,5 @@
   .mastery-legend { font-size: 12px; }
   .practice-options { grid-template-columns: 1fr; }
   .academic-progress-row { grid-template-columns: 1fr; }
+  .current-status { width: 100%; border-radius: 14px; }
 }

@@ -91,17 +91,43 @@
       if (position < rawIndex) index++;
     });
     if (!queue.length) return null;
+    const reviewDirections = {};
+    if (value.mode === "review") {
+      for (const id of queue) {
+        const clean = uniqueStrings(value.reviewDirections?.[id]).filter(direction => DIRECTIONS.includes(direction));
+        reviewDirections[id] = clean.length ? clean : [...DIRECTIONS];
+      }
+    }
+    const spellingInput = object(value.spelling);
+    const spellingWordId = typeof spellingInput.wordId === "string" && queue.includes(spellingInput.wordId) ? spellingInput.wordId : "";
+    const spelling = spellingWordId ? {
+      wordId: spellingWordId,
+      attempts: clampInt(spellingInput.attempts, 0, 20),
+      hadClose: spellingInput.hadClose === true,
+      hadWrong: spellingInput.hadWrong === true,
+      resolved: spellingInput.resolved === true,
+      result: ["known", "fuzzy", "unknown"].includes(spellingInput.result) ? spellingInput.result : ""
+    } : null;
+    const hasDirectionRatings = isObject(value.directionRatings);
+    const cleanRound = value.round === 1 ? 1 : 0;
+    const cleanIndex = clampInt(index, 0, queue.length);
     return {
       mode: value.mode,
       queue,
-      round: value.round === 1 ? 1 : 0,
-      index: clampInt(index, 0, queue.length),
+      round: cleanRound,
+      index: cleanIndex,
       ratings: {
         unknown: clampInt(value.ratings?.unknown ?? value.wrong, 0, 20_000),
         fuzzy: clampInt(value.ratings?.fuzzy, 0, 20_000),
         known: clampInt(value.ratings?.known ?? value.correct, 0, 20_000),
         simple: clampInt(value.ratings?.simple ?? value.skipped, 0, 20_000)
       },
+      directionRatings: {
+        "en-zh": hasDirectionRatings ? clampInt(value.directionRatings?.["en-zh"], 0, 20_000) : (cleanRound ? queue.length : cleanIndex),
+        "zh-en": hasDirectionRatings ? clampInt(value.directionRatings?.["zh-en"], 0, 20_000) : (cleanRound ? cleanIndex : 0)
+      },
+      reviewDirections,
+      spelling,
       startedAt: isoOr(value.startedAt, new Date().toISOString()),
       scanCursor: clampInt(value.scanCursor, currentPosition, Number.MAX_SAFE_INTEGER),
       generalScanCursor: clampInt(value.generalScanCursor ?? value.scanCursor, currentPosition, Number.MAX_SAFE_INTEGER),
@@ -142,10 +168,7 @@
   }
 
   function deriveStatus(directions, fallback = "unknown") {
-    const statuses = DIRECTIONS.map(direction => directions[direction]?.status).filter(Boolean);
-    if (!statuses.length) return validStatus(fallback) || "unknown";
-    if (statuses.includes("simple")) return statuses.every(status => status === "simple") ? "simple" : statuses.filter(status => status !== "simple").sort((a, b) => STATUS[b].weight - STATUS[a].weight)[0];
-    return statuses.sort((a, b) => STATUS[b].weight - STATUS[a].weight)[0];
+    return directions["en-zh"]?.status || directions["zh-en"]?.status || validStatus(fallback) || "unknown";
   }
 
   function sanitizeMastery(value, key) {
@@ -174,7 +197,7 @@
       word: String(input.word || key).trim().slice(0, 120),
       status,
       updatedAt: timestamps.at(-1),
-      nextReviewAt: status === "simple" ? null : due,
+      nextReviewAt: due,
       directions
     };
   }
@@ -290,29 +313,34 @@
     const timestamp = isoOr(now, new Date().toISOString());
     const current = sanitizeMastery(previous, normalizeWord(word)) || { word, directions: {} };
     const directions = { ...current.directions };
-    if (status === "simple") {
-      for (const itemDirection of DIRECTIONS) directions[itemDirection] = {
-        status: "simple", updatedAt: timestamp, nextReviewAt: null, streak: 0, misses: 0
-      };
-    } else {
-      const old = directions[direction] || {};
-      const streak = status === "known" ? clampInt(old.streak, 0, 10_000) + 1 : 0;
-      const misses = clampInt(old.misses, 0, 10_000) + (status === "unknown" ? 1 : 0);
-      directions[direction] = {
-        status,
-        updatedAt: timestamp,
-        nextReviewAt: new Date(Date.parse(timestamp) + reviewDelay(status, streak) * DAY).toISOString(),
-        streak,
-        misses
-      };
-    }
+    const old = directions[direction] || {};
+    const streak = status === "known" ? clampInt(old.streak, 0, 10_000) + 1 : 0;
+    const misses = clampInt(old.misses, 0, 10_000) + (status === "unknown" ? 1 : 0);
+    const delay = reviewDelay(status, streak);
+    directions[direction] = {
+      status,
+      updatedAt: timestamp,
+      nextReviewAt: delay === null ? null : new Date(Date.parse(timestamp) + delay * DAY).toISOString(),
+      streak,
+      misses
+    };
     const overall = deriveStatus(directions, status);
     const due = Object.values(directions).map(item => item.nextReviewAt).filter(Boolean).sort()[0] || null;
-    return { word, status: overall, updatedAt: timestamp, nextReviewAt: overall === "simple" ? null : due, directions };
+    return { word, status: overall, updatedAt: timestamp, nextReviewAt: due, directions };
+  }
+
+  function dueDirections(entry, now = Date.now()) {
+    const directions = object(entry?.directions);
+    const result = DIRECTIONS.filter(direction => {
+      const state = directions[direction];
+      return state?.status !== "simple" && validDate(state?.nextReviewAt) && Date.parse(state.nextReviewAt) <= Number(now);
+    });
+    if (result.length || Object.keys(directions).length) return result;
+    return entry?.status !== "simple" && validDate(entry?.nextReviewAt) && Date.parse(entry.nextReviewAt) <= Number(now) ? [...DIRECTIONS] : [];
   }
 
   function isDue(entry, now = Date.now()) {
-    return Boolean(entry && entry.status !== "simple" && validDate(entry.nextReviewAt) && Date.parse(entry.nextReviewAt) <= Number(now));
+    return dueDirections(entry, now).length > 0;
   }
 
   function eligibleSlice(words, mastery, start, count, excluded = [], excludedWords = []) {
@@ -363,10 +391,41 @@
       return true;
     }).sort((a, b) => {
       const left = object(mastery)[normalizeWord(a.word)], right = object(mastery)[normalizeWord(b.word)];
-      return (STATUS[right?.status]?.weight || 0) - (STATUS[left?.status]?.weight || 0)
+      const dueWeight = entry => Math.max(0, ...dueDirections(entry, now).map(direction => STATUS[entry.directions?.[direction]?.status]?.weight || 0));
+      const dueAt = entry => dueDirections(entry, now).map(direction => entry.directions?.[direction]?.nextReviewAt).filter(Boolean).sort()[0] || entry.nextReviewAt || "";
+      return dueWeight(right) - dueWeight(left)
         || Number(b.source === "academic") - Number(a.source === "academic")
-        || String(left?.nextReviewAt || "").localeCompare(String(right?.nextReviewAt || ""));
+        || String(dueAt(left)).localeCompare(String(dueAt(right)));
     });
+  }
+
+  function normalizeSpelling(value) {
+    return String(value || "").trim().toLocaleLowerCase("en-US");
+  }
+
+  function levenshteinDistance(left, right) {
+    const a = normalizeSpelling(left), b = normalizeSpelling(right);
+    if (!a.length) return b.length;
+    if (!b.length) return a.length;
+    let previous = Array.from({ length: b.length + 1 }, (_, index) => index);
+    for (let i = 1; i <= a.length; i++) {
+      const current = [i];
+      for (let j = 1; j <= b.length; j++) {
+        current[j] = Math.min(current[j - 1] + 1, previous[j] + 1, previous[j - 1] + Number(a[i - 1] !== b[j - 1]));
+      }
+      previous = current;
+    }
+    return previous[b.length];
+  }
+
+  function checkSpelling(answer, expected) {
+    const actual = normalizeSpelling(answer), target = normalizeSpelling(expected);
+    if (actual && actual === target) return "correct";
+    if (!actual || !target) return "wrong";
+    const longest = Math.max(actual.length, target.length);
+    const threshold = longest >= 10 ? 2 : longest >= 5 ? 1 : 0;
+    const distance = levenshteinDistance(actual, target);
+    return threshold && distance <= threshold && distance / longest <= 0.2 ? "close" : "wrong";
   }
 
   function academicQuestion(word, index = 0, round = 0) {
@@ -456,7 +515,8 @@
     };
     let due = 0;
     for (const entry of Object.values(object(state.mastery))) {
-      if (validStatus(entry.status)) counts[entry.status]++;
+      const recognitionStatus = validStatus(entry.directions?.["en-zh"]?.status);
+      if (recognitionStatus) counts[recognitionStatus]++;
       for (const direction of DIRECTIONS) {
         const status = validStatus(entry.directions?.[direction]?.status);
         if (status) directionCounts[direction][status]++;
@@ -488,6 +548,8 @@
   return {
     VERSION, STATUS, DIRECTIONS, ACTIVE_DEFAULT,
     blankRoot, emptyBook, normalizeWord, sanitizeBook, sanitizeV4, migrateV3,
-    rateMastery, isDue, eligibleSlice, buildDailyPlan, prioritizeDueWords, academicQuestion, sanitizeAcademicWord, parseMeaning, report, validDate
+    rateMastery, dueDirections, isDue, eligibleSlice, buildDailyPlan, prioritizeDueWords,
+    normalizeSpelling, levenshteinDistance, checkSpelling,
+    academicQuestion, sanitizeAcademicWord, parseMeaning, report, validDate
   };
 });

@@ -1,4 +1,4 @@
-const CACHE_NAME="xiaolu-home-v2.7-shell-1";
+const CACHE_NAME="xiaolu-home-v2.8-shell-1";
 const CACHE_PREFIX="xiaolu-home-";
 const CORE=["./","./index.html","./study.html","./graduate-journey.html","./css/style.css","./css/study.css","./css/life-module.css","./js/home.js","./js/study-core.js","./js/study.js","./js/pwa.js","./js/exercise-storage.js","./js/timeline-storage.js","./js/notes-storage.js","./js/gifts-storage.js","./js/graduate-journey-core.js","./js/graduate-journey.js","./js/achievement-core.js","./data/wordbooks/manifest.json","./data/wordbooks/kaoyan-complete.json","./data/wordbooks/cet6.json","./data/academic-vocabulary.json","./data/study-practice.json","./manifest.webmanifest","./icons/app-icon.svg","./icons/app-icon-192.png","./icons/app-icon-512.png"];
 
