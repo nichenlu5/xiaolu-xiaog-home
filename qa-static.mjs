@@ -29,6 +29,8 @@ const studyJs = await readFile(resolve(root, "js/study.js"), "utf8");
 const studyIds = new Set([...studyHtml.matchAll(/\bid="([^"]+)"/g)].map(match => match[1]));
 const referencedIds = new Set([...studyJs.matchAll(/\$\("([^"]+)"\)/g)].map(match => match[1]));
 for (const id of referencedIds) assert.ok(studyIds.has(id), `js/study.js references missing #${id}`);
+assert.ok(studyJs.includes("async function fetchRequired") && studyJs.includes("new URL(url, document.baseURI).href"), "study fetch failures must identify the absolute resource URL");
+assert.ok(!studyJs.includes("Promise.all((rawState?.version === 3 ? allManifest : activeManifest).map(fetchCatalog))"), "large catalogs must not download in parallel on constrained mobile devices");
 
 for (const [htmlFile, scriptFile] of [["exercise.html", "js/exercise.js"], ["timeline.html", "js/timeline.js"], ["notes.html", "js/notes.js"], ["gifts.html", "js/gifts.js"], ["graduate-journey.html", "js/graduate-journey.js"], ["index.html", "js/home.js"], ["data-center.html", "js/data-center.js"]]) {
   const html = await readFile(resolve(root, htmlFile), "utf8");

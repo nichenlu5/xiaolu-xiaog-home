@@ -60,7 +60,7 @@ assert.equal(backup.inspectBackup(oldPayload, target).valid, true); backup.resto
 const html = await read("index.html"), homeJs = await read("js/home.js"), page = await read("graduate-journey.html"), sw = await read("sw.js"), manifest = JSON.parse(await read("manifest.webmanifest"));
 for (const id of ["home-journey-phase", "home-journey-remaining", "home-journey-elapsed", "home-journey-percent", "home-journey-goal", "home-journey-bar"]) assert.ok(html.includes(`id="${id}"`));
 for (const id of ["journey-phase", "journey-remaining", "journey-elapsed", "journey-percent", "milestone-list", "growth-study"]) assert.ok(page.includes(`id="${id}"`));
-assert.ok(sw.includes("xiaolu-home-v2.8-shell-1") && sw.includes("./graduate-journey.html") && sw.includes("./js/graduate-journey-core.js"));
+assert.ok(sw.includes("xiaolu-home-v2.8-shell-2") && sw.includes("./graduate-journey.html") && sw.includes("./js/graduate-journey-core.js"));
 assert.ok(manifest.shortcuts.some(item => item.url === "./graduate-journey.html"));
 for (const file of ["graduate-journey.html", "js/graduate-journey-core.js", "js/graduate-journey.js"]) await access(resolve(root, file));
 

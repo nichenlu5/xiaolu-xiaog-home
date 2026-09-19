@@ -44,7 +44,7 @@ const timelineHtml=await readFile(resolve(root,"timeline.html"),"utf8"),notesJs=
 assert.ok(timelineHtml.includes('data-memory-filter="pinned"')&&timelineHtml.includes('data-memory-filter="favorite"')&&timelineHtml.includes('id="tag-filter"'));
 assert.ok(notesJs.includes('source:"note"')&&notesJs.includes("查看关联回忆"),"note to memory flow is missing");
 assert.ok(giftsJs.includes('source:"gift"')&&giftsJs.includes("查看关联回忆"),"gift to memory flow is missing");
-assert.ok(sw.includes("xiaolu-home-v2.8-shell-1")&&sw.includes("./js/gifts-storage.js"));
+assert.ok(sw.includes("xiaolu-home-v2.8-shell-2")&&sw.includes("./js/gifts-storage.js"));
 for(const path of ["gifts.html","js/gifts.js","js/gifts-storage.js","manifest.webmanifest","icons/app-icon-192.png"])await access(resolve(root,path));
 
 console.log("PASS v2.5 core: memory flags/links, notebook migration/management, note and gift backlinks, old backup compatibility, PWA resources");

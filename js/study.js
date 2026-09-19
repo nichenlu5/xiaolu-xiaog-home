@@ -65,10 +65,24 @@
     return status ? `${label}：${Core.STATUS[status].label}` : `${label}：— 未训练`;
   }
 
+  async function fetchRequired(url, label) {
+    const absoluteUrl = new URL(url, document.baseURI).href;
+    let failure;
+    for (let attempt = 0; attempt < 2; attempt++) {
+      try {
+        const response = await fetch(absoluteUrl, attempt ? { cache: "reload" } : undefined);
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        return response;
+      } catch (error) {
+        failure = error;
+      }
+    }
+    throw new Error(`${label}读取失败：${absoluteUrl}（${failure?.message || "网络请求失败"}）`);
+  }
+
   async function fetchCatalog(bookMeta) {
     if (catalogs[bookMeta.bookId]) return catalogs[bookMeta.bookId];
-    const response = await fetch(bookMeta.file);
-    if (!response.ok) throw new Error(`词书读取失败：${response.status}`);
+    const response = await fetchRequired(bookMeta.file, `词书「${bookMeta.name}」`);
     const payload = await response.json();
     if (payload.bookId !== bookMeta.bookId || !Array.isArray(payload.words)) throw new Error("词书格式不正确");
     if (bookMeta.kind === "academic" && ![1, 2].includes(payload.schemaVersion)) throw new Error("学术词库 schema 暂不支持");
@@ -101,8 +115,7 @@
 
   async function init() {
     try {
-      const [manifestResponse, practiceResponse] = await Promise.all([fetch(MANIFEST_URL), fetch(PRACTICE_URL)]);
-      if (!manifestResponse.ok) throw new Error(`词书清单读取失败：${manifestResponse.status}`);
+      const manifestResponse = await fetchRequired(MANIFEST_URL, "词书清单");
       allManifest = await manifestResponse.json();
       if (!Array.isArray(allManifest)) throw new Error("词书清单格式不正确");
       const activeManifest = allManifest.filter(item => item.active !== false);
@@ -111,16 +124,17 @@
       if (manifest.length !== 2 || !manifest.some(item => item.bookId === "kaoyan-complete") || !manifest.some(item => item.bookId === "cet6") || !academicMeta) {
         throw new Error("v2.1 主词书清单不完整");
       }
-      await Promise.all((rawState?.version === 3 ? allManifest : activeManifest).map(fetchCatalog));
+      for (const bookMeta of rawState?.version === 3 ? allManifest : activeManifest) await fetchCatalog(bookMeta);
       academicWords = catalogs[academicMeta.bookId];
       academicIds = new Set(academicWords.map(item => item.id));
-      if (practiceResponse.ok) {
+      try {
+        const practiceResponse = await fetchRequired(PRACTICE_URL, "专项练习数据");
         const payload = await practiceResponse.json();
         practice = {
           collocations: Array.isArray(payload.collocations) ? payload.collocations : [],
           confusables: Array.isArray(payload.confusables) ? payload.confusables : []
         };
-      }
+      } catch {}
       await migrateIfNeeded();
       if (!manifest.some(item => item.bookId === state.selectedBookId)) state.selectedBookId = manifest[0].bookId;
       $("book-select").innerHTML = manifest.map(item => `<option value="${item.bookId}">${item.name}（${item.totalWords.toLocaleString()} 词）</option>`).join("");

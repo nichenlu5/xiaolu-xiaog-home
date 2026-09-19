@@ -24,7 +24,9 @@ assert.equal(new Set(payload.words.map(item => item.id)).size, 465);
 assert.equal(new Set(payload.words.map(item => Core.normalizeWord(item.word))).size, 465);
 assert.deepEqual(payload.words.filter(item => item.top100Rank).map(item => item.top100Rank).sort((a, b) => a - b), Array.from({ length: 100 }, (_, index) => index + 1));
 assert.deepEqual(payload.words.slice(0, 100).map(item => item.top100Rank), Array.from({ length: 100 }, (_, index) => index + 1), "the handbook Top 100 must lead Academic Priority in source order");
-for (const asset of ["./study.html", "./js/study-core.js", "./js/study.js", "./data/academic-vocabulary.json"]) assert.ok(serviceWorker.includes(asset), `${asset} must be available to the PWA shell`);
+for (const asset of ["./study.html", "./js/study-core.js", "./js/study.js"]) assert.ok(serviceWorker.includes(asset), `${asset} must be available to the PWA shell`);
+assert.ok(serviceWorker.includes('url.pathname.includes("/data/")') && serviceWorker.includes("networkFirst(request)"), "large study data must use resilient runtime caching");
+assert.ok(serviceWorker.includes("activateCache") && serviceWorker.includes('pathname.includes("/data/")'), "existing offline study data must migrate across cache versions");
 for (const word of payload.words) {
   assert.equal(word.source, "academic");
   assert.ok(word.phonetic && word.partOfSpeech && word.academicMeaning && word.frequency >= 1 && word.frequency <= 3);
