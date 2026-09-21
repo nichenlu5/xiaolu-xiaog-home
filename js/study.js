@@ -103,6 +103,12 @@
       state = Core.blankRoot();
       return;
     }
+    if (Core.needsFreshStart(rawState)) {
+      state = Core.freshStart(rawState);
+      storageLocked = false;
+      save();
+      return;
+    }
     if (rawState.version === 3) {
       state = Core.migrateV3(rawState, allManifest, catalogs);
       storageLocked = false;
@@ -124,7 +130,8 @@
       if (manifest.length !== 2 || !manifest.some(item => item.bookId === "kaoyan-complete") || !manifest.some(item => item.bookId === "cet6") || !academicMeta) {
         throw new Error("v2.1 主词书清单不完整");
       }
-      for (const bookMeta of rawState?.version === 3 ? allManifest : activeManifest) await fetchCatalog(bookMeta);
+      const requiresLegacyCatalogs = rawState?.version === 3 && !Core.needsFreshStart(rawState);
+      for (const bookMeta of requiresLegacyCatalogs ? allManifest : activeManifest) await fetchCatalog(bookMeta);
       academicWords = catalogs[academicMeta.bookId];
       academicIds = new Set(academicWords.map(item => item.id));
       try {
@@ -411,9 +418,10 @@
     $("prompt-label").textContent = question?.label || (enToZh ? "看到英文，说出核心中文语义" : "看到中文，输入正确英文单词");
     const meaning = Core.parseMeaning(word.meaning);
     $("word-prompt").textContent = question?.prompt || (enToZh ? formatWord(word) : [meaning.core.text, ...meaning.common.slice(0, 2).map(item => item.text)].join("；"));
+    $("spelling-hint").textContent = enToZh ? "" : Core.spellingHint(word.word);
     $("answer-english").textContent = enToZh ? "" : formatWord(word);
     renderMeaning(word);
-    $("recall-hint").textContent = enToZh ? "先在心里说出含义，再点击揭晓。" : "请直接输入英文；大小写和首尾空格不影响判断。";
+    $("recall-hint").textContent = enToZh ? "先在心里说出含义，再点击揭晓。" : "根据前缀提示输入完整英文；大小写和首尾空格不影响判断。";
     $("spelling-form").hidden = enToZh;
     $("reveal-button").hidden = !enToZh;
     $("recognition-rating").hidden = !enToZh;
@@ -641,15 +649,17 @@
       if (payload.app !== "xiaolu-xiaog-vocabulary" || ![3, Core.VERSION].includes(payload.schemaVersion) || payload.data?.version !== payload.schemaVersion) {
         throw new Error("不是可识别的词汇学习备份");
       }
-      if (payload.schemaVersion === 3) {
-        await Promise.all(allManifest.map(fetchCatalog));
+      if (Core.needsFreshStart(payload.data)) {
+        state = Core.freshStart(payload.data);
+      } else if (payload.schemaVersion === 3) {
+        for (const bookMeta of allManifest) await fetchCatalog(bookMeta);
         state = Core.migrateV3(payload.data, allManifest, catalogs);
       } else {
         state = Core.sanitizeV4(payload.data, allManifest, catalogs);
       }
       storageLocked = false;
       await loadBook(state.selectedBookId);
-      $("data-message").textContent = "导入成功：进度、共享掌握状态和旧数据归档已恢复。";
+      $("data-message").textContent = "导入成功：当前 fresh-start 规则已应用，其他有效学习数据已恢复。";
     } catch (error) {
       $("data-message").textContent = `导入失败：${error.message}`;
     }

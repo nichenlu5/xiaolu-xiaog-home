@@ -44,6 +44,32 @@ assert.equal(migrated.legacyBooks["kaoyan-required"].currentPosition, 51, "retir
 assert.equal(migrated.books.cet6.currentPosition, 12, "active book cursor must remain independent");
 assert.deepEqual(migrated.legacyBooks["kaoyan-required"].session.queue, ["kaoyan-required-00004"], "invalid session IDs must be filtered");
 
+const oldVocabulary = {
+  version: 4,
+  selectedBookId: "cet6",
+  mastery: { adapt: { status: "known", directions: { "en-zh": { status: "known" }, "zh-en": { status: "fuzzy" } } } },
+  books: {
+    cet6: { currentPosition: 120, history: [{ date: at, mode: "daily", words: 50 }], session: { mode: "daily", queue: ["cet6-00001"], index: 0 } },
+    "academic-priority": { currentPosition: 30, history: [], session: null }
+  },
+  preferences: { dailyGoal: 40, academicDailyGoal: 20, lastAcademicWord: "significant" }
+};
+assert.equal(Core.needsFreshStart(oldVocabulary), true, "legacy vocabulary state must require the one-time fresh start");
+const restarted = Core.freshStart(oldVocabulary);
+assert.equal(restarted.vocabularyFreshStartVersion, Core.FRESH_START_VERSION);
+assert.equal(restarted.selectedBookId, "cet6", "fresh start may preserve the selected vocabulary book");
+assert.deepEqual(restarted.mastery, {}, "fresh start must clear recognition and production mastery");
+assert.deepEqual(restarted.books, {}, "fresh start must clear cursors, history, due plans and unfinished sessions");
+assert.deepEqual(restarted.legacyBooks, {});
+assert.equal(restarted.preferences.dailyGoal, 40, "non-progress vocabulary preferences may be preserved");
+assert.equal(restarted.preferences.academicDailyGoal, 20);
+assert.equal(restarted.preferences.lastAcademicWord, "", "last learned academic word is learning history and must reset");
+assert.equal(Core.needsFreshStart(restarted), false, "fresh start must not run again after its marker is saved");
+restarted.mastery.newword = Core.rateMastery(null, "newword", "known", "en-zh", at);
+const restartedReload = Core.sanitizeV4(restarted, manifest, catalogs);
+assert.equal(restartedReload.mastery.newword.directions["en-zh"].status, "known", "new learning after fresh start must survive refresh");
+assert.equal(Core.needsFreshStart(restartedReload), false);
+
 let mastery = Core.rateMastery(null, "adapt", "known", "en-zh", at);
 mastery = Core.rateMastery(mastery, "adapt", "unknown", "zh-en", at);
 assert.equal(mastery.status, "known", "compatibility status must follow recognition instead of the weaker direction");
@@ -66,6 +92,12 @@ assert.equal(Core.checkSpelling("Significant", "significant"), "correct");
 assert.equal(Core.checkSpelling(" significant ", "significant"), "correct");
 assert.equal(Core.checkSpelling("signficant", "significant"), "close", "a small typo should allow another attempt");
 assert.equal(Core.checkSpelling("different", "significant"), "wrong", "unrelated words must not be accepted as close");
+assert.equal(Core.spellingHint("significant"), "sig________");
+assert.equal(Core.spellingHint("derive"), "de____");
+assert.equal(Core.spellingHint("data"), "d___");
+assert.equal(Core.spellingHint("well-known"), "wel_-_____");
+assert.equal(Core.spellingHint("in contrast"), "in c_______");
+assert.equal(Core.spellingHint("state-of-the-art"), "sta__-__-___-___");
 
 const firstKnown = Core.rateMastery(null, "resolution", "known", "en-zh", "2026-09-01T00:00:00.000Z");
 assert.equal(firstKnown.nextReviewAt, "2026-09-08T00:00:00.000Z", "first known rating must schedule a future review");
@@ -172,11 +204,18 @@ const sessionState = Core.sanitizeV4({
 const source = new MemoryStorage({ xiaoluXiaogVocabularyV2: JSON.stringify(sessionState) });
 const payload = backup.createBackup(source, new Date(at));
 assert.equal(payload.modules.english.entries.xiaoluXiaogVocabularyV2.value.books[kaoyan.bookId].session.index, 20);
+assert.equal(payload.modules.english.entries.xiaoluXiaogVocabularyV2.value.vocabularyFreshStartVersion, Core.FRESH_START_VERSION, "backup must preserve the fresh-start marker");
 const restoredStorage = new MemoryStorage();
 assert.ok(backup.restoreBackup(payload, restoredStorage).restored.includes("xiaoluXiaogVocabularyV2"));
 const restored = Core.sanitizeV4(JSON.parse(restoredStorage.getItem("xiaoluXiaogVocabularyV2")), manifest, catalogs);
 assert.deepEqual(restored.books[kaoyan.bookId].session.queue, sessionQueue, "backup restore must preserve the unfinished queue");
 assert.equal(restored.books[kaoyan.bookId].session.index, 20, "backup restore must preserve the resume index");
+const legacyBackupStorage = new MemoryStorage();
+const legacyBackup = backup.createBackup(new MemoryStorage({ xiaoluXiaogVocabularyV2: JSON.stringify(oldVocabulary) }), new Date(at));
+backup.restoreBackup(legacyBackup, legacyBackupStorage);
+const legacyRestoredValue = JSON.parse(legacyBackupStorage.getItem("xiaoluXiaogVocabularyV2"));
+assert.equal(Core.needsFreshStart(legacyRestoredValue), true, "an old backup must re-enter the one-time fresh-start gate");
+assert.deepEqual(Core.freshStart(legacyRestoredValue).mastery, {}, "restoring an old backup must not revive pre-reset mastery after the gate runs");
 
 const summary = Core.report({ ...migrated, mastery: { ...migrated.mastery, adapt: mastery } }, manifest, Date.parse("2026-09-10T00:00:00.000Z"));
 assert.equal(summary.counts.simple, 2);

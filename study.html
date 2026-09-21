@@ -98,8 +98,9 @@
         <p id="recall-hint" class="recall-hint">先在心里或纸上说出答案，再点击揭晓。</p>
         <button id="reveal-button" class="primary-button">显示答案</button>
         <form id="spelling-form" class="spelling-form" hidden autocomplete="off">
-          <label for="spelling-input">输入英文单词</label>
-          <input id="spelling-input" name="spelling" type="text" inputmode="text" enterkeyhint="done" autocapitalize="none" autocomplete="off" autocorrect="off" spellcheck="false" maxlength="120" placeholder="输入英文单词">
+          <div class="spelling-hint-wrap"><small>英文提示</small><strong id="spelling-hint" class="spelling-hint"></strong></div>
+          <label for="spelling-input">输入完整英文单词</label>
+          <input id="spelling-input" name="spelling" type="text" inputmode="text" enterkeyhint="done" autocapitalize="none" autocomplete="off" autocorrect="off" spellcheck="false" maxlength="120" placeholder="输入完整英文单词">
           <div class="spelling-actions">
             <button id="spelling-submit" class="primary-button" type="submit">提交</button>
             <button id="spelling-forget" class="soft-button" type="button">想不起来</button>

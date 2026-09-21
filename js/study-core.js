@@ -6,6 +6,7 @@
   "use strict";
 
   const VERSION = 4;
+  const FRESH_START_VERSION = 1;
   const STATUS = Object.freeze({
     unknown: { label: "不认识", icon: "🔴", delayDays: 1, weight: 4 },
     fuzzy: { label: "模糊", icon: "🟠", delayDays: 3, weight: 3 },
@@ -31,6 +32,7 @@
   function blankRoot() {
     return {
       version: VERSION,
+      vocabularyFreshStartVersion: FRESH_START_VERSION,
       selectedBookId: ACTIVE_DEFAULT,
       mastery: {},
       books: {},
@@ -38,6 +40,18 @@
       preferences: { dailyGoal: 50, academicDailyGoal: 30, lastAcademicWord: "" },
       migration: null
     };
+  }
+
+  function needsFreshStart(value) {
+    return finiteNumber(object(value).vocabularyFreshStartVersion, 0) < FRESH_START_VERSION;
+  }
+
+  function freshStart(value) {
+    const input = object(value), result = blankRoot();
+    if (typeof input.selectedBookId === "string" && input.selectedBookId.length <= 120) result.selectedBookId = input.selectedBookId;
+    result.preferences.dailyGoal = clampInt(input.preferences?.dailyGoal ?? 50, 5, 100);
+    result.preferences.academicDailyGoal = clampInt(input.preferences?.academicDailyGoal ?? 30, 0, result.preferences.dailyGoal);
+    return result;
   }
 
   function emptyBook(meta) {
@@ -205,6 +219,7 @@
   function sanitizeV4(raw, metas, catalogs = {}) {
     const input = object(raw);
     const result = blankRoot();
+    result.vocabularyFreshStartVersion = Math.max(FRESH_START_VERSION, clampInt(input.vocabularyFreshStartVersion, 0, 10_000));
     const activeMetas = metas.filter(meta => meta.active !== false);
     const selectableIds = new Set(activeMetas.filter(meta => meta.kind !== "academic").map(meta => meta.bookId));
     const allCatalogIds = new Set(activeMetas.flatMap(meta => (Array.isArray(catalogs[meta.bookId]) ? catalogs[meta.bookId] : []).map(item => item.id)));
@@ -428,6 +443,18 @@
     return threshold && distance <= threshold && distance / longest <= 0.2 ? "close" : "wrong";
   }
 
+  function spellingHint(value) {
+    const characters = Array.from(String(value || "").trim());
+    const isLetter = character => /\p{L}/u.test(character);
+    const letterCount = characters.filter(isLetter).length;
+    const revealed = letterCount <= 4 ? 1 : letterCount <= 6 ? 2 : 3;
+    let seen = 0;
+    return characters.map(character => {
+      if (!isLetter(character)) return character;
+      return seen++ < revealed ? character : "_";
+    }).join("");
+  }
+
   function academicQuestion(word, index = 0, round = 0) {
     const meaning = String(word?.academicMeaning || word?.meaning || "暂无论文语境释义");
     if (round) return { type: "zh-en", direction: "zh-en", label: "根据论文语境，说出英文词", prompt: meaning };
@@ -546,10 +573,10 @@
   }
 
   return {
-    VERSION, STATUS, DIRECTIONS, ACTIVE_DEFAULT,
-    blankRoot, emptyBook, normalizeWord, sanitizeBook, sanitizeV4, migrateV3,
+    VERSION, FRESH_START_VERSION, STATUS, DIRECTIONS, ACTIVE_DEFAULT,
+    blankRoot, needsFreshStart, freshStart, emptyBook, normalizeWord, sanitizeBook, sanitizeV4, migrateV3,
     rateMastery, dueDirections, isDue, eligibleSlice, buildDailyPlan, prioritizeDueWords,
-    normalizeSpelling, levenshteinDistance, checkSpelling,
+    normalizeSpelling, levenshteinDistance, checkSpelling, spellingHint,
     academicQuestion, sanitizeAcademicWord, parseMeaning, report, validDate
   };
 });
