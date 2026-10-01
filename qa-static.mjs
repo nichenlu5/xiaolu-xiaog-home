@@ -40,7 +40,7 @@ for (const [htmlFile, scriptFile] of [["exercise.html", "js/exercise.js"], ["tim
   for (const id of scriptIds) assert.ok(htmlIds.has(id), `${scriptFile} references missing #${id}`);
 }
 
-for (const file of ["js/study-core.js", "js/study.js", "js/exercise-storage.js", "js/exercise.js", "js/timeline-storage.js", "js/timeline.js", "js/notes-storage.js", "js/notes.js", "js/gifts-storage.js", "js/gifts.js", "js/graduate-journey-core.js", "js/graduate-journey.js", "js/backup-core.js", "js/data-center.js", "js/achievement-core.js", "js/achievements.js", "js/home.js", "js/pwa.js", "sw.js", "qa-study-core.mjs", "qa-study.mjs", "qa-responsive.mjs", "qa-v22-core.mjs", "qa-v23-core.mjs", "qa-v24-core.mjs", "qa-v25-core.mjs", "qa-v25-browser.mjs", "qa-v26-core.mjs", "qa-v26-academic.mjs", "qa-v26-browser.mjs"]) {
+for (const file of ["js/study-core.js", "js/study-pdf.js", "js/study.js", "js/exercise-storage.js", "js/exercise.js", "js/timeline-storage.js", "js/timeline.js", "js/notes-storage.js", "js/notes.js", "js/gifts-storage.js", "js/gifts.js", "js/graduate-journey-core.js", "js/graduate-journey.js", "js/backup-core.js", "js/data-center.js", "js/achievement-core.js", "js/achievements.js", "js/home.js", "js/pwa.js", "sw.js", "qa-study-core.mjs", "qa-study-pdf.mjs", "qa-study.mjs", "qa-responsive.mjs", "qa-v22-core.mjs", "qa-v23-core.mjs", "qa-v24-core.mjs", "qa-v25-core.mjs", "qa-v25-browser.mjs", "qa-v26-core.mjs", "qa-v26-academic.mjs", "qa-v26-browser.mjs"]) {
   execFileSync(process.execPath, ["--check", resolve(root, file)], { stdio: "pipe" });
 }
 

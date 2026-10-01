@@ -6,6 +6,7 @@
   const MANIFEST_URL = "./data/wordbooks/manifest.json";
   const PRACTICE_URL = "./data/study-practice.json";
   const Core = window.StudyCore;
+  const Pdf = window.StudyPdf;
   const $ = id => document.getElementById(id);
 
   let allManifest = [];
@@ -20,6 +21,7 @@
   let byWord = new Map();
   let practice = { collocations: [], confusables: [] };
   let active = null;
+  let completedDailyPdf = null;
   let warning = "";
   let storageLocked = false;
   let rawState = readStored();
@@ -303,6 +305,9 @@
   function begin(session) {
     active = session;
     if (!active) return;
+    completedDailyPdf = null;
+    $("daily-pdf-button").hidden = true;
+    $("daily-pdf-message").textContent = "";
     book().session = active;
     save();
     $("dashboard").hidden = true;
@@ -501,6 +506,13 @@
 
   function finish() {
     const data = book();
+    completedDailyPdf = active.mode === "daily"
+      ? Pdf.createDailyPayload({
+          date: new Date().toLocaleDateString("sv-SE"),
+          bookName: meta().name,
+          words: active.queue.map(id => byId.get(id))
+        })
+      : null;
     if (active.mode === "daily") {
       data.currentPosition = Math.max(data.currentPosition, active.generalScanCursor);
       academicBook().currentPosition = Math.max(academicBook().currentPosition, active.academicScanCursor);
@@ -530,7 +542,19 @@
     $("result-stats").innerHTML = Object.entries(active.ratings).map(([status, count]) => {
       return `<span><strong>${Core.STATUS[status].icon} ${count}</strong> ${Core.STATUS[status].label}</span>`;
     }).join("");
+    $("daily-pdf-button").hidden = !completedDailyPdf;
+    $("daily-pdf-message").textContent = completedDailyPdf ? "点击后在系统打印窗口中选择“保存为 PDF”。" : "";
     active = null;
+  }
+
+  function exportDailyPdf() {
+    if (!completedDailyPdf) return;
+    try {
+      Pdf.openPrintView(completedDailyPdf);
+      $("daily-pdf-message").textContent = "打印视图已打开，请选择“保存为 PDF”。";
+    } catch (error) {
+      $("daily-pdf-message").textContent = error.message;
+    }
   }
 
   function renderHistory() {
@@ -683,6 +707,7 @@
   document.querySelectorAll("[data-rating]").forEach(button => button.onclick = () => rate(button.dataset.rating));
   $("exit-button").onclick = renderDashboard;
   $("result-home").onclick = renderDashboard;
+  $("daily-pdf-button").onclick = exportDailyPdf;
   $("collocation-button").onclick = () => startPractice("collocations");
   $("confusable-button").onclick = () => startPractice("confusables");
   $("report-button").onclick = () => { renderReport(); $("report-dialog").showModal(); };
@@ -703,7 +728,8 @@
     submitSpelling,
     resolveSpelling,
     dueIds,
-    renderReport
+    renderReport,
+    getDailyPdfPayload: () => completedDailyPdf
   };
   init();
 })();

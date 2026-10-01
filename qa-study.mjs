@@ -87,6 +87,7 @@ try {
   await assert(await evaluate("StudyApp.getState().vocabularyFreshStartVersion===1 && Object.keys(StudyApp.getState().mastery).length===0 && StudyApp.getBook().currentPosition===0"), "fresh start repeated or produced an invalid state on the second refresh");
 
   await click("#start-button");
+  await assert(await evaluate("document.querySelector('#daily-pdf-button').hidden && StudyApp.getDailyPdfPayload()===null"), "PDF export appeared before the daily session was complete");
   await assert(await evaluate("StudyApp.getBook().session.queue.length===50 && StudyApp.getBook().session.queue.slice(0,30).every(id=>id.startsWith('academic-priority-')) && StudyApp.getBook().session.queue.filter(id=>id.startsWith('academic-priority-')).length===30"), "academic-first 30+20 daily plan failed");
   await evaluate("sessionStorage.setItem('v272Queue',JSON.stringify(StudyApp.getBook().session.queue))");
   await click("#reveal-button");
@@ -137,6 +138,7 @@ try {
   await click("#spelling-next");
   await evaluate("(()=>{while(StudyApp.getBook().session)StudyApp.rate('known')})()");
   await assert(await evaluate("StudyApp.getBook().history.length===1 && StudyApp.getBook().currentPosition>=20 && StudyApp.getState().books['academic-priority'].currentPosition>=30 && StudyApp.getBook().history[0].academicWords===30"), "completion/history/cursors failed");
+  await assert(await evaluate("!document.querySelector('#daily-pdf-button').hidden && StudyApp.getDailyPdfPayload()?.words.length===50 && StudyApp.getDailyPdfPayload().words.every(word=>word.word&&word.meaning) && StudyPdf.buildPrintHtml(StudyApp.getDailyPdfPayload()).includes('今日 50 词复习单')"), "completed daily session did not expose its exact 50-word PDF payload");
 
   await click("#result-home");
   await assert(await evaluate("(()=>{const next=StudyApp.newSession('daily');if(!next||next.index!==0)return false;const all=[...StudyApp.getAcademicWords(),...StudyApp.getWords()];const known=sessionStorage.getItem('v272KnownWord');return JSON.stringify(next.queue)!==sessionStorage.getItem('v271Queue')&&!next.queue.some(id=>all.find(x=>x.id===id)?.word.toLowerCase()===known)})()"), "the next daily session repeated a just-learned word");

@@ -140,7 +140,11 @@
       <div class="result-icon">🌟</div><p class="eyebrow">SESSION COMPLETE</p>
       <h2 id="result-title">今天完成啦</h2><p id="result-copy"></p>
       <div id="result-stats" class="result-stats"></div>
-      <button id="result-home" class="primary-button">返回学习首页</button>
+      <div class="result-actions">
+        <button id="daily-pdf-button" class="soft-button" type="button" hidden>导出今日 50 词 PDF</button>
+        <button id="result-home" class="primary-button" type="button">返回学习首页</button>
+      </div>
+      <p id="daily-pdf-message" class="storage-note" role="status" aria-live="polite"></p>
     </section>
 
     <dialog id="practice-dialog" class="study-dialog practice-dialog">
@@ -166,6 +170,7 @@
     </dialog>
   </main>
   <script src="./js/study-core.js"></script>
+  <script src="./js/study-pdf.js"></script>
   <script src="./js/study.js"></script>
 </body>
 </html>

@@ -25,6 +25,7 @@ for(const icon of manifest.icons) await access(resolve(root,icon.src));
 assert.equal(manifest.shortcuts.length,5);
 assert.ok(sw.includes("request.mode===\"navigate\""),"service worker needs an offline navigation strategy");
 assert.ok(!sw.includes("localStorage"),"service worker must not touch localStorage");
+assert.ok(sw.includes("./js/study-pdf.js"),"daily PDF support must be available from the offline shell");
 assert.equal(backup.APP_VERSION,"2.8");
 assert.equal(backup.specs.length,17,"v2.6 adds graduate journey to the backup registry");
 assert.equal(modules.schemaVersion,4);
