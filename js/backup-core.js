@@ -6,7 +6,7 @@
   "use strict";
   const BACKUP_SCHEMA_VERSION = 1;
   const APP_ID = "xiaolu-xiaog-home";
-  const APP_VERSION = "2.8";
+  const APP_VERSION = "3.0";
   const MAX_IMPORT_BYTES = 12 * 1024 * 1024;
   const specs = [
     ["english", "英语学习", "xiaoluXiaogVocabularyV2", "object", "version"],
@@ -19,6 +19,7 @@
     ["notes", "笔记 / 小纸条", "xiaoluXiaogNotesV1", "object", "schemaVersion"],
     ["gifts", "礼物盒", "xiaoluXiaogGiftsV1", "object", "schemaVersion"],
     ["graduateJourney", "研究生旅程", "xiaoluXiaogGraduateJourneyV1", "object", "schemaVersion"],
+    ["today", "今日状态", "xiaoluXiaogTodayV1", "object", "schemaVersion"],
     ["achievements", "跨模块成就", "xiaoluXiaogAchievementsV2", "object", "schemaVersion"],
     ["games", "游戏厅总记录", "xiaoluXiaogArcadeV1", "object", ""],
     ["games", "知识擂台错题", "xiaoluQuizWrongQuestionsV1", "object", ""],

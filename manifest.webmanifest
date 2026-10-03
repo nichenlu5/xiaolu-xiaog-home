@@ -1,8 +1,8 @@
 {
   "id": "./",
-  "name": "小路 × 小G的小家",
-  "short_name": "小路的小家",
-  "description": "一起学习、生活、玩耍与收藏回忆的私人生活空间。",
+  "name": "小路 OS · 今日",
+  "short_name": "小路 OS",
+  "description": "轻轻看见今天的学习、生活与兴趣。",
   "lang": "zh-CN",
   "start_url": "./index.html",
   "scope": "./",

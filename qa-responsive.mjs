@@ -9,9 +9,9 @@ const server = await startStaticServer();
 const profile = await mkdtemp(join(tmpdir(), "xiaolu-v14-"));
 const proc = spawn(chrome, ["--headless=new", "--disable-gpu", "--remote-debugging-port=9333", `--user-data-dir=${profile}`, "about:blank"]);
 const pause = ms => new Promise(resolve => setTimeout(resolve, ms));
-let socket, nextId = 0; const waiting = new Map();
+let socket, nextId = 0; const waiting = new Map(), browserErrors = [];
 async function connect() {
-  for (let i = 0; i < 30; i++) { try { const tabs = await fetch("http://127.0.0.1:9333/json/list").then(r => r.json()); const page = tabs.find(t => t.type === "page" && t.url === "about:blank") || tabs.find(t => t.type === "page"); if (!page) throw new Error("page target unavailable"); socket = new WebSocket(page.webSocketDebuggerUrl); await new Promise((ok, bad) => { socket.onopen = ok; socket.onerror = bad; }); socket.onmessage = e => { const msg = JSON.parse(e.data); if (msg.id && waiting.has(msg.id)) { waiting.get(msg.id)(msg); waiting.delete(msg.id); } }; return; } catch { await pause(100); } } throw new Error("Chrome DevTools connection failed");
+  for (let i = 0; i < 30; i++) { try { const tabs = await fetch("http://127.0.0.1:9333/json/list").then(r => r.json()); const page = tabs.find(t => t.type === "page" && t.url === "about:blank") || tabs.find(t => t.type === "page"); if (!page) throw new Error("page target unavailable"); socket = new WebSocket(page.webSocketDebuggerUrl); await new Promise((ok, bad) => { socket.onopen = ok; socket.onerror = bad; }); socket.onmessage = e => { const msg = JSON.parse(e.data); if (msg.id && waiting.has(msg.id)) { waiting.get(msg.id)(msg); waiting.delete(msg.id); } if (msg.method === "Runtime.exceptionThrown") browserErrors.push(msg.params.exceptionDetails?.text || "runtime exception"); if (msg.method === "Log.entryAdded" && msg.params.entry?.level === "error") browserErrors.push(msg.params.entry.text); }; return; } catch { await pause(100); } } throw new Error("Chrome DevTools connection failed");
 }
 function send(method, params = {}) { return new Promise((resolve, reject) => { const id = ++nextId; waiting.set(id, msg => msg.error ? reject(new Error(msg.error.message)) : resolve(msg.result)); socket.send(JSON.stringify({ id, method, params })); }); }
 async function evaluate(expression, awaitPromise = true) { const r = await send("Runtime.evaluate", { expression, awaitPromise, returnByValue: true }); if (r.exceptionDetails) throw new Error(r.exceptionDetails.exception?.description || r.exceptionDetails.text); return r.result.value; }
@@ -20,14 +20,26 @@ async function assert(condition, message) { if (!condition) throw new Error(mess
 async function click(selector) { await evaluate(`document.querySelector(${JSON.stringify(selector)}).click()`); }
 
 try {
-  await connect(); await send("Page.enable"); await send("Runtime.enable");
-  const pages = ["index.html", "wishlist.html", "footprints.html", "exercise.html", "timeline.html", "notes.html", "gifts.html", "graduate-journey.html", "data-center.html", "game-hall.html", "game.html", "lyrics.html", "timer.html", "sync.html", "memory.html", "world.html", "province.html", "literature.html", "pi-memory.html", "clue-guess.html", "speed-quiz.html", "achievements.html"];
+  await connect(); await send("Page.enable"); await send("Runtime.enable"); await send("Log.enable");
+  const pages = ["index.html", "interest.html", "wishlist.html", "footprints.html", "exercise.html", "timeline.html", "notes.html", "gifts.html", "graduate-journey.html", "data-center.html", "game-hall.html", "game.html", "lyrics.html", "timer.html", "sync.html", "memory.html", "world.html", "province.html", "literature.html", "pi-memory.html", "clue-guess.html", "speed-quiz.html", "achievements.html"];
   for (const width of [320, 360, 375, 390, 412, 430, 768, 1024]) for (const page of pages) { await open(page, width); const sizes = await evaluate("({scroll:document.documentElement.scrollWidth,client:document.documentElement.clientWidth})"); await assert(sizes.scroll <= sizes.client, `${page} overflows at ${width}px: ${sizes.scroll}/${sizes.client}`); }
 
   await open("index.html",320);
   await assert(await evaluate("document.querySelectorAll('.os-app').length===8"),"Xiaolu OS app grid does not have eight entries");
   await assert(await evaluate("document.querySelectorAll('.os-dock a').length===4"),"Xiaolu OS dock does not have four shortcuts");
   await assert(await evaluate("getComputedStyle(document.querySelector('.os-app-grid')).gridTemplateColumns.split(' ').length===4"),"Xiaolu OS mobile grid is not four columns");
+  await assert(await evaluate("document.querySelectorAll('[data-today-status]').length===7"),"Today status choices are incomplete");
+  await assert(await evaluate("document.querySelectorAll('.interest-scroll a').length===9"),"interest branches are incomplete");
+  await evaluate("localStorage.setItem('v30Sentinel','keep-me')");
+  await click('[data-today-status="good"]');
+  await assert(await evaluate("JSON.parse(localStorage.getItem('xiaoluXiaogTodayV1')).records[0].statusId==='good'"),"Today status was not saved");
+  await open("index.html",320);
+  await assert(await evaluate("document.querySelector('[data-today-status=good]').getAttribute('aria-pressed')==='true'"),"Today status did not survive refresh");
+  await click('[data-today-status="rest"]');
+  await assert(await evaluate("(()=>{const s=JSON.parse(localStorage.getItem('xiaoluXiaogTodayV1'));return s.records.length===1&&s.records[0].statusId==='rest'})()"),"Today status did not update in place");
+  await click('#clear-today-status');
+  await assert(await evaluate("JSON.parse(localStorage.getItem('xiaoluXiaogTodayV1')).records.length===0&&localStorage.getItem('v30Sentinel')==='keep-me'"),"clearing Today status changed unrelated storage");
+  await assert(browserErrors.length===0,`Today page produced browser errors: ${browserErrors.join(" | ")}`);
   await open("index.html",1024);
   await assert(await evaluate("getComputedStyle(document.querySelector('.os-shell')).gridTemplateColumns.split(' ').length===2"),"Xiaolu OS desktop dashboard is not two columns");
 

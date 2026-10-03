@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <meta name="description" content="小路和小G一起学习、生活、玩耍与收藏回忆的私人生活空间。">
+  <meta name="description" content="小路 OS · 今日：轻轻看见今天的学习、生活与兴趣。">
   <meta name="theme-color" content="#fff8ed">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -22,41 +22,83 @@
         <a class="os-settings" href="./data-center.html" aria-label="打开数据备份与恢复">⚙️</a>
       </header>
 
-      <section class="os-hero">
-        <div class="home-illustration" aria-hidden="true">
-          <span class="little-star star-one">✦</span><span class="little-star star-two">✦</span>
-          <div class="house"><div class="roof"></div><div class="house-body"><div class="window"><span></span></div><div class="door"></div></div></div>
+      <section class="today-welcome">
+        <div class="today-welcome-copy">
+          <p class="eyebrow">XIAOLU OS · TODAY</p>
+          <h1 id="home-title">今天，也按自己的节奏来</h1>
+          <p>不必把每一天都过成满分答卷。看见正在发生的生活，就已经很好。</p>
+          <a class="journey-day-pill" href="./graduate-journey.html"><span aria-hidden="true">🎓</span><span id="research-day">正在读取研究生旅程</span></a>
         </div>
-        <div class="os-hero-copy"><p class="eyebrow">XIAOLU OS</p><h1 id="home-title">小路 <span>×</span> 小G</h1><p>一间装着学习、生活、小快乐和共同回忆的屋子。</p></div>
+        <div class="today-sun" aria-hidden="true"><span>☀️</span><i></i></div>
       </section>
 
-      <nav class="os-app-grid" aria-label="小路 OS 应用">
-        <a class="os-app app-study" href="./study.html"><span class="os-app-icon" aria-hidden="true">📚</span><strong>学习</strong><small>考研 · 六级 · 学术</small></a>
-        <a class="os-app app-exercise" href="./exercise.html"><span class="os-app-icon" aria-hidden="true">🏃🏻‍♀️</span><strong>运动</strong><small>训练与休息</small></a>
-        <a class="os-app app-games" href="./game-hall.html"><span class="os-app-icon" aria-hidden="true">🎮</span><strong>游戏</strong><small>一起玩一局</small></a>
-        <a class="os-app app-footprints" href="./footprints.html"><span class="os-app-icon" aria-hidden="true">🗺️</span><strong>足迹</strong><small>去过的地方</small></a>
-        <a class="os-app app-wishes" href="./wishlist.html"><span class="os-app-icon" aria-hidden="true">🌱</span><strong>愿望</strong><small>想做的事情</small></a>
-        <a class="os-app app-memory" href="./timeline.html"><span class="os-app-icon" aria-hidden="true">❤️</span><strong>回忆</strong><small>舍不得忘记</small></a>
-        <a class="os-app app-notes" href="./notes.html"><span class="os-app-icon" aria-hidden="true">📝</span><strong>小纸条</strong><small>灵感与日记</small></a>
-        <a class="os-app app-achievements" href="./achievements.html"><span class="os-app-icon" aria-hidden="true">🏆</span><strong>成就</strong><small>发生过的闪光</small></a>
-      </nav>
-      <nav class="os-secondary" aria-label="更多收藏"><span>更多收藏</span><a href="./gifts.html"><span aria-hidden="true">🎁</span><span><strong>礼物盒</strong><small id="home-gift-summary">收藏文件礼物与纪念小物</small></span><b aria-hidden="true">→</b></a></nav>
+      <section class="today-agenda" id="today" aria-labelledby="today-title">
+        <div class="section-heading"><div><p class="eyebrow">TODAY</p><h2 id="today-title">今天</h2></div><span>没有安排也没关系</span></div>
+        <a class="agenda-card" href="./graduate-journey.html">
+          <span class="agenda-icon" aria-hidden="true">🗓️</span>
+          <span><strong id="today-arrangement">今天还没有安排</strong><small id="today-arrangement-detail">可以留一点空白给自己</small></span>
+          <b aria-hidden="true">→</b>
+        </a>
+      </section>
 
-      <a class="graduate-summary-card" href="./graduate-journey.html" aria-label="打开研究生旅程">
-        <span class="graduate-summary-icon" aria-hidden="true">🎓</span>
-        <span class="graduate-summary-copy"><small>研究生旅程 · <b id="home-journey-phase">研一</b></small><strong id="home-journey-remaining">正在计算毕业倒计时</strong><span class="graduate-mini-progress"><i id="home-journey-bar"></i></span><em id="home-journey-elapsed">正在计算入学天数</em><em id="home-journey-goal">还没有设置目标</em></span>
-        <span class="graduate-summary-percent" id="home-journey-percent">0%</span>
-      </a>
-
-      <section class="today-panel" id="today" aria-labelledby="today-title">
-        <div class="section-heading"><div><p class="eyebrow">TODAY</p><h2 id="today-title">今天的小家</h2></div><span>慢慢来，也很好</span></div>
-        <div class="today-grid">
-          <a href="./study.html"><span class="today-icon" aria-hidden="true">📖</span><span><small>英语 · Academic Priority</small><strong id="today-study">今天可以慢慢开始</strong></span></a>
-          <a href="./exercise.html"><span class="today-icon" aria-hidden="true">🌿</span><span><small>运动状态</small><strong id="today-exercise">今天还没有记录</strong></span></a>
-          <a href="./timeline.html"><span class="today-icon" aria-hidden="true">📸</span><span><small>最近回忆</small><strong id="today-memory">还没有回忆</strong></span></a>
-          <a href="./wishlist.html"><span class="today-icon" aria-hidden="true">✨</span><span><small>愿望进展</small><strong id="today-wish">还没有完成的愿望</strong></span></a>
+      <section class="recent-work" aria-labelledby="recent-work-title">
+        <div class="section-heading"><div><p class="eyebrow">IN PROGRESS</p><h2 id="recent-work-title">最近在做</h2></div><span>接着上次的地方</span></div>
+        <div class="recent-work-grid">
+          <a href="./study.html"><span class="recent-work-icon" aria-hidden="true">📖</span><span><small>英语 · 今日 50 词</small><strong id="today-study">今天可以慢慢开始</strong></span><b aria-hidden="true">→</b></a>
+          <a href="./notes.html"><span class="recent-work-icon c-icon" aria-hidden="true">C</span><span><small>C语言 · 最近在学</small><strong id="today-c">还没有 C 语言记录</strong></span><b aria-hidden="true">→</b></a>
+          <a href="./graduate-journey.html"><span class="recent-work-icon research-icon" aria-hidden="true">🔬</span><span><small>科研 / 研究生</small><strong id="today-research">打开研究生旅程</strong></span><b aria-hidden="true">→</b></a>
         </div>
       </section>
+
+      <section class="today-status" aria-labelledby="today-status-title">
+        <div class="section-heading"><div><p class="eyebrow">HOW ARE YOU</p><h2 id="today-status-title">今日状态</h2></div><span>可以不选，也可以随时改</span></div>
+        <div class="status-choices" role="group" aria-label="选择今天的状态">
+          <button type="button" data-today-status="good" aria-pressed="false"><span>😊</span>今天不错</button>
+          <button type="button" data-today-status="ordinary" aria-pressed="false"><span>🙂</span>普普通通</button>
+          <button type="button" data-today-status="tired" aria-pressed="false"><span>🥱</span>有点累</button>
+          <button type="button" data-today-status="messy" aria-pressed="false"><span>😵‍💫</span>脑袋乱乱的</button>
+          <button type="button" data-today-status="study" aria-pressed="false"><span>📚</span>今天想学习</button>
+          <button type="button" data-today-status="play" aria-pressed="false"><span>🎮</span>今天想玩</button>
+          <button type="button" data-today-status="rest" aria-pressed="false"><span>🛏️</span>今天只想躺着</button>
+        </div>
+        <div class="status-foot"><p id="today-status-note" role="status">今天还没有选择状态，这也很正常。</p><button type="button" id="clear-today-status" hidden>不记录了</button></div>
+      </section>
+
+      <section class="interest-branches" id="interests" aria-labelledby="interest-title">
+        <div class="section-heading"><div><p class="eyebrow">SIDE QUESTS</p><h2 id="interest-title">兴趣支线</h2></div><span>随心逛逛</span></div>
+        <div class="interest-scroll">
+          <a href="./interest.html?branch=reading"><span>📚</span><strong>阅读</strong><small>共同书架</small></a>
+          <a href="./interest.html?branch=cinema"><span>📺</span><strong>影视</strong><small>假面骑士</small></a>
+          <a href="./interest.html?branch=github"><span>💻</span><strong>GitHub</strong><small>项目与灵感</small></a>
+          <a href="./interest.html?branch=ai"><span>🤖</span><strong>AI</strong><small>Agent</small></a>
+          <a href="./interest.html?branch=cars"><span>🚗</span><strong>汽车</strong><small>车标</small></a>
+          <a href="./interest.html?branch=photo"><span>📷</span><strong>摄影</strong><small>Citywalk</small></a>
+          <a href="./interest.html?branch=dolls"><span>🧸</span><strong>娃娃</strong><small>收藏</small></a>
+          <a href="./interest.html?branch=embedded"><span>🔧</span><strong>嵌入式</strong><small>机器人</small></a>
+          <a href="./interest.html?branch=space"><span>🌌</span><strong>天文</strong><small>太空</small></a>
+        </div>
+      </section>
+
+      <details class="home-rooms">
+        <summary><span><small>MORE ROOMS</small><strong>去小家的其他房间</strong></span><b aria-hidden="true">⌄</b></summary>
+        <nav class="os-app-grid" aria-label="小路 OS 应用">
+          <a class="os-app app-study" href="./study.html"><span class="os-app-icon" aria-hidden="true">📚</span><strong>学习</strong><small>考研 · 六级 · 学术</small></a>
+          <a class="os-app app-exercise" href="./exercise.html"><span class="os-app-icon" aria-hidden="true">🏃🏻‍♀️</span><strong>运动</strong><small>训练与休息</small></a>
+          <a class="os-app app-games" href="./game-hall.html"><span class="os-app-icon" aria-hidden="true">🎮</span><strong>游戏</strong><small>一起玩一局</small></a>
+          <a class="os-app app-footprints" href="./footprints.html"><span class="os-app-icon" aria-hidden="true">🗺️</span><strong>足迹</strong><small>去过的地方</small></a>
+          <a class="os-app app-wishes" href="./wishlist.html"><span class="os-app-icon" aria-hidden="true">🌱</span><strong>愿望</strong><small>想做的事情</small></a>
+          <a class="os-app app-memory" href="./timeline.html"><span class="os-app-icon" aria-hidden="true">❤️</span><strong>回忆</strong><small>舍不得忘记</small></a>
+          <a class="os-app app-notes" href="./notes.html"><span class="os-app-icon" aria-hidden="true">📝</span><strong>小纸条</strong><small>灵感与日记</small></a>
+          <a class="os-app app-achievements" href="./achievements.html"><span class="os-app-icon" aria-hidden="true">🏆</span><strong>成就</strong><small>发生过的闪光</small></a>
+        </nav>
+        <nav class="os-secondary" aria-label="更多收藏"><span>更多收藏</span><a href="./gifts.html"><span aria-hidden="true">🎁</span><span><strong>礼物盒</strong><small id="home-gift-summary">收藏文件礼物与纪念小物</small></span><b aria-hidden="true">→</b></a></nav>
+
+        <a class="graduate-summary-card" href="./graduate-journey.html" aria-label="打开研究生旅程">
+          <span class="graduate-summary-icon" aria-hidden="true">🎓</span>
+          <span class="graduate-summary-copy"><small>研究生旅程 · <b id="home-journey-phase">研一</b></small><strong id="home-journey-remaining">正在计算毕业倒计时</strong><span class="graduate-mini-progress"><i id="home-journey-bar"></i></span><em id="home-journey-elapsed">正在计算入学天数</em><em id="home-journey-goal">还没有设置目标</em></span>
+          <span class="graduate-summary-percent" id="home-journey-percent">0%</span>
+        </a>
+      </details>
 
       <section class="home-recent" id="recent" aria-labelledby="recent-title">
         <div class="section-heading"><div><p class="eyebrow">LITTLE MOMENTS</p><h2 id="recent-title">最近的小日子</h2></div></div>
@@ -78,7 +120,7 @@
   </main>
 
   <nav class="os-dock" aria-label="常用导航">
-    <a class="active" href="#home-top" aria-current="page"><span aria-hidden="true">🏠</span><small>首页</small></a>
+    <a class="active" href="#home-top" aria-current="page"><span aria-hidden="true">☀️</span><small>今日</small></a>
     <a href="./study.html"><span aria-hidden="true">📚</span><small>学习</small></a>
     <a href="./timeline.html"><span aria-hidden="true">❤️</span><small>回忆</small></a>
     <a href="./data-center.html"><span aria-hidden="true">⚙️</span><small>数据</small></a>
@@ -91,6 +133,7 @@
   <script src="./js/gifts-storage.js"></script>
   <script src="./js/graduate-journey-core.js"></script>
   <script src="./js/achievement-core.js"></script>
+  <script src="./js/today-core.js"></script>
   <script src="./js/home.js"></script>
   <script src="./js/pwa.js"></script>
 </body>

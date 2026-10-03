@@ -1,6 +1,6 @@
 # 小路 OS 架构边界
 
-`xiaolu-xiaog-home` 是公开可访问的统一入口和个人仪表盘，不吞并专业项目仓库。当前仍保持零构建的 HTML / CSS / Vanilla JavaScript 结构；功能按“页面 + 独立数据 + 版本化存储”逐步演进。v2.6 在 Xiaolu OS 首页之上新增研究生旅程及其只读成长摘要。
+`xiaolu-xiaog-home` 是公开可访问的统一入口和个人仪表盘，不吞并专业项目仓库。当前仍保持零构建的 HTML / CSS / Vanilla JavaScript 结构；功能按“页面 + 独立数据 + 版本化存储”逐步演进。v3.0 第一阶段在 Xiaolu OS 首页之上新增“今日”聚合页，并继续只读复用既有领域数据。
 
 ## 三个长期核心
 
@@ -35,7 +35,8 @@
 | 回忆馆 | `xiaoluXiaogTimelineV1` | `{ schemaVersion: 3, memories }` | `source` 与 `links` 保存稳定领域 ID；记录支持收藏和置顶 |
 | 笔记本 | `xiaoluXiaogNotesV1` | `{ schemaVersion: 3, notebooks, notes }` | 笔记通过稳定 `notebookId` 归属可管理的笔记本 |
 | 礼物盒 | `xiaoluXiaogGiftsV1` | `{ schemaVersion: 1, gifts }` | 礼物通过 `links.memoryIds` 关联回忆 |
-| 研究生旅程 | `xiaoluXiaogGraduateJourneyV1` | `{ schemaVersion: 1, settings, milestones }` | 月份精度时间设置、三阶段目标与状态；成长统计不复制入此 key |
+| 研究生旅程 | `xiaoluXiaogGraduateJourneyV1` | `{ schemaVersion: 2, settings, milestones, dailyRecords, communications, experiments }` | 时间设置、三阶段目标与生活科研记录；成长统计不复制入此 key |
+| 今日状态 | `xiaoluXiaogTodayV1` | `{ schemaVersion: 1, records }` | 每天最多一个可选状态；不记录连续打卡、分数或完成率 |
 | 跨模块成就 | `xiaoluXiaogAchievementsV2` | `{ schemaVersion, unlocked }` | 只登记稳定成就 ID 与首次解锁时间 |
 
 生活模块仓储均过滤缺失字段和异常类型；JSON 损坏或检测到更高 schema 版本时只读展示，不覆盖原值。
@@ -49,6 +50,16 @@ v2.5 将 `xiaoluXiaogGiftsV1` 加入第 16 个备份注册项。笔记本与笔�
 v2.6 将 `xiaoluXiaogGraduateJourneyV1` 加入第 17 个备份注册项。旧 v2.3～v2.5 备份没有研究生旅程条目时，恢复逻辑不会删除或覆盖当前旅程数据。
 
 v2.7 保持 `xiaoluXiaogGraduateJourneyV1` key 不变，将内部 schema 升级为 2，并在原状态中加入 `dailyRecords`、`communications` 与 `experiments`。schema 1 数据读取时只补空集合，不改写原有 settings 和 milestones；整个根对象继续作为同一个备份条目导出与恢复。
+
+v3.0 第一阶段将 `xiaoluXiaogTodayV1` 作为第 18 个备份注册项。旧备份缺少今日状态时不会删除当前记录；新增数据与英语、研究生旅程、运动、回忆等 key 完全隔离。
+
+### v3.0 Today 聚合边界
+
+- 首页只读现有英语 session/history、C语言笔记、研究生旅程日常记录以及其他生活摘要，不向来源模块写回。
+- “今天”没有独立课表时只展示现有日常记录或空状态，不制造课程和进度。
+- 兴趣支线第一阶段仅提供稳定入口与装修中页面，不保存虚构内容。
+- 今日状态完全可选、可当天修改或删除；不推送提醒，不生成 streak、KPI、扣分或逾期。
+- 未知更高 schema 或损坏的今日状态会进入只读保护，不覆盖原始值。
 
 ### v2.7 研究生生活关联边界
 
@@ -101,7 +112,9 @@ Home 不复制这些仓库的业务代码。未来聚合数据时，每个项目
 - **v2.3**：全站备份/恢复、稳定来源引用、跨模块成就登记和首页动态摘要。
 - **v2.4**：小路 OS 手机式首页、八应用入口、今日摘要、底部 Dock 与 PWA 离线壳；不改变各模块存储。
 - **v2.5**：回忆馆收藏/置顶/日期层级、多笔记本、礼物盒、稳定 note/gift 回链与第 16 项备份注册。
-- **v2.6（当前）**：研究生旅程、毕业倒计时、三阶段目标、首页只读摘要与第 17 项备份注册。
+- **v2.6**：研究生旅程、毕业倒计时、三阶段目标、首页只读摘要与第 17 项备份注册。
+- **v2.7–v2.9**：研究生日常记录扩展、英语学习增强与每日 50 词 PDF。
+- **v3.0 第一阶段（当前）**：“今日”聚合页、独立可选状态、兴趣支线入口与第 18 项备份注册。
 - **模块互联**：在稳定 ID 和导出恢复机制成熟后，再加入事件协议与可选双向索引。
 - **平台能力**：PWA 离线壳已完成；云同步必须在冲突策略和导出恢复成熟后加入。
 - **AI Companion**：最后接入权限中心与记忆核心，只读取用户明确授权的范围。

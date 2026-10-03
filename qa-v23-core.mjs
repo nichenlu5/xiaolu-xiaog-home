@@ -10,7 +10,7 @@ class MemoryStorage {
 }
 const json=value=>JSON.stringify(value),date="2026-09-08T10:00:00.000Z";
 
-assert.equal(backup.specs.length,17,"backup registry must cover all 17 persistent keys");
+assert.equal(backup.specs.length,18,"backup registry must cover all 18 persistent keys");
 const source=new MemoryStorage({
   legacySentinel:"keep-me",
   xiaoluXiaogVocabularyV2:"{bad json",
@@ -22,7 +22,7 @@ const source=new MemoryStorage({
 });
 const payload=backup.createBackup(source,new Date(date));
 assert.equal(payload.backupSchemaVersion,1);
-assert.equal(payload.app.version,"2.8");
+assert.equal(payload.app.version,"3.0");
 assert.equal(payload.modules.gifts.entries.xiaoluXiaogGiftsV1.value.gifts[0].id,"g1");
 assert.equal(payload.modules.english.entries.xiaoluXiaogVocabularyV2.format,"raw","broken JSON must still be preserved in export");
 assert.equal(payload.modules.timeline.entries.xiaoluXiaogTimelineV1.value.futureField.keep,true,"unknown fields must survive export");

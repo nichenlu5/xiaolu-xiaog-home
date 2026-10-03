@@ -1,6 +1,6 @@
-const CACHE_NAME="xiaolu-home-v2.9-shell-1";
+const CACHE_NAME="xiaolu-home-v3.0-today-1";
 const CACHE_PREFIX="xiaolu-home-";
-const CORE=["./","./index.html","./study.html","./graduate-journey.html","./css/style.css","./css/study.css","./css/life-module.css","./js/home.js","./js/study-core.js","./js/study-pdf.js","./js/study.js","./js/pwa.js","./js/exercise-storage.js","./js/timeline-storage.js","./js/notes-storage.js","./js/gifts-storage.js","./js/graduate-journey-core.js","./js/graduate-journey.js","./js/achievement-core.js","./manifest.webmanifest","./icons/app-icon.svg","./icons/app-icon-192.png","./icons/app-icon-512.png"];
+const CORE=["./","./index.html","./interest.html","./study.html","./graduate-journey.html","./css/style.css","./css/study.css","./css/life-module.css","./js/home.js","./js/today-core.js","./js/interest.js","./js/study-core.js","./js/study-pdf.js","./js/study.js","./js/pwa.js","./js/exercise-storage.js","./js/timeline-storage.js","./js/notes-storage.js","./js/gifts-storage.js","./js/graduate-journey-core.js","./js/graduate-journey.js","./js/achievement-core.js","./manifest.webmanifest","./icons/app-icon.svg","./icons/app-icon-192.png","./icons/app-icon-512.png"];
 
 async function cached(request){try{return await caches.match(request);}catch{return null;}}
 async function remember(request,response){if(response?.ok){try{const cache=await caches.open(CACHE_NAME);await cache.put(request,response.clone());}catch{}}return response;}
